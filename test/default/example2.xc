@@ -80,7 +80,7 @@ int main () {
 
 
  
-  if (result == 11)  
+  if (result == 1007012)  
     return 0;   // correct answer
   else
     return 1;   // incorrect answer

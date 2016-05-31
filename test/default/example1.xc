@@ -25,7 +25,7 @@ int v2 (Expr *e) {
         //Add (Mul (e1,e2), Mul (e3,e4)) -> {
         //   result = (v2(e1) - v2(e2)) + (v2(e3) * v2(e4)) ; }
 
-        ! Const(_) -> { printf ("Not a constant!\n"); }
+        //! Const(_) -> { printf ("Not a constant!\n"); }
 
         Add(e1,e2) -> { result = v2(e1) + v2(e2) ; }
         Mul(e1,m@Mul(_,_)) -> { 
