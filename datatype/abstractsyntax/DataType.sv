@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:core:abstractsyntax ;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax ;
 
 {- 
  - datatype Type {
@@ -216,7 +216,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                     nilStructItem()))), location=builtIn()))),
         nilDecl() ) ; --cs.funDecls);
 
-
+  -- TODO, what is this?
   local attribute testing_defaultDecls::Decls =
       consDecl(
         typeExprDecl(
@@ -473,12 +473,9 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
 -- orig                  structRefIdItem(d) -> d.refId
 -- orig                end,
 
-                  case lookupRefId(top.topTypeName, top.env) of
-                  | [] -> "123456"
-                          -- error("BOOM-EVW-1: not found " ++ top.topTypeName)
-                  | xs -> case head(xs) of
-                          | structRefIdItem(d) -> d.refId
-                          end
+                  case lookupTag(top.topTypeName, top.env) of
+                    refIdTagItem(_, refId) :: _ -> refId
+                  | _ -> error("ref id not found for " ++ top.topTypeName)
                   end,
                   true, -- Lucas, verify that this should be true and not false
                   noIntSuffix(),

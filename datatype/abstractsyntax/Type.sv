@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:core:abstractsyntax;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 
 {- ADTs, like structs, allow forward declarations so that mutually
    recursive ADTs can be specified.  Thus we use the same refId-based

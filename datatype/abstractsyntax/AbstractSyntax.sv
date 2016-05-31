@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:core:abstractsyntax;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 
 imports silver:langutil only pp, errors, err; 
 imports silver:langutil:pp with implode as ppImplode ;

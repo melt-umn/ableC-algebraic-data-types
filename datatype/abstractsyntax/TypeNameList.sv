@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:core:abstractsyntax ;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax ;
 
 {-
 nonterminal TypeNameList with pps, env, typereps, returnType;

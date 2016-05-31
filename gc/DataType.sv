@@ -8,7 +8,7 @@ imports edu:umn:cs:melt:ableC:abstractsyntax;
 imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 --imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
-imports edu:umn:cs:melt:exts:ableC:algDataTypes:core:abstractsyntax;
+imports edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 
 -- trigger the test
 import edu:umn:cs:melt:exts:ableC:algDataTypes:gc:mda_test;

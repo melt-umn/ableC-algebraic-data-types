@@ -14,10 +14,10 @@ imports edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching:abstractsyntax a
 exports edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching:concretesyntax:matchKeyword;
 exports edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching:concretesyntax:patterns;
 
---import edu:umn:cs:melt:exts:ableC:algDataTypes:core:concretesyntax:patterns;
+--import edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:concretesyntax:patterns;
 
 -- trigger the test
---import edu:umn:cs:melt:exts:ableC:algDataTypes:core:mda_test;
+--import edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:mda_test;
 
 
 
