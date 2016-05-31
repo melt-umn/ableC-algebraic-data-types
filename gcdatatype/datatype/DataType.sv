@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:gc;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype:datatype;
 
 imports silver:langutil only ast, pp, errors; 
 imports silver:langutil:pp with implode as ppImplode ;
@@ -10,8 +10,10 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 
 imports edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 
+exports edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype:datatypeKeyword;
+
 -- trigger the test
-import edu:umn:cs:melt:exts:ableC:algDataTypes:gc:mda_test;
+import edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype:mda_test;
 
 {-
 
@@ -71,5 +73,5 @@ concrete productions top::TailTypeNameList_c
 abstract production gcConstructor
 top::Constructor ::= n::String tms::TypeNames
 {
-  forwards to allocConstructor(n, tms, \ty::String -> txtExpr("(" ++ ty ++ " *) gcMalloc (sizeof(" ++ ty ++ "))", location=builtIn()));
+  forwards to allocConstructor(n, tms, \ty::String -> txtExpr("(" ++ ty ++ " *) GC_malloc (sizeof(" ++ ty ++ "))", location=builtIn()));
 }
