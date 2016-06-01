@@ -31,3 +31,4 @@ out
 *.test.stdout
 *.test.stderr
 *.tests_failed
+.clean

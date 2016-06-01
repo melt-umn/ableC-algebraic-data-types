@@ -373,12 +373,14 @@ nonterminal Constructor
        returnType -- because Types may contain Exprs
        ;
 
+-- Default ADT pointer allocation using malloc
 abstract production constructor
 top::Constructor ::= n::String tms::TypeNames
 {
   forwards to allocConstructor(n, tms, \ty::String -> txtExpr("(" ++ ty ++ " *) malloc (sizeof(" ++ ty ++ "))", location=builtIn()));
 }
 
+-- Takes a function that takes a String and returns an Expr that does the allocation for that type
 abstract production allocConstructor
 top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
 {
@@ -469,10 +471,6 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
                 eqOp(location=builtIn()),location=builtIn()), 
               realConstant(
                 integerConstant(
--- orig                 case head(lookupRefId(top.topTypeName, top.env)) of
--- orig                  structRefIdItem(d) -> d.refId
--- orig                end,
-
                   case lookupTag(top.topTypeName, top.env) of
                     refIdTagItem(_, refId) :: _ -> refId
                   | _ -> error("ref id not found for " ++ top.topTypeName)

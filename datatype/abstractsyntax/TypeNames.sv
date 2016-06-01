@@ -1,22 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax ;
 
-{-
-nonterminal TypeNameList with pps, env, typereps, returnType;
-
-abstract production nilTypeName
-ts::TypeNameList ::= 
-{ 
-  ts.pps = [];
-  ts.typereps = [ ];
-}
-abstract production consTypeName
-ts::TypeNameList ::= t::TypeName rest::TypeNameList
-{
- ts.pps = t.pp :: rest.pps ;
- ts.typereps = t.typerep :: rest.typereps;
-}
--}
-
 synthesized attribute asParameters :: Parameters;
 synthesized attribute asStructItemList :: StructItemList;
 synthesized attribute asAssignments :: Stmt;
