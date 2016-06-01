@@ -55,6 +55,8 @@ int main () {
 
   int result = value(test);
   printf("value of t0 is %d\n", result );
+  
+  free_Expr(test);
  
   if (result == 14)  
     return 0;   // correct answer
