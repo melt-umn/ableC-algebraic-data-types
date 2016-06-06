@@ -59,7 +59,6 @@ p::Pattern ::= id::String
   p.transform = txtStmt(id ++ " = * _curr_scrutinee_ptr;") ;
 }
 
-
 abstract production patternWildcard
 p::Pattern ::=
 {
