@@ -9,7 +9,7 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
 
   clauses.expectedType = scrutinee.typerep;
 
-  forwards to 
+  forwards to if !null(clauses.errors) then errorExpr(clauses.errors, location=e.location) else
     stmtExpr (
       foldStmt( [
         txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
@@ -27,7 +27,9 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
 
         mkDecl( "_match_scrutinee_ptr", pointerType( [], scrutinee.typerep), 
                 unaryOpExpr( addressOfOp(location=scrutinee.location), 
-                             scrutinee, location=scrutinee.location),
+                             declRefExpr(name("_match_scrutinee_val", location=scrutinee.location),
+                                         location=scrutinee.location),
+                             location=scrutinee.location),
                 scrutinee.location),
 
         clauses.transform 

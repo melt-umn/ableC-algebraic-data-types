@@ -1,35 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching:abstractsyntax;
 
-abstract production matchStmt
-e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
-{
-  e.globalDecls := [];
-  e.pp = concat([ text("match"), space(), parens(scrutinee.pp), line(), 
-                    braces(nestlines(2, clauses.pp)) ]);
-
-  clauses.expectedType = scrutinee.typerep;
-
-  -- TODO:
-  -- warning: Forward equation exceeds flow type with dependencies on
-  -- edu:umn:cs:melt:ableC:abstractsyntax:returnType
-  forwards to
-    foldStmt( [
-      txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
-
-      mkDecl( "_match_scrutinee_val", scrutinee.typerep, scrutinee, 
-              scrutinee.location),
-      mkDecl( "_match_scrutinee_ptr", pointerType( [], scrutinee.typerep), 
-              unaryOpExpr( addressOfOp(location=scrutinee.location), 
-                           scrutinee, location=scrutinee.location),
-              scrutinee.location),
-
-      clauses.transform 
-    ] ) ;
-}
-
-
-
-
 -- Clauses --
 -------------
 
@@ -123,12 +93,12 @@ c::StmtClause ::= p::Pattern s::Stmt
 
   s.env = addEnv(p.defs,c.env);
 
-  c.transform
-    = foldStmt( [
+  c.transform = 
+    foldStmt( [
         txtStmt( "/* matching for pattern " ++ show(80,p.pp) ++ " */"),
-
         txtStmt( "/* ... declarations of pattern variables */"),
-	foldStmt( p.decls ),
+        
+        foldStmt( p.decls ),
 
         mkDecl ("_curr_scrutinee_ptr", pointerType( [], c.expectedType), 
                 -- unaryOpExpr( dereferenceOp(location=c.location), 
