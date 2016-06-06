@@ -21,9 +21,31 @@ p::Pattern ::= id::String ps::PatternList
   p.pp = cat( text(id), parens( ppImplode(text(","), ps.pps) ) );
   ps.env = p.env;
   p.decls = ps.decls;
-  p.defs = [];
+  p.defs = ps.defs;
+  
+  -- Type checking
+  p.errors :=
+    -- Check that expected type for this pattern is an ADT type of some sort.
+    if  ! adtTypeInfo.fst
+    then [ err( p.location, "Constructor \"" ++ id ++ "\" does not match " ++
+           "expected type of \"" ++ 
+           show(100,cat(p.expectedType.lpp,p.expectedType.rpp)) ++ "\".") ]
+    else
 
-  p.errors := error("Define errors on constructorPattern");
+    -- Check that this pattern is a constructor for the expected ADT type.
+    if ! constructorM.isJust
+    then [ err( p.location, "\"" ++ id ++ "\" is not a valid constructor " ++
+           "for the expected type of \"" ++ 
+           show(100,cat(p.expectedType.lpp,p.expectedType.rpp)) ++ "\".") ]
+    else
+
+    -- Check that the number of patterns matches number of arguments for 
+    -- this constructor.
+    if  ps.pslength != length( constructorM.fromJust.snd )
+    then [ err( p.location, "This pattern has " ++ toString(ps.pslength) ++ 
+           " arguments, but " ++ 
+           toString(length( constructorM.fromJust.snd )) ++ " were expected.") ]
+    else ps.errors;
 
   -- 1. get the RefIdItem for the expected type
   local adtTypeInfo :: Pair<Boolean [RefIdItem]>
@@ -47,7 +69,7 @@ p::Pattern ::= id::String ps::PatternList
   -- 3. get the ADT constructors for this ADT
   local all_ADT_constructors :: [ Pair<String [Type]> ]
     = case maybe_adtDcl of
-      | nothing() -> []
+      | nothing() -> error("ADT decl not found!")
       | just(adtDcl) -> adtDcl.adtInfo.snd
       end;
 
@@ -62,7 +84,7 @@ p::Pattern ::= id::String ps::PatternList
   local constructorM :: Maybe< Pair<String [Type]> >
     = case filter( matchConstructorName(id,_), all_ADT_constructors ) of
       | [] -> nothing()
-      | x::[] -> just(x)
+      | [x] -> just(x)
       | _ -> error ("Two constructors with the same name in ADT type")
       end;
 
@@ -166,34 +188,6 @@ Boolean ::= n::String cnst::Pair<String [Type]>
 
 
 {-
-  p.defs = ps.defs;
-
-  -- Type checking
-  p.errors :=
-    -- Check that expected type for this pattern is an ADT type of some sort.
-    if  ! adtTypeInfo.fst
-    then [ err( p.location, "Constructor \"" ++ id ++ "\" does not match " ++
-           "expected type of \"" ++ 
-           show(100,cat(p.expectedType.lpp,p.expectedType.rpp)) ++ "\".") ]
-    else 
-
-    -- Check that this pattern is a constructor for the expected ADT type.
-    if ! constructorM.isJust
-    then [ err( p.location, "\"" ++ id ++ "\" is not a valid constructor " ++
-           "for the expected type of \"" ++ 
-           show(100,cat(p.expectedType.lpp,p.expectedType.rpp)) ++ "\".") ]
-    else
-
-    -- Check that the number of patterns matches number of arguments for 
-    -- this constructor.
-    if  ps.pslength != length( constructorM.fromJust.snd )
-    then [ err( p.location, "This pattern has " ++ toString(ps.pslength) ++ 
-           " arguments, but " ++ 
-           toString(length( constructorM.fromJust.snd )) ++ " were expected.") ]
-    else ps.errors;
-
-
-
   ps.transformIn = p.transformIn;
 
   p.transform =
@@ -268,10 +262,11 @@ Pair<String [ Pair<String [Type]> ]> ::= t::Type e::Decorated Env
 
 -- PatternList --
 -----------------
-nonterminal PatternList with location, pps, 
-  env, decls, expectedTypes, 
+synthesized attribute pslength::Integer;
+nonterminal PatternList with location, pps, errors,
+  env, defs, decls, expectedTypes, 
   transform<[Stmt]>,
-  --defs, env,
+  pslength,
   returnType;
 
 -- , defs, env, errors, pslength, position, depth, parent_id, parent_idType, parent_idTypeIndicator, parentTag, 
@@ -283,9 +278,13 @@ abstract production consPattern
 ps::PatternList ::= p::Pattern rest::PatternList
 {
   ps.pps = p.pp :: rest.pps;
+  ps.errors := p.errors ++ rest.errors;
+  ps.pslength = 1 + rest.pslength;
 
   p.env = ps.env;
   rest.env = ps.env;
+  
+  ps.defs = p.defs ++ rest.defs;
 
   ps.decls = p.decls ++ rest.decls;
 
@@ -303,10 +302,6 @@ ps::PatternList ::= p::Pattern rest::PatternList
   ps.transform = p.transform :: rest.transform ;
 
 {-
-  ps.defs = p.defs ++ rest.defs;
-  ps.errors := p.errors ++ rest.errors;
-
-  ps.pslength = 1 + rest.pslength;
 
   p.position = ps.position ;
   rest.position = ps.position + 1;
@@ -321,13 +316,11 @@ abstract production nilPattern
 ps::PatternList ::= {-empty-}
 {
   ps.pps = [];
-  ps.decls = [ ];
-  ps.transform = [];
-{-
-  ps.defs = [];
   ps.errors := [];
   ps.pslength = 0;
--}
+  ps.defs = [];
+  ps.decls = [ ];
+  ps.transform = [];
 }
 
 
