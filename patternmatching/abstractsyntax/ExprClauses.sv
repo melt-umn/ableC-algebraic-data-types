@@ -50,11 +50,20 @@ cs::ExprClauses ::= c::ExprClause rest::ExprClauses
   rest.expectedType = cs.expectedType;
 
   cs.errors := c.errors ++ rest.errors;
+  cs.errors <-
+    if typeAssignableTo(c.typerep, rest.typerep)
+    then []
+    else [err(c.location,
+              "Incompatible types in rhs of pattern, expected " ++ showType(rest.typerep) ++
+              " but found " ++ showType(c.typerep))];
 
   cs.transform = c.transform;
   c.transformIn = rest.transform;
 
-  cs.typerep = c.typerep;  -- ToDo: check against rest.typerep
+  cs.typerep =
+    if compatibleTypes(c.typerep, rest.typerep, true)
+    then c.typerep
+    else errorType();
 }
 
 abstract production oneExprClause
