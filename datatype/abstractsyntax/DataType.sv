@@ -29,18 +29,23 @@ top::Decl ::= adt::ADTDecl
 { 
   top.pp = concat([ text("datatype"), space(), adt.pp ]);
 
-  adt.env = top.env ;
+  adt.env = top.env;
+
+  -- Env to look up tag and refId
+  -- tag isn't always in scope, so we open another scope with the incoming env to get it
+  -- in the case of a forward decl
+  local lookupEnv::Decorated Env = addEnv(forward.defs, openScope(top.env));
 
   -- Get the struct RefId and StructDecl off of forwards to tree since
   -- they are to be used in the ADT tag and ref Def items.
   adt.structRefId
-    = case lookupTag( adt.name, addEnv(forward.defs, emptyEnv()) ) of
+    = case lookupTag(adt.name, lookupEnv) of
       | refIdTagItem(_, r) :: _ -> r
       | _ -> error( "struct ref id not found.")
       end;
 
   adt.structDcl
-    = case lookupRefId(adt.structRefId, addEnv(forward.defs, emptyEnv()) ) of
+    = case lookupRefId(adt.structRefId, lookupEnv) of
       | structRefIdItem(s) :: _  -> s
       | _ -> error( "struct decl not found")
       end;
@@ -50,6 +55,9 @@ top::Decl ::= adt::ADTDecl
     -- We want the functions for constructing values,
     -- but not the 'struct ADT' defs.
     forward.defs;
+    
+  -- TODO, obviously interfering!  
+  forward.env = addEnv(adt.defs, top.env);
 
   -- TODO
   -- warning: Forward equation exceeds flow type with dependencies on 
@@ -215,67 +223,6 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                         nilStructDeclarator())),
                     nilStructItem()))), location=builtIn()))),
         nilDecl() ) ; --cs.funDecls);
-
-  -- TODO, what is this?
-  local attribute testing_defaultDecls::Decls =
-      consDecl(
-        typeExprDecl(
-          [],
-          structTypeExpr(
-            [],
-            structDecl([],
-              justName( n ),
-
-              consStructItem(
-                structItem([],
-                  directTypeExpr(
-                    builtinType(
-                      [],
-                      signedType(intType()))),
-                  consStructDeclarator(
-                    structField(
-                      name("refId", location=builtIn()),
-                      baseTypeExpr(),
-                      []),
-                    nilStructDeclarator())),
-
-                consStructItem(
-                  structItem([],
-
-                    enumTypeExpr(
-                      [],
-                      enumDecl(justName(name("_" ++ n.name ++ "_types", location=builtIn())),
-                        cs.enumItems, location=builtIn())),
-
-                    consStructDeclarator(
-                      structField(
-                        name("tag", location=builtIn()),
-                        baseTypeExpr(),
-                        []),
-                      nilStructDeclarator())),
-
-                  consStructItem(
-                    structItem([],
-                      unionTypeExpr(
-                        [],
-                        unionDecl([],
-                          justName(
-                            name("_" ++ n.name ++ "_contents", location=builtIn())),
-                          cs.structItems, location=builtIn())),
-                      consStructDeclarator(
-                        structField(
-                          name("contents",location=builtIn()), 
-                          baseTypeExpr(),
-                          []),
-                        nilStructDeclarator())),
-
-
-                    nilStructItem()
-                  )           
-                )
-              ), location=builtIn()))),
-
-        cs.funDecls);
 
 --  top.transform = decls(appendDecls(defaultDecls, adtDecls));
 
