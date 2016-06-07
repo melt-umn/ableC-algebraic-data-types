@@ -13,6 +13,7 @@ hs_err_pid*
 
 # Misc build artifacts (copied from ableC)
 *~
+.fuse_hidden*
 build.xml
 *.copperdump.html
 *.jar
