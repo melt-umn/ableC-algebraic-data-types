@@ -15,7 +15,7 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
         txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
 
         declStmt(
-         variableDecls( [], [], directTypeExpr(clauses.typerep),
+          variableDecls( [], [], directTypeExpr(clauses.typerep),
              consDeclarator(
                declarator( name("__result", location=bogus_loc()), 
                  baseTypeExpr(), [], 
@@ -35,7 +35,7 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
         clauses.transform 
       ] ),
 
-      txtExpr ("__result", location=e.location),
+      declRefExpr(name("__result", location=e.location), location=e.location),
 
       location = e.location 
     ) ;
