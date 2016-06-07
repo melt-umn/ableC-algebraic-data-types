@@ -119,9 +119,7 @@ b::BaseTypeExpr ::= q::[Qualifier] n::Name
     -- It's an ADT and the tag type agrees.
     | adtRefIdTagItem(r,s)::_ -> adtTagType( n.name, refId, structRefId )
     | _ -> errorType()
-    end ;
-    
-    
+    end ;    
     
   forwards to 
     case tags of

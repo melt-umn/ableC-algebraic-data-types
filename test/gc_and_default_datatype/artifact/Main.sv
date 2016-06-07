@@ -11,7 +11,7 @@ parser extendedParser :: cst:Root {
   
   prefer edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:concretesyntax:datatypeKeyword:Datatype_t
     over edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype:datatypeKeyword:Datatype_t;
-} 
+}
 
 function main
 IOVal<Integer> ::= args::[String] io_in::IO
