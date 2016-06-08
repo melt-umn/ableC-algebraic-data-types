@@ -19,8 +19,6 @@ p::Pattern ::= p1::Pattern p2::Pattern
 
   p.decls = p1.decls ++ p2.decls;
 
-  p.errors := []; --ToDo
-
   p.transform = seqStmt (p1.transform, p2.transform);
 }
 
