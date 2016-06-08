@@ -47,17 +47,6 @@ p::Pattern ::= e::Expr
   p.pp = text("when");
   p.decls = [];
   p.defs = [];
-  p.errors := [];
-  p.transform 
-    = ifStmt(
-        e,
-        -- txtExpr("( *_curr_scrutinee_ptr != " ++ show(10, constExpr.pp) ++ ")",
-        --        location=p.location),
-
-        -- then clause
-        nullStmt(),
-        -- else clause
-        txtStmt("_match = 0;")
-      );
-
+  p.errors := e.errors;
+  p.transform = ifStmt(e, nullStmt(), txtStmt("_match = 0;") );
 }
