@@ -13,6 +13,8 @@ terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier};
 terminal NamedPatternOp_t '@' precedence = 0, lexer classes {Csymbol};
 terminal AntipatternOp_t '!'  precedence = 1, lexer classes {Csymbol};
 
+terminal When_t 'when' lexer classes {Ckeyword};
+
 nonterminal Pattern with location, ast<abs:Pattern> ;
 
 {- We need to have algebraic datatype patterns here.  They can't be in
@@ -47,6 +49,10 @@ concrete productions p::Pattern
   { p.ast = 
       abs:patternNot( p1.ast,
         location=p.location );
+  }
+
+| 'when' '(' e::Expr_c ')'
+  { p.ast = abs:patternWhen( e.ast, location=p.location );
   }
 
 

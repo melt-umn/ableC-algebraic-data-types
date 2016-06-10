@@ -3,6 +3,10 @@
 # The -I directive includes the parent directory of the artifact and
 # ableC specification directories.
 
-silver -I ../../.. -I ../../../../ableC -o ableC.jar $@ \
-   edu:umn:cs:melt:exts:ableC:algDataTypes:artifacts:core
+silver -I ../../../../ableC \
+       -I ../../.. \
+       -I ../../../../ableC/extensions/closure \
+       -I ../../../../ableC/extensions/gc \
+       -o ableC.jar $@ \
+       edu:umn:cs:melt:exts:ableC:algDataTypes:artifacts:core
 
