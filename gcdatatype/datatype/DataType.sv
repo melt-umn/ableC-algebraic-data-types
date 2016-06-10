@@ -49,10 +49,10 @@ concrete productions top::ConstructorList_c
      { top.ast = nilConstructor(); }
 
 
-nonterminal Constructor_c with ast<Constructor>;
+nonterminal Constructor_c with ast<Constructor>, location;
 concrete productions top::Constructor_c
 | n::Identifier_t '(' ad::TypeNameList_c ')' ';'
-     { top.ast = gcConstructor(n.lexeme, ad.ast); }
+     { top.ast = gcConstructor(n.lexeme, ad.ast, location=top.location); }
 
 
 nonterminal TypeNameList_c with ast<TypeNames>;
@@ -73,5 +73,9 @@ concrete productions top::TailTypeNameList_c
 abstract production gcConstructor
 top::Constructor ::= n::String tms::TypeNames
 {
-  forwards to allocConstructor(n, tms, \ty::String -> txtExpr("(" ++ ty ++ " *) GC_malloc (sizeof(" ++ ty ++ "))", location=builtIn()));
+  forwards to
+    allocConstructor(
+      n, tms,
+      \ty::String -> txtExpr("(" ++ ty ++ " *) GC_malloc (sizeof(" ++ ty ++ "))", location=builtIn()),
+      location=top.location);
 }

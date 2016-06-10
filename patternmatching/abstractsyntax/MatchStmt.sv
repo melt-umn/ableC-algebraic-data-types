@@ -9,7 +9,10 @@ e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
                     
   -- TODO: Can't forward to an error prod b/c that adds a circular dependancy on
   -- forward.defs -> forward.env -> forward.errors -> forward.defs
-  e.errors <- clauses.errors;
+  e.errors :=
+    if !null(clauses.errors ++ scrutinee.errors)
+    then clauses.errors ++ scrutinee.errors
+    else forward.errors;
 
   clauses.expectedType = scrutinee.typerep;
 

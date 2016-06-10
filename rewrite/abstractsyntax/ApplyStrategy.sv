@@ -3,8 +3,6 @@ grammar edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite:abstractsyntax;
 abstract production applyStrategy
 e::Expr ::= expr::Expr strategy::Expr
 {
-  e.errors := expr.errors ++ strategy.errors;
-  
   e.errors <-
     case expr.typerep of
     | pointerType(_, adtTagType(_, _, _)) -> []

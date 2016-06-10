@@ -49,10 +49,10 @@ concrete productions top::ConstructorList_c
      { top.ast = nilConstructor(); }
 
 
-nonterminal Constructor_c with ast<Constructor>;
+nonterminal Constructor_c with ast<Constructor>, location;
 concrete productions top::Constructor_c
 | n::Identifier_t '(' ad::TypeNameList_c ')' ';'
-     { top.ast = constructor(n.lexeme, ad.ast); }
+     { top.ast = constructor(n.lexeme, ad.ast, location=top.location); }
 
 
 nonterminal TypeNameList_c with ast<TypeNames>;

@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax ;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 
 {- 
  - datatype Type {
@@ -28,6 +28,9 @@ abstract production datatypeDecl
 top::Decl ::= adt::ADTDecl
 { 
   top.pp = concat([ text("datatype"), space(), adt.pp ]);
+  
+  -- TODO: Do local error checking before reporting forward errors once error checking for datatypeDecl is finished
+  top.errors <- adt.errors;
 
   adt.env = top.env;
 
@@ -68,7 +71,7 @@ top::Decl ::= adt::ADTDecl
 
 synthesized attribute transform<a> :: a;
 
-nonterminal ADTDecl with pp, env, defs, returnType, structRefId, structDcl, name, adtInfo, transform<Decl>;
+nonterminal ADTDecl with pp, env, defs, errors, returnType, structRefId, structDcl, name, adtInfo, transform<Decl>;
 
 inherited attribute structRefId :: String;
 inherited attribute structDcl :: Decorated StructDecl;
@@ -78,6 +81,7 @@ abstract production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
 {
   top.pp = concat([ n.pp, space(), braces(cs.pp) ]);
+  top.errors := cs.errors; -- TODO: check for redeclaration
 
   {- Since ADTs translate down to structs with the same name, we don't
      want to allow programmer to create structs that also have this
@@ -275,12 +279,13 @@ inherited attribute topTypeName :: String;
 synthesized attribute constructors :: [ Pair<String [Type]> ];
 
 nonterminal ConstructorList
-  with pp, env, returnType, enumItems, structItems, funDecls, topTypeName, constructors;
+  with pp, env, errors, returnType, enumItems, structItems, funDecls, topTypeName, constructors;
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
 {
   top.pp = concat([ c.pp, sep, cl.pp ]) ;
+  top.errors := c.errors ++ cl.errors;
   local attribute sep::Document =
     case cl of
     | consConstructor(_,_) -> line()
@@ -299,6 +304,7 @@ abstract production nilConstructor
 top::ConstructorList ::=
 {
   top.pp = notext();
+  top.errors := [];
   top.enumItems = nilEnumItem();
   top.structItems = nilStructItem();
   top.funDecls = nilDecl();
@@ -316,15 +322,19 @@ synthesized attribute structItem :: StructItem;
 synthesized attribute funDecl :: Decl;
 
 nonterminal Constructor
-  with pp, env, enumItem, structItem, funDecl, topTypeName, constructors,
-       returnType -- because Types may contain Exprs
-       ;
+  with pp, env, errors, enumItem, structItem, funDecl, topTypeName, constructors,
+       returnType, -- because Types may contain Exprs
+       location;
 
 -- Default ADT pointer allocation using malloc
 abstract production constructor
 top::Constructor ::= n::String tms::TypeNames
 {
-  forwards to allocConstructor(n, tms, \ty::String -> txtExpr("(" ++ ty ++ " *) malloc (sizeof(" ++ ty ++ "))", location=builtIn()));
+  forwards to
+    allocConstructor(
+      n, tms,
+      \ty::String -> txtExpr("(" ++ ty ++ " *) malloc (sizeof(" ++ ty ++ "))", location=builtIn()),
+      location=top.location);
 }
 
 -- Takes a function that takes a String and returns an Expr that does the allocation for that type
@@ -336,6 +346,11 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
 
   top.pp = concat( [ text(n ++ " ( "), ppImplode (text(", "), tms.pps),
                      text(" );") ] );
+  top.errors :=
+    if !null(lookupValue(n, top.env))
+    then [err(top.location, n ++ " is already defined as a constructor or value")]
+    else [];
+  
   tms.position = 0;  
   tms.name_i = n;
 

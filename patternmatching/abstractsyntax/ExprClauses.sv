@@ -61,7 +61,7 @@ cs::ExprClauses ::= c::ExprClause rest::ExprClauses
   c.transformIn = rest.transform;
 
   cs.typerep =
-    if compatibleTypes(c.typerep, rest.typerep, true)
+    if typeAssignableTo(c.typerep, rest.typerep)
     then c.typerep
     else errorType();
 }

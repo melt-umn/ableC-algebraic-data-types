@@ -63,7 +63,7 @@ concrete productions ps::PatternList
       abs:consPattern( p.ast, abs:nilPattern(location=ps.location),
         location=p.location ); 
   }
-
+-- TODO: This is only allowing constPattern as the last element in PatternList?  
 | p::ConstPattern
   { ps.ast = 
       abs:consPattern( p.ast, abs:nilPattern(location=ps.location),
