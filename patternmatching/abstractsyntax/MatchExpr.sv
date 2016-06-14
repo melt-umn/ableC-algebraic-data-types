@@ -9,7 +9,7 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
 
   clauses.expectedType = scrutinee.typerep;
 
-  forwards to if !null(clauses.errors ++ scrutinee.errors) then errorExpr(clauses.errors ++ scrutinee.errors, location=e.location) else
+  local fwrd::Expr =
     stmtExpr (
       foldStmt( [
         txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
@@ -39,4 +39,5 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
 
       location = e.location 
     ) ;
+  forwards to mkErrorCheck(clauses.errors ++ scrutinee.errors, fwrd);
 }
