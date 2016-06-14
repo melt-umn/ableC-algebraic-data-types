@@ -12,6 +12,50 @@ imports edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 imports edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching:abstractsyntax hiding transform;
 
 abstract production strategyDecl
+top::Decl ::= n::Name extends::Expr visits::VisitList
+{
+  -- TODO: pp
+  
+  local localErrors::[Message] = visits.errors ++
+    (if top.isTopLevel
+     then [err(n.location, "Nonparameterized strategies can't occur at the global scope")]
+     else []);
+
+  -- TODO
+  top.errors :=
+    if !null(localErrors)
+    then localErrors
+    else forward.errors;
+  
+  top.errors <- 
+    (if !null(lookupValue("strategy", top.env)) then [] else
+      [err(n.location, "Rewrite strategies require rewrite.xh to be included.")]);
+  
+  visits.extendsExpr = extends;
+  
+  forwards to
+    variableDecls(
+      [], [],
+      typedefTypeExpr([], name("strategy", location=builtIn())),
+      consDeclarator( 
+        declarator(
+          n,
+          baseTypeExpr(),
+          [], 
+          justInitializer(
+            exprInitializer(
+              directCallExpr(
+                name("_rule", location=builtIn()),
+                consExpr(
+                  visits.transform,
+                  consExpr(
+                    stringLiteral("\"" ++ n.name ++ "\"", location=builtIn()),
+                    nilExpr())),
+                location=builtIn())))),
+        nilDeclarator()));
+}
+
+abstract production strategyDeclParams
 top::Decl ::= n::Name params::Parameters extends::Expr visits::VisitList
 {
   -- TODO: pp
@@ -26,13 +70,33 @@ top::Decl ::= n::Name params::Parameters extends::Expr visits::VisitList
     (if !null(lookupValue("strategy", top.env)) then [] else
       [err(n.location, "Rewrite strategies require rewrite.xh to be included.")]);
   
-  visits.env = addEnv(params.defs, top.env);
+  visits.env = addEnv(params.defs ++ protoDecl.defs, top.env);
   visits.extendsExpr = extends;
   
-  forwards to
+  -- Decorate this to get the def for the function which then goes in the visits env
+  local protoDecl::Decl =
+    variableDecls(
+      if top.isTopLevel then [staticStorageClass()] else [autoStorageClass()],
+      [],
+      typedefTypeExpr([], name("strategy", location=builtIn())),
+      consDeclarator(
+        declarator(
+          n,
+          functionTypeExprWithArgs(
+            baseTypeExpr(),
+            params,
+            false),
+          [],
+          nothingInitializer()),
+        nilDeclarator()));
+  protoDecl.env = top.env;
+  protoDecl.isTopLevel = top.isTopLevel;
+  protoDecl.returnType = top.returnType;
+  
+  local fnDecl::Decl =
     functionDeclaration(
       (if top.isTopLevel then functionDecl else nestedFunctionDecl)( -- TODO, this shouldn't be needed to solve scoping problems
-        if top.isTopLevel then [staticStorageClass()] else [],
+        [],
         [],
         typedefTypeExpr([], name("strategy", location=builtIn())),
         functionTypeExprWithArgs(
@@ -52,6 +116,14 @@ top::Decl ::= n::Name params::Parameters extends::Expr visits::VisitList
                   stringLiteral("\"" ++ n.name ++ "\"", location=builtIn()),
                   nilExpr())),
             location=builtIn())))));
+  
+  forwards to
+    decls(
+      (if top.isTopLevel then consGlobalDecl else consDecl)(
+        protoDecl,
+        (if top.isTopLevel then consGlobalDecl else consDecl)(
+          fnDecl,
+          nilDecl())));
 }
 
 global failStrategy::Expr = 
@@ -240,7 +312,7 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
   
   cs.expectedType = type.typerep;
   
-  forwards to if !null(localErrors) then errorExpr(localErrors, location=e.location) else
+  local fwrd::Expr =
     lambdaExpr(
       exprFreeVariables(),
       consParameters(
@@ -303,6 +375,7 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
           location=builtIn()),
         location=builtIn()),
       location=builtIn());
+  forwards to mkErrorCheck(localErrors, fwrd);
 }
 
 function addDefaultCaseExpr

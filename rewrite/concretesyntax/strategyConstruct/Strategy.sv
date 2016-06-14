@@ -37,22 +37,32 @@ e::Declaration_c ::= 'rewrite' 'rule' s::Strategy
 
 nonterminal Strategy with ast<Decl>, location;
 
+concrete production strategyDecl_c
+s::Strategy ::= n::Identifier_t extends::Extends '{' visits::VisitList '}'
+{
+  s.ast =
+    abs:strategyDecl(
+      fromId(n),
+      extends.ast,
+      visits.ast);
+}
+
 concrete production strategyDeclParams_c
 s::Strategy ::= n::Identifier_t '(' params::ParameterList_c ')' extends::Extends '{' visits::VisitList '}'
 {
   s.ast =
-    abs:strategyDecl(
+    abs:strategyDeclParams(
       fromId(n),
       foldParameterDecl(params.ast),
       extends.ast,
       visits.ast);
 }
 
-concrete production strategyDecl_c
+concrete production strategyDeclEmptyParams_c
 s::Strategy ::= n::Identifier_t '(' ')' extends::Extends '{' visits::VisitList '}'
 {
   s.ast =
-    abs:strategyDecl(
+    abs:strategyDeclParams(
       fromId(n),
       nilParameters(),
       extends.ast,
