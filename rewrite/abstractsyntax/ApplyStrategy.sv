@@ -11,15 +11,15 @@ e::Expr ::= expr::Expr strategy::Expr
                 "Rewritten expression does not have adt pointer type (got " ++
                 showType(expr.typerep) ++ ")")]
     end;
-  
+  {-
   e.errors <-
     case strategy.typerep of
     | noncanonicalType(typedefType(_, "strategy", _)) -> []
     | errorType() -> []
-    | _ -> [err(expr.location,
+    | _ -> [err(strategy.location,
                 "Applied strategy does not have strategy type (got " ++
                 showType(strategy.typerep) ++ ")")]
-    end;
+    end;-}
   
   local adtName::String =
     case expr.typerep of

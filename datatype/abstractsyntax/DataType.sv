@@ -58,15 +58,12 @@ top::Decl ::= adt::ADTDecl
     -- We want the functions for constructing values,
     -- but not the 'struct ADT' defs.
     forward.defs;
-    
-  -- TODO, obviously interfering!  
-  forward.env = addEnv(adt.defs, top.env);
 
   -- TODO
   -- warning: Forward equation exceeds flow type with dependencies on 
   -- edu:umn:cs:melt:ableC:abstractsyntax:isTopLevel, 
   -- edu:umn:cs:melt:ableC:abstractsyntax:returnType
-  forwards to adt.transform ; -- with {env = addEnv(adt.defs, top.env);};
+  forwards to adt.transform with {env = addEnv(adt.defs, top.env);}; -- TODO, obviously bad to change env manually!  
 }
 
 synthesized attribute transform<a> :: a;
