@@ -19,7 +19,12 @@ p::Pattern ::= p1::Pattern p2::Pattern
 
   p.decls = p1.decls ++ p2.decls;
 
-  p.transform = seqStmt (p1.transform, p2.transform);
+  p.transform =
+    seqStmt(
+      p1.transform,
+      ifStmtNoElse(
+        declRefExpr(name("_match", location=builtIn()), location=builtIn()),
+        p2.transform));
 }
 
 abstract production patternNot
