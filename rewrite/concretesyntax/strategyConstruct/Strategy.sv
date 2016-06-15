@@ -23,6 +23,7 @@ terminal Extends_t 'extends';
 
 lexer class StrategyKeyword;
 terminal Visit_t     'visit' lexer classes {StrategyKeyword};
+terminal Print_t     'print' lexer classes {StrategyKeyword};
 terminal Rec_t       'rec'   lexer classes {StrategyKeyword};
 terminal IfVisit_t   'if'    lexer classes {StrategyKeyword};
 terminal ElseVisit_t 'else'  lexer classes {StrategyKeyword}, precedence = 2, association = left;
@@ -141,6 +142,12 @@ concrete production idVisit
 top::Visit ::= id::StrategyName_t ';'
 {
   top.ast = abs:idVisit(fromStrategyName(id), location=top.location);
+}
+
+concrete production printVisit
+top::Visit ::= 'print' '(' args::ArgumentExprList_c ')' ';'
+{
+  top.ast = abs:printVisit(foldExpr(args.ast), location=top.location);
 }
 
 concrete production ruleVisit

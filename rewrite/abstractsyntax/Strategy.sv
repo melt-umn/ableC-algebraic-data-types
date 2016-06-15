@@ -273,6 +273,29 @@ top::Visit ::= n::Name args::VisitList
     end;
 }
 
+abstract production printVisit
+top::Visit ::= args::Exprs
+{
+  top.errors := args.errors;
+  top.transform =
+    lambdaExpr(
+      exprFreeVariables(),
+      consParameters(
+        parameterDecl(
+          [],
+          directTypeExpr(builtinType([], voidType())),
+          pointerTypeExpr([], baseTypeExpr()),
+          justName(name("term", location=builtIn())),
+          []),
+        nilParameters()),
+      stmtExpr(
+        exprStmt(
+          directCallExpr(name("printf", location=builtIn()), args, location=builtIn())),
+        declRefExpr(name("term", location=builtIn()), location=builtIn()),
+        location=builtIn()),
+      location=top.location);
+}
+
 abstract production condVisit
 top::Visit ::= c::Expr th::Visit el::Visit
 {
