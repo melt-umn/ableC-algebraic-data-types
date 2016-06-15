@@ -216,22 +216,34 @@ static strategy vchoice(int count, ...) {
 
 /* Misc strategies */
 // Prints a message and does nothing
-static strategy print(const char *message) {
-  return lambda {message, printf} (void *x) . (({printf("%s", message); x;}));
-}
+#define print(format, ...) _rule(lambda (void *term) . (({printf(format, __VA_ARGS__); term;})), "print")
 
 /* Helpers */
+// Parses the source code given by seq or ch and counts the total number of arguments
 static int _countArgs(const char *args) {
   int result = 0;
   int i = 0;
+  int depth = 0;
 
+  // Skip leading whitespace
   while (args[i] == ' ' || args[i] == '\t' || args[i] == '\n' || args[i] == '\r') i++;
+
+  // If the string doesn't immediately end, then there is at least 1 arg
   if (args[i]) result++;
 
+  // Loop over chars at the top level
+  // Invariant: args[i] is the next unprocessed char
   while (args[i]) {
-    if (args[i] == ',') result++;
+    // Count top level commas
+    if (args[i] == ',')
+      if (depth == 0) result++;
+
+    // Ignore escape chars
     else if (args[i] == '\'') i += 2;
+
+    // Ignore strings
     else if (args[i] == '\"') {
+      // Skip chars until an unescaped quote ends the string
       while (args[i]) {
         if (args[i+1] == '\"' && args[i] != '\\') {
           i++;
@@ -240,14 +252,13 @@ static int _countArgs(const char *args) {
         i++;
       }
     }
+
+    // Ignore contents of nested parens
     else if (args[i] == '(') {
-      while (args[i]) {
-        if (args[i+1] == ')') {
-          i++;
-          break;
-        }
-        i++;
-      }
+      depth++;
+    }
+    else if (args[i] == ')') {
+      depth--;
     }
     i++;
   }
