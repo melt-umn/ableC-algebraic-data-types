@@ -1,9 +1,12 @@
 #!/bin/bash
 
+rm -f .tests_failed
+
 for DIR in ./*/
 do
     cd $DIR
-    ./make tests || touch .tests_failed
+    ./make tests
+    [[ -e .tests_failed ]] && touch ../.tests_failed
     cd ..
     sleep 1
 done
