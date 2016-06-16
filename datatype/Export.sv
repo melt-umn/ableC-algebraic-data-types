@@ -9,5 +9,6 @@ exports edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:mda_test;
 option edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype;
 option edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching;
 
--- Rewrite isn't a pure extension to datatype so we need to include it as an option
+-- These aren't pure extensions to datatype so we need to include them as options
 option edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite;
+option edu:umn:cs:melt:exts:ableC:algDataTypes:deriving;
