@@ -59,11 +59,8 @@ top::Decl ::= adt::ADTDecl
     -- but not the 'struct ADT' defs.
     forward.defs;
 
-  -- TODO
-  -- warning: Forward equation exceeds flow type with dependencies on 
-  -- edu:umn:cs:melt:ableC:abstractsyntax:isTopLevel, 
-  -- edu:umn:cs:melt:ableC:abstractsyntax:returnType
-  forwards to adt.transform with {env = addEnv(adt.defs, top.env);}; -- TODO, obviously bad to change env manually!  
+  -- TODO, obviously bad to change env manually!  
+  forwards to adt.transform with {env = addEnv(adt.defs, top.env);};
 }
 
 synthesized attribute transform<a> :: a;
@@ -458,8 +455,6 @@ top::Location ::=
 {
   forwards to loc("Built In", 0, 0, 0, 0, 0, 0);
 }
-
-
 
 {-
 function convertTypeNamesToParameters

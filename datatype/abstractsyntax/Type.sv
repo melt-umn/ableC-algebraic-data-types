@@ -146,7 +146,7 @@ t::BaseTypeExpr ::= q::[Qualifier] def::StructDecl
 abstract production adtTagType
 t::Type ::= name::String adtRefId::String structRefId::String
 {
-  t.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")");
+  t.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")"); -- TODO
   t.rpp = notext();
   forwards to tagType( [],
                 refIdTagType( structSEU(), name, structRefId ) );
