@@ -282,7 +282,7 @@ ps::PatternList ::= p::Pattern rest::PatternList
   ps.pslength = 1 + rest.pslength;
 
   p.env = ps.env;
-  rest.env = ps.env;
+  rest.env = addEnv(p.defs,ps.env);
   
   ps.defs = p.defs ++ rest.defs;
 
