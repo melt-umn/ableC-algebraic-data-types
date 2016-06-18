@@ -221,57 +221,49 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
   local patternTrans::Pattern =
     constructorPattern(n, tms.constructorPatternList, location=builtIn());
   
-  local constructorResult::Expr =
-    directCallExpr(name(n, location=builtIn()), tms.constructorArgList, location=builtIn());
-  
   top.constructStmtClauseTrans =
-    stmtClause(patternTrans, returnStmt(justExpr(constructorResult)), location=builtIn());
-  top.destructStmtClauseTrans =
     stmtClause(
       patternTrans,
       seqStmt(
+        mkIntDeclInit("_index", "0", builtIn()),
+        returnStmt(
+          justExpr(
+            directCallExpr(
+              name(n, location=builtIn()),
+              tms.constructorArgList,
+              location=builtIn())))),
+      location=builtIn());
+  top.destructStmtClauseTrans =
+    stmtClause(
+      patternTrans,
+      foldStmt([
+        mkIntDeclInit("_index", "0", builtIn()),
         tms.destructCopyTrans,
         returnStmt(
           justExpr(
-            realConstant(
-              integerConstant(
-                toString(tms.numChildADTs),
-                false,
-                noIntSuffix(),
-                location=builtIn()),
-              location=builtIn())))),
+            declRefExpr(
+              name("_index", location=builtIn()),
+              location=builtIn())))]),
       location=builtIn());
---  tms.topTypeName = top.topTypeName;
-  tms.childADTPosition = 0;
 }
 
 synthesized attribute constructorPatternList::PatternList occurs on TypeNames;
 synthesized attribute constructorArgList::Exprs occurs on TypeNames;
 synthesized attribute destructCopyTrans::Stmt occurs on TypeNames;
-synthesized attribute numChildADTs::Integer occurs on TypeNames;
-
-inherited attribute childADTPosition::Integer occurs on TypeNames;
 
 --attribute topTypeName occurs on TypeNameList;
 
 aspect production nilTypeName
 ts::TypeNames ::= 
-{ 
+{
   ts.constructorPatternList = nilPattern(location=builtIn());
   ts.constructorArgList = nilExpr();
   ts.destructCopyTrans = nullStmt();
-  ts.numChildADTs = 0;
 }
 
 aspect production consTypeName
 ts::TypeNames ::= t::TypeName rest::TypeNames
 {
-  local isChildADT::Boolean =
-    case t.typerep of
-      | pointerType(_,adtTagType(n, _, _)) -> true
-      | _ -> false
-    end;
-
   ts.constructorPatternList =
     consPattern(
       patternVariable(
@@ -282,57 +274,17 @@ ts::TypeNames ::= t::TypeName rest::TypeNames
   
   ts.constructorArgList =
     consExpr(
-      if isChildADT
-      then arraySubscriptExpr(
-             declRefExpr(
-               name("_contents", location=builtIn()),
-               location=builtIn()),
-             realConstant(
-               integerConstant(
-                 toString(ts.childADTPosition),
-                 false,
-                 noIntSuffix(),
-                 location=builtIn()),
-               location=builtIn()),
-             location=builtIn())
-     else declRefExpr(
-            name("f" ++ toString(ts.position), location=builtIn()),
-            location=builtIn()),
+      t.typerep.constructProd(
+        name("_contents", location=builtIn()),
+        name("f" ++ toString(ts.position), location=builtIn()),
+        name("_index", location=builtIn())),
       rest.constructorArgList);
   
   ts.destructCopyTrans =
-    if isChildADT
-    then seqStmt(
-           exprStmt(
-             binaryOpExpr(
-               arraySubscriptExpr(
-                 declRefExpr(
-                   name("_contents", location=builtIn()),
-                   location=builtIn()),
-                 realConstant(
-                   integerConstant(
-                     toString(ts.childADTPosition),
-                     false,
-                     noIntSuffix(),
-                     location=builtIn()),
-                   location=builtIn()),
-                 location=builtIn()),
-             assignOp(eqOp(location=builtIn()), location=builtIn()),
-             declRefExpr(
-               name("f" ++ toString(ts.position), location=builtIn()),
-               location=builtIn()),
-             location=builtIn())),
-           rest.destructCopyTrans)
-    else rest.destructCopyTrans;
-  
-  ts.numChildADTs =
-    if isChildADT
-    then rest.numChildADTs + 1
-    else rest.numChildADTs;
-  
-  --rest.topTypeName = ts.topTypeName;
-  rest.childADTPosition =
-    if isChildADT
-    then ts.childADTPosition + 1
-    else ts.childADTPosition;
+    seqStmt(
+      t.typerep.destructProd(
+        name("f" ++ toString(ts.position),
+        location=builtIn()), name("_contents", location=builtIn()),
+        name("_index", location=builtIn())),
+      rest.destructCopyTrans);
 }
