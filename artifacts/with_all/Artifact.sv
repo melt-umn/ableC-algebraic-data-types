@@ -18,9 +18,12 @@ parser extendedParser :: cst:Root {
   
   prefer edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:concretesyntax:datatypeKeyword:Datatype_t
     over edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype:datatypeKeyword:Datatype_t;
-    
+  
   edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching;
   edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:vectorrewrite;
+  --edu:umn:cs:melt:exts:ableC:algDataTypes:vectorpatterns;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:eq;
 }
 
 function main
