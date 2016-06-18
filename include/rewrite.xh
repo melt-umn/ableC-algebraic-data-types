@@ -11,6 +11,7 @@
 
 //#define PRINT_STRATEGY_CALLS // Uncomment to print all strategy calls
 
+// TODO: This may need to be re-thought since we now have vectors as children
 #define MAX_FIELDS 100
 
 typedef closure((void*) -> void*) strategy;
@@ -120,11 +121,11 @@ static strategy onceTopDown(strategy);
 static strategy innermost(strategy);
 static strategy outermost(strategy);
 
-rewrite rule try(strategy s) extends (identity()) {
+newstrategy try(strategy s) extends (identity()) {
   s;
 }
 
-rewrite rule repeat(strategy s) {
+newstrategy repeat(strategy s) {
   rec(self) {
     try {
       sequence {s; self;}
@@ -132,7 +133,7 @@ rewrite rule repeat(strategy s) {
   }
 }
 
-rewrite rule bottomUp(strategy s) {
+newstrategy bottomUp(strategy s) {
   rec(self) {
     sequence {
       all {self;}
@@ -141,7 +142,7 @@ rewrite rule bottomUp(strategy s) {
   }
 }
 
-rewrite rule topDown(strategy s) {
+newstrategy topDown(strategy s) {
   rec(self) {
     sequence {
       s;
@@ -150,7 +151,7 @@ rewrite rule topDown(strategy s) {
   }
 }
 
-rewrite rule onceBottomUp(strategy s) {
+newstrategy onceBottomUp(strategy s) {
   rec(self) {
     choice {
       one {self;}
@@ -159,7 +160,7 @@ rewrite rule onceBottomUp(strategy s) {
   }
 }
 
-rewrite rule onceTopDown(strategy s) {
+newstrategy onceTopDown(strategy s) {
   rec(self) {
     choice {
       s;
@@ -168,13 +169,13 @@ rewrite rule onceTopDown(strategy s) {
   }
 }
 
-rewrite rule innermost(strategy s) {
+newstrategy innermost(strategy s) {
   rec(self) {
     sequence(all(self), try(sequence(s, self)));
   }
 }
 
-rewrite rule outermost(strategy s) {
+newstrategy outermost(strategy s) {
   rec(self) {
     sequence(try(sequence(s, self)), all(self));
   }

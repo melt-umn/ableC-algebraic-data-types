@@ -18,7 +18,6 @@ exports edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite:concretesyntax;
 -- trigger the test
 import edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite:mda_test;
 
-terminal Rule_t    'rule';
 terminal Extends_t 'extends';
 
 lexer class StrategyKeyword;
@@ -31,7 +30,7 @@ terminal ElseVisit_t 'else'  lexer classes {StrategyKeyword}, precedence = 2, as
 terminal StrategyName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ submits to {StrategyKeyword};
 
 concrete production strategy_c
-e::Declaration_c ::= 'rewrite' 'rule' s::Strategy
+e::Declaration_c ::= 'newstrategy' s::Strategy
 {
   e.ast = s.ast;
 }
@@ -70,6 +69,7 @@ s::Strategy ::= n::Identifier_t '(' ')' extends::Extends '{' visits::VisitList '
       visits.ast);
 }
 
+-- TODO: remove this
 nonterminal Extends with ast<Expr>;
 
 concrete productions top::Extends

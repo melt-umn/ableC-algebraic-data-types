@@ -80,7 +80,7 @@ const char *get_free_var() {
 }
 
 // Performs a capture-avoiding substitution of target for sub when applied to a Term
-rewrite rule substitute(const char *target, Term *sub) {
+newstrategy substitute(const char *target, Term *sub) {
   rec (self) {
     try {
       choice {
@@ -113,7 +113,7 @@ rewrite rule substitute(const char *target, Term *sub) {
   }
 }
 
-rewrite rule normalize() {
+newstrategy normalize() {
   // TODO: I think this is the same as outermost?
   repeat {
     onceTopDown {
@@ -129,7 +129,7 @@ rewrite rule normalize() {
 }
 
 char buf[1000];
-rewrite rule normalize_hnf() {
+newstrategy normalize_hnf() {
   print("term: %s\n", showTerm(term, (const char*)buf));
   rec (self) {
     try {

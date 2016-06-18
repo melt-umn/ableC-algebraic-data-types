@@ -14,7 +14,7 @@ datatype Expr {
 };
 
 Expr *evalExpr(Expr *expr) {
-  rewrite rule eval() {
+  newstrategy eval {
     innermost {
       choice {
         // Simplify
@@ -38,7 +38,7 @@ Expr *evalExpr(Expr *expr) {
     }
   }
 
-  return expr @ eval();
+  return expr @ eval;
 }
 
 void printExpr(Expr *expr) {

@@ -30,7 +30,7 @@ bool exprEq(Expr *e1, Expr *e2) {
 }
 
 Expr *evalExpr(Expr *expr) {
-  rewrite rule eval() {
+  newstrategy eval {
     innermost {
       choice {
         // Simplify and
@@ -70,7 +70,7 @@ Expr *evalExpr(Expr *expr) {
     }
   }
 
-  return expr @ eval();
+  return expr @ eval;
 }
 
 void printExpr(Expr *expr) {
