@@ -89,9 +89,9 @@ p::Pattern ::= id::String ps::PatternList
       end;
 
   ps.expectedTypes 
-    = case constructorM of
-      | just(pair(_,ts)) -> ts
-      | _ -> []
+    = case adtTypeInfo.fst, constructorM of
+      | true, just(pair(_,ts)) -> ts
+      | _, _ -> []
       end ;
 
   -- ps.transformIn = nullStmt();
