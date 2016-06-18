@@ -3,7 +3,7 @@
 abstract production patternBoth
 p::Pattern ::= p1::Pattern p2::Pattern
 {
-  p.pp = cat(p1.pp, cat(text("@"), p2.pp));
+  p.pp = concat([p1.pp, space(), text("@"), space(), p2.pp ]);
   p.errors := p1.errors ++ p2.errors;
 
   p.defs = p1.defs ++ p2.defs;
@@ -49,7 +49,7 @@ p::Pattern ::= p1::Pattern
 abstract production patternWhen
 p::Pattern ::= e::Expr
 {
-  p.pp = text("when");
+  p.pp = cat( text("when"), parens(e.pp));
   p.decls = [];
   p.defs = [];
   p.errors := e.errors;
