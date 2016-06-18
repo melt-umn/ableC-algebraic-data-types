@@ -8,6 +8,7 @@
   * Bad things happen when trying to capture a local function that references something else local.  Not sure if this is easily fixable, at least add a warning for this
   * Currently you need to write an explicit function prototype when making a recursive call from within a lambda body.  Annoying, but not easily fixable on the closure side of things.  Could be fixed for strategy definitions by automatically adding a function prototype immediately before the definition.  
   * Capturing a non-constant can cause unexpected behavior, add a warning for this?  
+* Finish deriving extension
 
 ## Redesign/cleanup
 * Clean up names in adtDecl and add comments (what is name_tagRefId_workaround?) 
