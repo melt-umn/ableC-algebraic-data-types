@@ -18,4 +18,5 @@
 * Use error productions in numerous places
 
 ## Other features
+* Get matching over vectors working
 * Eric, maybe fill in what we had written on your board?  
