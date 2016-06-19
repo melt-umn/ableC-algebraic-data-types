@@ -79,14 +79,14 @@ Decl ::= n::String
             consParameters(
               parameterDecl(
                 [],
-                adtTagReferenceTypeExpr([], name(n, location=builtIn())),
+                typedefTypeExpr([], name(n, location=builtIn())),--adtTagReferenceTypeExpr([], name(n, location=builtIn())),
                 pointerTypeExpr([], baseTypeExpr()),
                 justName(name("term1", location=builtIn())),
                 []),
               consParameters(
                 parameterDecl(
                   [],
-                  adtTagReferenceTypeExpr([], name(n, location=builtIn())),
+                  typedefTypeExpr([], name(n, location=builtIn())),--adtTagReferenceTypeExpr([], name(n, location=builtIn())),
                   pointerTypeExpr([], baseTypeExpr()),
                   justName(name("term2", location=builtIn())),
                   []),
