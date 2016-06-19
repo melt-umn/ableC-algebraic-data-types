@@ -18,4 +18,6 @@
 * Use error productions in numerous places
 
 ## Other features
+* Get matching over vectors working
+* Overload operators for strategy combinators
 * Eric, maybe fill in what we had written on your board?  
