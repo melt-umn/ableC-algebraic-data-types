@@ -24,7 +24,7 @@ int main() {
 
   if (res0 != "Abs(\"f\", Abs(\"x\", Var(\"x\")))")
     return 1;
-  //  else if (one_a == two_b)
-  //    return 2;
+  else if (one == two)
+    return 2;
   return 0;
 }

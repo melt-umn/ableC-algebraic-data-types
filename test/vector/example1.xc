@@ -16,17 +16,20 @@ datatype Catter {
 string get_cat(Catter *c) {
   newstrategy cat {
     innermost {
-      visit (Catter*) {
-        // TODO: Use vector pattern
-        Group(elems) -> ({
-            printf("length: %d\n", elems->length);
-            string res = "";
-            int i;
-            for (i = 0; i < elems->length; i++) {
+      sequence {
+        print("%s\n", show((Catter*)term));
+        visit (Catter*) {
+          // TODO: Use vector pattern
+          Group(elems) -> ({
+              printf("length: %d\n", elems->length);
+              string res = "";
+              int i;
+              for (i = 0; i < elems->length; i++) {
+                res += match (elems[i]) (Elem(s) -> s;);
+              }
               printf("res: %s\n", res);
-              res += match (elems[i]) (Elem(s) -> s;);
-            }
-            Elem(res);});
+              Elem(res);});
+        }
       }
     }
   }

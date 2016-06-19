@@ -274,16 +274,22 @@ ts::TypeNames ::= t::TypeName rest::TypeNames
   
   ts.constructorArgList =
     consExpr(
-      t.typerep.constructProd(
-        name("_contents", location=builtIn()),
-        name("f" ++ toString(ts.position), location=builtIn()),
+      t.typerep.packProd(
+        declRefExpr(
+          name("_contents", location=builtIn()),
+          location=builtIn()),
+        declRefExpr(
+          name("f" ++ toString(ts.position), location=builtIn()),
+          location=builtIn()),
         name("_index", location=builtIn())),
       rest.constructorArgList);
   
   ts.destructCopyTrans =
     seqStmt(
-      t.typerep.destructProd(
-        name("f" ++ toString(ts.position),
+      t.typerep.unpackProd(
+        declRefExpr(
+          name("f" ++ toString(ts.position),
+          location=builtIn()),
         location=builtIn()), name("_contents", location=builtIn()),
         name("_index", location=builtIn())),
       rest.destructCopyTrans);

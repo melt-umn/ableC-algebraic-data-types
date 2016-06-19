@@ -1,43 +1,43 @@
 grammar edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite:abstractsyntax;
 
--- src name, ref name, index name
-synthesized attribute constructProd::(Expr ::= Name Name Name) occurs on Type;
-synthesized attribute pointerConstructProd::(Expr ::= Name Name Name) occurs on Type;
+-- src expr, ref expr, index name
+synthesized attribute packProd::(Expr ::= Expr Expr Name) occurs on Type;
+synthesized attribute pointerPackProd::(Expr ::= Expr Expr Name) occurs on Type;
 
--- src name, dest name, index name
-synthesized attribute destructProd::(Stmt ::= Name Name Name) occurs on Type;
-synthesized attribute pointerDestructProd::(Stmt ::= Name Name Name) occurs on Type;
+-- src expr, dest name, index name
+synthesized attribute unpackProd::(Stmt ::= Expr Name Name) occurs on Type;
+synthesized attribute pointerUnpackProd::(Stmt ::= Expr Name Name) occurs on Type;
 
 aspect default production
 top::Type ::=
 {
-  top.constructProd = \src::Name ref::Name index::Name -> declRefExpr(ref, location=builtIn());
-  top.pointerConstructProd = \src::Name ref::Name index::Name -> declRefExpr(ref, location=builtIn());
-  top.destructProd = \src::Name dst::Name index::Name -> nullStmt();
-  top.pointerDestructProd = \src::Name dst::Name index::Name -> nullStmt();
+  top.packProd = \src::Expr ref::Expr index::Name -> ref;
+  top.pointerPackProd = \src::Expr ref::Expr index::Name -> ref;
+  top.unpackProd = \src::Expr dst::Name index::Name -> nullStmt();
+  top.pointerUnpackProd = \src::Expr dst::Name index::Name -> nullStmt();
 }
 
 aspect production pointerType
 top::Type ::= q::[Qualifier]  target::Type
 {
-  top.constructProd = target.pointerConstructProd;
-  top.destructProd = target.pointerDestructProd;
+  top.packProd = target.pointerPackProd;
+  top.unpackProd = target.pointerUnpackProd;
 }
 
 aspect production adtTagType
 top::Type ::= name::String adtRefId::String structRefId::String
 {
-  top.pointerConstructProd =
-    \src::Name ref::Name index::Name ->
+  top.pointerPackProd =
+    \src::Expr ref::Expr index::Name ->
       arraySubscriptExpr(
-        declRefExpr(src, location=builtIn()),
+        src,
         unaryOpExpr(
           postIncOp(location=builtIn()),
           declRefExpr(index, location=builtIn()),
           location=builtIn()),
         location=builtIn());
-  top.pointerDestructProd =
-    \src::Name dst::Name index::Name ->
+  top.pointerUnpackProd =
+    \src::Expr dst::Name index::Name ->
       exprStmt(
         binaryOpExpr(
           arraySubscriptExpr(
@@ -48,6 +48,6 @@ top::Type ::= name::String adtRefId::String structRefId::String
               location=builtIn()),
             location=builtIn()),
           assignOp(eqOp(location=builtIn()), location=builtIn()),
-          declRefExpr(src, location=builtIn()),
+          src,
           location=builtIn()));
 }
