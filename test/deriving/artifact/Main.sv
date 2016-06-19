@@ -9,7 +9,7 @@ parser extendedParser :: cst:Root {
   --edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype prefix "GC";
   edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching;
   edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:eq;
-  --edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:show;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:show;
   --edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:read;
   --edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:free;
   --edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:copy;
