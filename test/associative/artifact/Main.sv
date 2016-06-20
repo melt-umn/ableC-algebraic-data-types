@@ -11,8 +11,8 @@ parser extendedParser :: cst:Root {
   edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching;
   edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:show;
   edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite;
-  --edu:umn:cs:melt:exts:ableC:algDataTypes:vectorpatterns;
-  edu:umn:cs:melt:exts:ableC:algDataTypes:vectorrewrite;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:associativepatterns;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:associativerewrite;
 } 
 
 function main

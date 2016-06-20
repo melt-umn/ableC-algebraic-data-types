@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:vectorrewrite;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:associativerewrite;
 
 imports silver:langutil; 
 imports silver:langutil:pp with implode as ppImplode;

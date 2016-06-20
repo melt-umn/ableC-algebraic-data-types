@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:vectorrewrite;
+grammar edu:umn:cs:melt:exts:ableC:algDataTypes:associativerewrite;
 
 aspect production vectorType
 top::Type ::= qs::[Qualifier] sub::Type
