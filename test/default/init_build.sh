@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source $ABLEC_PATH/extensions/closure/init_build.sh
+source $ABLEC_PATH/extensions/string/init_build.sh # Need to include this since the string extension is imported by option deriving
 
 export ADT_PATH=../../../../extensions/edu.umn.cs.melt.exts.ableC.algDataTypes
 
