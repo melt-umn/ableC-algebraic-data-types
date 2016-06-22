@@ -144,11 +144,13 @@ top::Visit ::= id::StrategyName_t ';'
   top.ast = abs:idVisit(fromStrategyName(id), location=top.location);
 }
 
+{-
 concrete production printVisit
 top::Visit ::= 'print' '(' args::ArgumentExprList_c ')' ';'
 {
   top.ast = abs:printVisit(foldExpr(args.ast), location=top.location);
 }
+-}
 
 concrete production ruleVisit
 top::Visit ::= 'visit' '(' type::TypeName_c ')' '{' cs::ExprClauses '}'

@@ -258,7 +258,7 @@ top::Visit ::= n::Name
     case n.name of
       "fail" -> strategyVisit(failStrategy, location=builtIn())
     | "identity" -> strategyVisit(identityStrategy, location=builtIn())
-    | _ -> strategyVisit(declRefExpr(n, location=builtIn()), location=top.location)
+    | _ -> strategyVisit(declRefExpr(n, location=top.location), location=top.location)
     end;
 }
 
@@ -269,10 +269,11 @@ top::Visit ::= n::Name args::VisitList
     case n.name of
       "choice" -> choiceVisit(args, location=top.location)
     | "sequence" -> sequenceVisit(args, location=top.location)
-    | _ -> strategyVisit(directCallExpr(n, args.exprsTransform, location=builtIn()), location=top.location)
+    | _ -> strategyVisit(directCallExpr(n, args.exprsTransform, location=top.location), location=top.location)
     end;
 }
 
+{-
 abstract production printVisit
 top::Visit ::= args::Exprs
 {
@@ -295,6 +296,7 @@ top::Visit ::= args::Exprs
         location=builtIn()),
       location=top.location);
 }
+-}
 
 abstract production condVisit
 top::Visit ::= c::Expr th::Visit el::Visit
