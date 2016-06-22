@@ -13,7 +13,8 @@ import edu:umn:cs:melt:ableC:drivers:parseAndPrint;
 parser extendedParser2 :: cst:Root {
   edu:umn:cs:melt:ableC:concretesyntax;
   edu:umn:cs:melt:exts:ableC:algDataTypes;
-  edu:umn:cs:melt:exts:ableC:algDataTypes:associative;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:associativepatterns;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:associativerewrite;
 } 
 
 function main

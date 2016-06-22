@@ -5,6 +5,8 @@
 
 silver -I ../../../../ableC \
        -I ../../.. \
+       -I ../../../../ableC/extensions/string \
+       -I ../../../../ableC/extensions/vector \
        -I ../../../../ableC/extensions/closure \
        -I ../../../../ableC/extensions/gc \
        -o ableC.jar $@ \
