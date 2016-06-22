@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
+//#include <pthread.h>
 
 #ifndef __REWRITE_H
 #define __REWRITE_H
@@ -42,7 +43,19 @@ static strategy choice(strategy s1, strategy s2) {
         void *res = s1(x);
         res == NULL? s2(x) : res;}));
 }
-
+/*
+static strategy nchoice(strategy s1, strategy s2) {
+  return lambda (void *x) . (({
+#ifdef PRINT_STRATEGY_CALLS
+        printf("nchoice\n");
+#endif
+        void *fn(strategy s) {
+          return NULL;
+        }
+        void *res = s1(x);
+        res == NULL? s2(x) : res;}));
+}
+*/
 static strategy all(strategy s) {
   return lambda (void *x) . (({
 #ifdef PRINT_STRATEGY_CALLS
@@ -73,7 +86,7 @@ static strategy one(strategy s) {
             return (((struct _GenericDatatype *) x)->constructFun)(contents, x);
           }
         }
-        x;}));
+        NULL;}));
 }
 
 static strategy fail() {

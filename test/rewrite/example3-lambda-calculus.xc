@@ -21,31 +21,47 @@ datatype Term {
 string ppTerm(Term *term) {
   match (term) {
     Abs(n, e) -> {
-      string res = "\\";
-      res += n;
+      string res = "\\" + n;
       bool matched = true;
       while (matched) {
-        match(e) {
+        match (e) {
           Abs(n, e1) -> {res += n; e = e1;}
           _ -> {matched = false;}
         }
       }
-      res += ". ";
-      return res + ppTerm(e);
+      return res + ". " + ppTerm(e);
     }
     App(e1, e2) -> {
-      return match(e1)
+      return match (e1)
         (Abs(_, _) -> "(" + ppTerm(e1) + ")";
          Let(_, _, _) -> "(" + ppTerm(e1) + ")";
-         _ -> ppTerm(e1);) + match(e2)
+         _ -> ppTerm(e1);) + match (e2)
         (Abs(_, _) -> "(" + ppTerm(e2) + ")";
          App(_, _) -> "(" + ppTerm(e2) + ")";
          Let(_, _, _) -> "(" + ppTerm(e1) + ")";
          _ -> ppTerm(e2););
     }
     Var(n) -> {return n;}
-    Let(n, e1, e2) ->
-      {return "let " + n + "=" + ppTerm(e1) + " in " + ppTerm(e2);}
+    Let(n, e1, e2) -> {
+      string res = "let " + n + "=" + match (e1)
+        (Let(_, _, _) -> "(" + ppTerm(e1) + ")";
+         _ -> ppTerm(e1););
+      bool matched = true;
+      while (matched) {
+        match(e2) {
+          Let(n, e1, e3) -> {
+            res += "; " + n + "=" + match (e1)
+              (Let(_, _, _) -> "(" + ppTerm(e1) + ")";
+               _ -> ppTerm(e1););
+            e2 = e3;
+          }
+          _ -> {matched = false;}
+        }
+      }
+      return res + " in " + match (e2)
+        (App(_, _) -> "(" + ppTerm(e2) + ")";
+         _ -> ppTerm(e2););
+    }
   }
 }
 
@@ -63,7 +79,7 @@ bool occurs_free(const char *var, Term *term) {
 // We assume names in the original terms are all letters
 const char *get_fresh_var() {
   static int var_num = 0;
-  return str(var_num++);
+  return "_" + str(var_num++);
 }
 /*
 // Performs a capture-avoiding substitution of target for sub when applied to a Term
@@ -122,22 +138,23 @@ newstrategy reduce() {
     Let(x, e, App(e1, e2)) -> App(Let(x, e, e1), Let(x, e, e2));
 
     // subsLam
-    Let(x, e1, Abs(y, e2))@when(x == y) -> Abs(y, e1);
-    Let(x, e1, Abs(y, e2)) -> 
+    Let(x, e1, Abs(y, e2))@when(x == y) -> Abs(y, e2);
+    /*Let(x, e1, Abs(y, e2)) -> 
       ({string z = get_fresh_var();
-        Abs(z, Let(x, e1, Let(y, Var(z), e2)));});
+      Abs(z, Let(x, e1, Let(y, Var(z), e2)));});*/
   }
 }
 
 newstrategy normalize() {
   // TODO: I think this is the same as outermost?
   repeat {
-    onceTopDown {
-      sequence {
-        print("term: %s\n", ppTerm(term));
+    sequence {
+      onceTopDown {
+        //print("term: %s\n", ppTerm(term));
         reduce();
-        print("reduced: %s\n", ppTerm(term));
+        //print("reduced: %s\n", ppTerm(term));
       }
+      print("reduced: %s\n", ppTerm(term));
     }
   }
 }
