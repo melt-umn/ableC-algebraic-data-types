@@ -5,10 +5,12 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 imports edu:umn:cs:melt:ableC:abstractsyntax:overload;
 
-imports edu:umn:cs:melt:exts:ableC:string;
 imports edu:umn:cs:melt:exts:ableC:algDataTypes:deriving;
 imports edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 imports edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching:abstractsyntax;
+
+-- Need the concrete syntax for the string extension (string type expression)
+exports edu:umn:cs:melt:exts:ableC:string;
 
 aspect production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
