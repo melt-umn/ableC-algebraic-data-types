@@ -7,6 +7,7 @@ parser extendedParser :: cst:Root {
   edu:umn:cs:melt:exts:ableC:gc;
   edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype;
   edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:deriving:show;
   edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite;
 } 
 

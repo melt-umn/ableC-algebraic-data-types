@@ -1,66 +1,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <string.h>
 #include <gc.h>
 //#include <sys/resource.h>
 
 #include <rewrite.xh>
+#include <string.xh>
 
 typedef datatype Term Term;
 
 datatype Term {
-  Abs(const char*, Term*);
+  Abs(string, Term*);
   App(Term*, Term*);
-  Var(const char*);
+  Var(string);
+
+  // Used in evaluation
+  Let(string, Term*, Term*);
 };
 
-const char *showTerm(Term *term, const char *buffer) {
+string ppTerm(Term *term) {
   match (term) {
     Abs(n, e) -> {
-      strcat((char*)buffer, "\\");
-      strcat((char*)buffer, n);
+      string res = "\\";
+      res += n;
       bool matched = true;
       while (matched) {
         match(e) {
-          Abs(n, e1) -> {strcat((char*)buffer, n); e = e1;}
+          Abs(n, e1) -> {res += n; e = e1;}
           _ -> {matched = false;}
         }
       }
-      return showTerm(e, buffer);
+      res += ". ";
+      return res + ppTerm(e);
     }
     App(e1, e2) -> {
-      match(e1) {
-        Abs(_, _) -> {
-          strcat((char*)buffer, "(");
-          showTerm(e1, buffer);
-          strcat((char*)buffer, ")");
-        }
-        _ -> {showTerm(e1, buffer);}
-      }
-      strcat((char*)buffer, " ");
-      match(e2) {
-        Abs(_, _) -> {
-          strcat((char*)buffer, "(");
-          showTerm(e2, buffer);
-          strcat((char*)buffer, ")");
-        }
-        App(_, _) -> {
-          strcat((char*)buffer, "(");
-          showTerm(e2, buffer);
-          strcat((char*)buffer, ")");
-        }
-        _ -> {showTerm(e2, buffer);}
-      }
-      return buffer;
+      return match(e1)
+        (Abs(_, _) -> "(" + ppTerm(e1) + ")";
+         Let(_, _, _) -> "(" + ppTerm(e1) + ")";
+         _ -> ppTerm(e1);) + match(e2)
+        (Abs(_, _) -> "(" + ppTerm(e2) + ")";
+         App(_, _) -> "(" + ppTerm(e2) + ")";
+         Let(_, _, _) -> "(" + ppTerm(e1) + ")";
+         _ -> ppTerm(e2););
     }
-    Var(n) -> {
-      strcat((char*)buffer, n);
-      return buffer;
-    }
+    Var(n) -> {return n;}
+    Let(n, e1, e2) ->
+      {return "let " + n + "=" + ppTerm(e1) + " in " + ppTerm(e2);}
   }
 }
 
+/*
 bool occurs_free(const char *var, Term *term) {
   match (term) {
     Abs(x, a) -> {return false;}
@@ -68,17 +57,15 @@ bool occurs_free(const char *var, Term *term) {
     Var(x) -> {return !strcmp(var, x);}
   }
 }
+*/
 
 // Manage creation of fresh variable names when needed
 // We assume names in the original terms are all letters
-int var_num = 0;
-const char *get_free_var() {
-  const char *res = GC_malloc(10);
-  sprintf((char *)res, "%d", var_num);
-  var_num++;
-  return res;
+const char *get_fresh_var() {
+  static int var_num = 0;
+  return str(var_num++);
 }
-
+/*
 // Performs a capture-avoiding substitution of target for sub when applied to a Term
 newstrategy substitute(const char *target, Term *sub) {
   rec (self) {
@@ -86,23 +73,21 @@ newstrategy substitute(const char *target, Term *sub) {
       choice {
         // Base cases
         visit (Term*) {
-          // Do the subtitution if possible
-          Var(n) -> !strcmp(n, target)? sub : Var(n);
+          // Do the substitution if possible
+          Var(n)@when(n == target) -> sub;
+          Var(n) -> Var(n);
+
           // If term is the same as the target, do nothing and be done
           // Otherwise fail and continue
-          // TODO: make this a where pattern
-          Abs(n, a) -> !strcmp(n, target)? Abs(n, a) : NULL;
+          Abs(n, a)@when(n == target) -> Abs(n, a);
         }
         sequence {
           // First check if alpha-conversion is needed
           try {
             visit (Term*) {
-              // TODO: make this a where pattern
-              Abs(n, a) ->
-                occurs_free(n, sub)?
-                ({const char *new_var = get_free_var();
-                  Abs(new_var, a @ substitute(n, Var(new_var)));}) :
-                NULL;
+              Abs(n, a)@when(occurs_free(n, sub)) ->
+                ({string new_var = get_fresh_var();
+                  Abs(new_var, a @ substitute(n, Var(new_var)));});
             }
           }
           // Then recursively perform the substitution
@@ -113,30 +98,64 @@ newstrategy substitute(const char *target, Term *sub) {
   }
 }
 
+newstrategy reduce() {
+  visit (Term*) {
+    // Beta-reduction
+    App(Abs(param, body), arg) -> body @ substitute(param, arg);
+
+    // Eta-reduction
+    Abs(x, App(f, Var(y)))@when(x == y && !occurs_free(x, f)) -> f;
+  }
+}
+*/
+
+newstrategy reduce() {
+  visit (Term*) {
+    // beta
+    App(Abs(x, e1), e2) -> Let(x, e2, e1);
+
+    // subsVar
+    Let(x, e, Var(y))@when(x == y) -> e;
+    Let(_, _, v@Var(_))            -> v;
+
+    // subsApp
+    Let(x, e, App(e1, e2)) -> App(Let(x, e, e1), Let(x, e, e2));
+
+    // subsLam
+    Let(x, e1, Abs(y, e2))@when(x == y) -> Abs(y, e1);
+    Let(x, e1, Abs(y, e2)) -> 
+      ({string z = get_fresh_var();
+        Abs(z, Let(x, e1, Let(y, Var(z), e2)));});
+  }
+}
+
 newstrategy normalize() {
   // TODO: I think this is the same as outermost?
   repeat {
     onceTopDown {
-      visit (Term*) {
-        // Beta-reduction
-        App(Abs(param, body), arg) -> body @ substitute(param, arg);
-        // Eta-reduction
-        // TODO: make this a where pattern
-        Abs(x, App(f, Var(y))) -> !strcmp(x, y) && !occurs_free(x, f)? f : NULL;
+      sequence {
+        print("term: %s\n", ppTerm(term));
+        reduce();
+        print("reduced: %s\n", ppTerm(term));
       }
     }
   }
 }
 
-char buf[1000];
 newstrategy normalize_hnf() {
-  print("term: %s\n", showTerm(term, (const char*)buf));
   rec (self) {
-    try {
-      // TODO
-      visit (Term*) {
-        App(Abs(param, body), arg) -> ((body @ substitute(param, arg)) @ self);
-        Abs(param, body) -> Abs(param, body @ self);
+    sequence {
+      //print("term: %s\n", showTerm(term));
+      try {
+        visit (Term*) {
+          App(a, b) -> App(a @ self, b @ self);
+        }
+      }
+      try {
+        sequence {
+          reduce();
+          self;
+        }
       }
     }
   }
@@ -144,14 +163,25 @@ newstrategy normalize_hnf() {
 
 int decode_num(Term *term) {
   match (term) {
-    Abs(_, Abs(a, Var(b)))@when (!strcmp(a, b)) -> {return 0;}
-    Abs(a, Var(b))@when (!strcmp(a, b)) -> {return 1;}
-    Abs(a, Abs(b, App(Var(c), t)))@when (!strcmp(a, c)) ->
-      {return decode_num(normalize_hnf()(Abs(a, Abs(b, t)))) + 1;}
+    Abs(_, Abs(a, Var(b)))@when (a == b) -> {return 0;}
+    Abs(a, Var(b))@when (a == b) -> {return 1;}
+    Abs(a, Abs(b, App(Var(c), t)))@when (a == c) ->
+      {return decode_num(Abs(a, Abs(b, t))) + 1;}
     _ -> {
-      char buf[1000];
-      buf[0] = '\0';
-      printf("Error: %s does not correspond to a Church numeral\n", showTerm(term, (const char*)buf));
+      printf("Error: %s does not correspond to a Church numeral\n", ppTerm(term));
+      exit(1);
+    }
+  }
+}
+
+int decode_num_hnf(Term *term) {
+  match (term) {
+    Abs(_, Abs(a, Var(b)))@when (a == b) -> {return 0;}
+    Abs(a, Var(b))@when (a == b) -> {return 1;}
+    Abs(a, Abs(b, App(Var(c), t)))@when (a == c) ->
+      {return decode_num(Abs(a, Abs(b, t)) @ normalize_hnf()) + 1;}
+    _ -> {
+      printf("Error: %s does not correspond to a Church numeral\n", ppTerm(term));
       exit(1);
     }
   }
@@ -164,6 +194,8 @@ int main() {
 
   Term *succ_e =
     Abs("n", Abs("f", Abs("x", App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))));
+
+  Term *id_e = Abs("x", Var("x"));
 
   Term *zero_e = Abs("f", Abs("x", Var("x")));
   Term *one_e = App(succ_e, zero_e);
@@ -211,17 +243,18 @@ int main() {
                     App(App(mult_e, Var("x")),
                         App(Var("g"), App(pre_e, Var("x"))))))));
 
-  Term *terms[] = {App(App(mult_e, two_e), two_e)};//, App(fact_e, one_e)};
-  char buf[1000];
-  buf[0] = '\0';
+  //Term *t = three_e;
+  //printf("%s: %s\n", ppTerm(t), ppTerm(t @ normalize()));
+
+  Term *terms[] = {one_e};//, App(fact_e, one_e)};
   for (int i = 0; i < sizeof(terms) / sizeof(Term*); i++) {
-    printf("%s: ", showTerm(terms[i], (const char*)buf));
-    Term *res = normalize_hnf()(terms[i]);
+    printf("%s: ", ppTerm(terms[i]));
+    Term *res = normalize()(terms[i]);
     if (res != NULL) {
-      printf("\n%s\n", showTerm(res, (const char*)buf));
-      //printf("%d\n", decode_num(res));
+      printf("\n%s\n", ppTerm(res));
+      printf("%d\n", decode_num(res));
     }
-    else 
+    else
       printf("Fail\n");
   }
 }

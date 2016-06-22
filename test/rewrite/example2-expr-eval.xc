@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <rewrite.xh>
+#include <string.xh>
 
 typedef datatype Expr Expr;
 
