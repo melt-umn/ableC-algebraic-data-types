@@ -6,6 +6,7 @@
 silver -I ../../../../ableC \
        -I ../../.. \
        -I ../../../../ableC/extensions/closure \
+       -I ../../../../ableC/extensions/vector \
        -I ../../../../ableC/extensions/gc \
        -o ableC.jar $@ \
        edu:umn:cs:melt:exts:ableC:algDataTypes:artifacts:associative

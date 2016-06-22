@@ -10,14 +10,15 @@ grammar edu:umn:cs:melt:exts:ableC:algDataTypes:artifacts:associative;
 import edu:umn:cs:melt:ableC:concretesyntax as cst;
 import edu:umn:cs:melt:ableC:drivers:parseAndPrint;
 
-parser extendedParser2 :: cst:Root {
+parser extendedParser :: cst:Root {
   edu:umn:cs:melt:ableC:concretesyntax;
-  edu:umn:cs:melt:exts:ableC:algDataTypes;
-  edu:umn:cs:melt:exts:ableC:algDataTypes:associative;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:gcdatatype;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching;
+  edu:umn:cs:melt:exts:ableC:algDataTypes:associativepatterns;
 } 
 
 function main
 IOVal<Integer> ::= args::[String] io_in::IO
 {
-  return driver(args, io_in, extendedParser2);
+  return driver(args, io_in, extendedParser);
 }
