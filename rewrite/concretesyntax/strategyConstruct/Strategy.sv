@@ -153,9 +153,9 @@ top::Visit ::= 'print' '(' args::ArgumentExprList_c ')' ';'
 -}
 
 concrete production ruleVisit
-top::Visit ::= 'visit' '(' type::TypeName_c ')' '{' cs::ExprClauses '}'
+top::Visit ::= 'visit' '(' p::ParameterDeclaration_c ')' '{' cs::ExprClauses '}'
 {
-  top.ast = abs:ruleVisit(type.ast, cs.ast, location=top.location);
+  top.ast = abs:ruleVisit(p.ast, cs.ast, location=top.location);
 }
 
 concrete production condVisitElse

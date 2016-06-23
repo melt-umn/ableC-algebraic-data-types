@@ -222,15 +222,15 @@ top::Visit ::= e::Expr params::VisitList
 }
 
 abstract production ruleVisit
-top::Visit ::= type::TypeName cs::ExprClauses
+top::Visit ::= p::ParameterDecl cs::ExprClauses
 {
-  top.errors := type.errors ++ cs.errors;
+  top.errors := p.errors ++ cs.errors;
   
-  cs.expectedType = type.typerep;
+  cs.expectedType = p.typerep;
   
   top.transform =
-    strategyExpr(
-      type,
+    visitStrategyExpr(
+      p,
       failStrategy,
       cs,
       location=loc("Built In", 0, 0, 0, 0, top.location.index, 0));--TODO
@@ -321,8 +321,8 @@ top::Visit ::= n::Name body::Visit
       location=builtIn());
 }
 
-abstract production strategyExpr
-e::Expr ::= type::TypeName base::Expr cs::ExprClauses
+abstract production visitStrategyExpr
+e::Expr ::= p::ParameterDecl base::Expr cs::ExprClauses
 {
   local localErrors::[Message] = 
     (if !null(lookupValue("strategy", e.env)) then [] else
@@ -335,7 +335,15 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
                 showType(base.typerep) ++ ")")]
     end;
   
-  cs.expectedType = type.typerep;
+  cs.expectedType = p.typerep;
+  
+  local pName::Name = 
+    case p.paramname of
+      just(n) -> n
+    | nothing() -> name("term", location=builtIn())
+    end;
+  
+  local pTypeName::TypeName = typeName(directTypeExpr(p.typerep), baseTypeExpr());
   
   local fwrd::Expr =
     lambdaExpr(
@@ -345,7 +353,7 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
           [],
           directTypeExpr(builtinType([], voidType())),
           pointerTypeExpr([], baseTypeExpr()),
-          justName(name("_expr", location=builtIn())),
+          justName(pName),
           []),
         nilParameters()),
       conditionalExpr(
@@ -358,7 +366,7 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
                   structSEU(),
                   name("_GenericDatatype", location=builtIn())),
                 pointerTypeExpr([], baseTypeExpr())),
-              declRefExpr(name("_expr", location=builtIn()), location=builtIn()),
+              declRefExpr(pName, location=builtIn()),
               location=builtIn()),
             true,
             name("refId", location=builtIn()),
@@ -366,7 +374,7 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
           compareOp(equalsOp(location=builtIn()), location=builtIn()),
           realConstant(
             integerConstant(
-              case type.typerep of
+              case p.typerep of
                 tagType([], refIdTagType(_, _, id)) -> id
               | pointerType([], tagType([], refIdTagType(_, _, id))) -> id
               | _ -> error("struct ref id not found")
@@ -378,14 +386,14 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
           location=builtIn()),
         matchExpr(
           explicitCastExpr(
-            type,
-            declRefExpr(name("_expr", location=builtIn()), location=builtIn()),
+            pTypeName,
+            declRefExpr(pName, location=builtIn()),
             location=builtIn()),
           addDefaultCaseExpr(
             applyStrategy(
               explicitCastExpr(
-                type,
-                declRefExpr(name("_expr", location=builtIn()), location=builtIn()),
+                pTypeName,
+                declRefExpr(pName, location=builtIn()),
                 location=builtIn()),
               base,
               location=builtIn()),
@@ -393,8 +401,8 @@ e::Expr ::= type::TypeName base::Expr cs::ExprClauses
           location=builtIn()),
         applyStrategy(
           explicitCastExpr(
-            type,
-            declRefExpr(name("_expr", location=builtIn()), location=builtIn()),
+            pTypeName,
+            declRefExpr(pName, location=builtIn()),
             location=builtIn()),
           base,
           location=builtIn()),
