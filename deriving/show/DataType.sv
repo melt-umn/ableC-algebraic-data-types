@@ -57,7 +57,10 @@ top::ADTDecl ::= n::Name cs::ConstructorList
           cs.constructors)));
   local protoDecls::Decls = foldDecl(map(makeShowFnProto, childADTNames));
         
-  adtDecls <- appendDecls(protoDecls, consDecl(showFn, nilDecl()));
+  adtDecls <-
+    if null(lookupValue("show" ++ n.name, top.env))
+    then appendDecls(protoDecls, consDecl(showFn, nilDecl()))
+    else nilDecl();
 }
 
 function makeShowFnProto

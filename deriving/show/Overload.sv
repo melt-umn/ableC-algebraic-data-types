@@ -11,10 +11,7 @@ top::Type ::= name::String adtRefId::String structRefId::String
 abstract production showAdt
 top::Expr ::= n::String e::Expr
 {
-  local fnName::String =
-    if !null(lookupValue("show" ++ n ++ "_override", top.env))
-    then "show" ++ n ++ "_override"
-    else "show" ++ n;
+  local fnName::String = "show" ++ n;
   
   local localErrors::[Message] =
     if null(lookupValue(fnName, top.env))

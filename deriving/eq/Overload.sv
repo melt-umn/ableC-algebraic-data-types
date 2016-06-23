@@ -12,10 +12,7 @@ top::Type ::= name::String adtRefId::String structRefId::String
 abstract production adtEq
 top::Expr ::= n::String l::Expr r::Expr
 {
-  local fnName::String =
-    if !null(lookupValue("eq" ++ n ++ "_override", top.env))
-    then "eq" ++ n ++ "_override"
-    else "eq" ++ n;
+  local fnName::String = "eq" ++ n;
   
   local localErrors::[Message] =
     case l.typerep, r.typerep of

@@ -61,7 +61,10 @@ top::ADTDecl ::= n::Name cs::ConstructorList
           cs.constructors)));
   local protoDecls::Decls = foldDecl(map(makeEqFnProto, childADTNames));
         
-  adtDecls <- appendDecls(protoDecls, consDecl(eqFn, nilDecl()));
+  adtDecls <-
+    if null(lookupValue("eq" ++ n.name, top.env))
+    then appendDecls(protoDecls, consDecl(eqFn, nilDecl()))
+    else nilDecl();
 }
 
 function makeEqFnProto
