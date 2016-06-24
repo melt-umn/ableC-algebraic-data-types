@@ -60,20 +60,21 @@ string ppTerm(Term *term) {
       }
       return res + " in " + match (e2)
         (App(_, _) -> "(" + ppTerm(e2) + ")";
-         _ -> ppTerm(e2););
+         _ -> ppTerm(e2);) + " end";
     }
   }
 }
 
-/*
-bool occurs_free(const char *var, Term *term) {
+bool occurs_free(string var, Term *term) {
   match (term) {
-    Abs(x, a) -> {return false;}
+    Abs(x, a)@when(x == var)-> {return false;}
+    Abs(x, a)-> {return occurs_free(var, a);}
     App(a, b) -> {return occurs_free(var, a) || occurs_free(var, b);}
-    Var(x) -> {return !strcmp(var, x);}
+    Var(x) -> {return x == var;}
+    Let(x, a, b)@when(x == var) -> {return occurs_free(var, b);}
+    Let(x, a, b) -> {return occurs_free(var, a) || occurs_free(var, b);}
   }
 }
-*/
 
 // Manage creation of fresh variable names when needed
 // We assume names in the original terms are all letters
@@ -81,52 +82,9 @@ const char *get_fresh_var() {
   static int var_num = 0;
   return "_" + str(var_num++);
 }
-/*
-// Performs a capture-avoiding substitution of target for sub when applied to a Term
-newstrategy substitute(const char *target, Term *sub) {
-  rec (self) {
-    try {
-      choice {
-        // Base cases
-        visit (Term*) {
-          // Do the substitution if possible
-          Var(n)@when(n == target) -> sub;
-          Var(n) -> Var(n);
-
-          // If term is the same as the target, do nothing and be done
-          // Otherwise fail and continue
-          Abs(n, a)@when(n == target) -> Abs(n, a);
-        }
-        sequence {
-          // First check if alpha-conversion is needed
-          try {
-            visit (Term*) {
-              Abs(n, a)@when(occurs_free(n, sub)) ->
-                ({string new_var = get_fresh_var();
-                  Abs(new_var, a @ substitute(n, Var(new_var)));});
-            }
-          }
-          // Then recursively perform the substitution
-          all(self);
-        }
-      }
-    }
-  }
-}
 
 newstrategy reduce() {
-  visit (Term*) {
-    // Beta-reduction
-    App(Abs(param, body), arg) -> body @ substitute(param, arg);
-
-    // Eta-reduction
-    Abs(x, App(f, Var(y)))@when(x == y && !occurs_free(x, f)) -> f;
-  }
-}
-*/
-
-newstrategy reduce() {
-  visit (Term*) {
+  visit (Term *t) {
     // beta
     App(Abs(x, e1), e2) -> Let(x, e2, e1);
 
@@ -139,9 +97,11 @@ newstrategy reduce() {
 
     // subsLam
     Let(x, e1, Abs(y, e2))@when(x == y) -> Abs(y, e2);
-    /*Let(x, e1, Abs(y, e2)) -> 
+    /*Let(x, e1, Abs(y, e2))@when(!occurs_free(y, e1)) -> 
+      Abs(y, Let(x, e1, e2));*/
+    Let(x, e1, Abs(y, e2)) -> 
       ({string z = get_fresh_var();
-      Abs(z, Let(x, e1, Let(y, Var(z), e2)));});*/
+        Abs(z, Let(x, e1, Let(y, Var(z), e2)));});
   }
 }
 
@@ -150,11 +110,9 @@ newstrategy normalize() {
   repeat {
     sequence {
       onceTopDown {
-        //print("term: %s\n", ppTerm(term));
         reduce();
-        //print("reduced: %s\n", ppTerm(term));
       }
-      print("reduced: %s\n", ppTerm(term));
+      //print("%s\n", ppTerm(term));
     }
   }
 }
@@ -162,7 +120,6 @@ newstrategy normalize() {
 newstrategy normalize_hnf() {
   rec (self) {
     sequence {
-      //print("term: %s\n", showTerm(term));
       try {
         visit (Term*) {
           App(a, b) -> App(a @ self, b @ self);
@@ -260,16 +217,13 @@ int main() {
                     App(App(mult_e, Var("x")),
                         App(Var("g"), App(pre_e, Var("x"))))))));
 
-  //Term *t = three_e;
-  //printf("%s: %s\n", ppTerm(t), ppTerm(t @ normalize()));
-
-  Term *terms[] = {one_e};//, App(fact_e, one_e)};
+  Term *terms[] = {App(App(Abs("y", Abs("z", App(Var("y"), Var("z")))), id_e), id_e)};//, App(fact_e, one_e)};
   for (int i = 0; i < sizeof(terms) / sizeof(Term*); i++) {
     printf("%s: ", ppTerm(terms[i]));
     Term *res = normalize()(terms[i]);
     if (res != NULL) {
-      printf("\n%s\n", ppTerm(res));
-      printf("%d\n", decode_num(res));
+      printf("%s\n", ppTerm(res));
+      //printf("%d\n", decode_num(res));
     }
     else
       printf("Fail\n");
