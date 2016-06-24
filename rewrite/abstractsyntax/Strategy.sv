@@ -227,6 +227,7 @@ top::Visit ::= p::ParameterDecl cs::ExprClauses
   top.errors := p.errors ++ cs.errors;
   
   cs.expectedType = p.typerep;
+  cs.env = addEnv(p.defs, top.env);
   
   top.transform =
     visitStrategyExpr(
