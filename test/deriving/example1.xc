@@ -25,5 +25,7 @@ int main() {
     return 1;
   else if (one_a == two_b)
     return 2;
+  else if (*two_a != *two_b)
+    return 3;
   return 0;
 }

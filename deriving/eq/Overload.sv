@@ -7,6 +7,9 @@ top::Type ::= name::String adtRefId::String structRefId::String
 {
   top.lPointerBinaryEqProd = just(adtEq(name, _, _, location=_));
   top.rPointerBinaryEqProd = top.lBinaryEqProd;
+  top.lBinaryEqProd =
+    just(\l::Expr r::Expr loc::Location -> adtEq(name, mkAddressOf(l, loc), mkAddressOf(r, loc), location=loc));
+  top.rBinaryEqProd = top.lBinaryEqProd;
 }
 
 abstract production adtEq
