@@ -124,6 +124,10 @@ static strategy _rec(RecFun f) {
 #endif
 }
 
+/* Macro strategies */
+// Prints a message and does nothing
+#define print(format, ...) _rule(lambda (void *term) . (({printf(format, __VA_ARGS__); term;})), "print")
+
 /* Util strategy combinators */
 static strategy try(strategy);
 static strategy repeat(strategy);
@@ -227,10 +231,6 @@ static strategy vchoice(int count, ...) {
 
 #define seq(...) vsequence(_countArgs(#__VA_ARGS__), __VA_ARGS__)
 #define ch(...)  vchoice(_countArgs(#__VA_ARGS__), __VA_ARGS__)
-
-/* Misc strategies */
-// Prints a message and does nothing
-#define print(format, ...) _rule(lambda (void *term) . (({printf(format, __VA_ARGS__); term;})), "print")
 
 /* Helpers */
 // Parses the source code given by seq or ch and counts the total number of arguments
