@@ -19,28 +19,10 @@ int valueE (Expr *e) {
           Sub(e1,e2) -> valueE(e1) - valueE(e2) ;
           Mul(e1,e2) -> valueE(e1) * valueE(e2) ;
           Div(e1,e2) -> valueE(e1) / valueE(e2) ; 
-          Const(v) -> 1000 + v ; 
+          Const(v) -> v ; 
           ) ;
 }
 
-
-
-int value (Expr *e) {
-    int result = 99;
-    match (e) {
-        Add(Sub(e1,e2),Mul(e3,e4)) -> {
-           result = (value(e1) - value(e2)) + (value(e3) * value(e4)) ; }
-
-        Add(_,Add(e3,e4)) -> { result = 100 ; }
-
-        Add(e1,e2) -> { result = value(e1) + value(e2) ; }
-        Sub(e1,e2) -> { result = value(e1) - value(e2) ; }
-        Mul(e1,e2) -> { result = value(e1) * value(e2) ; }
-        Div(e1,e2) -> { result = value(e1) / value(e2) ; }
-        Const(v) -> { result = v ;  }
-    }
-    return result;
-}
 
 
 
@@ -75,7 +57,7 @@ int main () {
 
   printf("value is %d\n", result );
   
-  free_Expr(t);
+//  free_Expr(t);
 
 
 
@@ -86,3 +68,22 @@ int main () {
     return 1;   // incorrect answer
 
 }
+
+
+int value (Expr *e) {
+    int result = 99;
+    match (e) {
+        Add(Sub(e1,e2),Mul(e3,e4)) -> {
+           result = (value(e1) - value(e2)) + (value(e3) * value(e4)) ; }
+
+        Add(_,Add(e3,e4)) -> { result = 100 ; }
+
+        Add(e1,e2) -> { result = value(e1) + value(e2) ; }
+        Sub(e1,e2) -> { result = value(e1) - value(e2) ; }
+        Mul(e1,e2) -> { result = value(e1) * value(e2) ; }
+        Div(e1,e2) -> { result = value(e1) / value(e2) ; }
+        Const(v) -> { result = v ;  }
+    }
+    return result;
+}
+

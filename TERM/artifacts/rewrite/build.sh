@@ -5,9 +5,13 @@
 
 silver -I ../../../../ableC \
        -I ../../.. \
-       -I ../../../../ableC/extensions/closure \
-       -I ../../../../ableC/extensions/gc \
        -I ../../../../ableC/extensions/string \
+       -I ../../../../ableC/extensions/vector \
+       -I ../../../../ableC/extensions/closure \
+       -I ../../../../ableC/extensions/vector \
+       -I ../../../../ableC/extensions/gc \
        -o ableC.jar $@ \
-       edu:umn:cs:melt:exts:ableC:algDataTypes:artifacts:core
+       edu:umn:cs:melt:exts:ableC:algDataTypes:artifacts:rewrite
 
+
+rm -f build.xml

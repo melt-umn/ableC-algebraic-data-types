@@ -16,14 +16,16 @@ int main () {
 
     int b = 1;
     int y = 0;
+
     // a match expression
     y = match(b) (
           1 -> 3 ;
  	  v -> v ;
 	);
+	
+    printf ("y is %d\n", y);
 
-
-    if (x == 3) 
+    if (x == 3 && y == 3) 
        return 0;
     else 
        return 1;

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef  datatype Expr  Expr;
+typedef datatype Expr  Expr;
 
 datatype Expr {
   Add (Expr*, Expr*);

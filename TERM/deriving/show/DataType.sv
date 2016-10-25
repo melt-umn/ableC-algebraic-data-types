@@ -10,6 +10,7 @@ imports edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:abstractsyntax;
 imports edu:umn:cs:melt:exts:ableC:algDataTypes:patternmatching:abstractsyntax;
 
 -- Need the concrete syntax for the string extension (string type expression)
+--imports edu:umn:cs:melt:exts:ableC:string;
 exports edu:umn:cs:melt:exts:ableC:string;
 
 aspect production adtDecl
