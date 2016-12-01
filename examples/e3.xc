@@ -4,41 +4,66 @@
 typedef  datatype Expr  Expr;
 
 datatype Expr {
-  AddAll (Expr* *);
+  Add (Expr*, Expr*);
+  Mul (Expr*, Expr*);
   Const (int);
 };
 
-int test (Expr *e) {
-    int result = 99;
+int funny_value (Expr *e) {
+    int result = 999;
     match (e) {
-//        AddAll( [ ..., Const(1), ..., Const(3), ...] ) -> { result = 1; }
+        Add (Mul (e1,e2), Mul (e3,e4)) -> {
+            result = (funny_value(e1) - funny_value(e2)) + (funny_value(e3) * funny_value(e4)) ; }
 
-        AddAll (vvv) -> {result = 1;}
-        Const(2) -> {result = 222;}
-        Const(4) -> {result = 444;}
-        _ -> { result = 0 ;  }
+        Mul(e1,m@Mul(_,_)) -> { 
+            match (m) {
+                Mul(e2,e3) -> { result = funny_value(e1) * funny_value(e2) * funny_value(e3) ; }
+            }
+        }
+
+        Mul(e1,e2) -> { result = funny_value(e1) * funny_value(e2) ; }
+
+        Const(v1@v2) -> { result = v1 + v2 ;  }
+
+        ! Const(_) -> { result = 1000; }
     }
     return result;
 }
 
 
 int main () {
-  Expr *e0 = Const(0);
-  Expr *e1 = Const(1);
-  Expr *e2 = Const(2);
-  Expr *e3 = Const(3);
+    int result;
 
-  Expr *e4 = Const(4);
-  Expr *e5 = Const(5);
-  Expr *e6 = Const(6);
+    Expr *t0 = Add( Mul( Const(3), Const(2) ), 
+                    Mul( Const(2), Const(4) ) ) ;
+    result = funny_value(t0);
+    printf ("funny_value of t0 is %d\n", result);
+    if ( result != 34 ) return 1;
 
-  Expr *all[7] = {e0, e1, e2, e3, e4, e5, e6};
+  
+    Expr *t1 = Mul( Const(3), 
+                    Mul(Const(2), Const(4)) ) ;
+    result = funny_value(t1);
+    printf ("funny_value of t1 is %d\n", result);
+    if ( result != 192) return 2;
 
-  Expr *e = AddAll(all);
+  
+    Expr *t2 = Mul(Const(2), Const(4)) ;
+    result = funny_value(t2);
+    printf ("funny_value of t2 is %d\n", result);
+    if ( result != 32) return 3;
 
-  int result = test(e);
 
-  printf("result is %d\n", result);
+    Expr *t3 = Const(2); 
+    result = funny_value(t3);
+    printf ("funny_value of t3 is %d\n", result);
+    if ( result != 2 + 2) return 4;
 
-  return 0;
+  
+    Expr *t4 = Add(Const(2), Const(4)) ;
+    result = funny_value(t4);
+    printf ("funny_value of t4 is %d\n", result);
+    if ( result != 1000) return 5;
+  
+    return 0;
 }

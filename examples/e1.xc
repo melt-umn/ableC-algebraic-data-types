@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef datatype Expr  Expr;
+typedef  datatype Expr  Expr;
 
 datatype Expr {
   Add (Expr*, Expr*);
@@ -19,65 +19,20 @@ int value (Expr *e) {
     return result;
 }
 
-int v2 (Expr *e) {
-    int result = 99;
-    match (e) {
-        //Add (Mul (e1,e2), Mul (e3,e4)) -> {
-        //   result = (v2(e1) - v2(e2)) + (v2(e3) * v2(e4)) ; }
-
-        ! Const(_) -> { printf ("Not a constant!\n"); }
-
-        Add(e1,e2) -> { result = v2(e1) + v2(e2) ; }
-        Mul(e1,m@Mul(_,_)) -> { 
-            match (m) {
-                Mul(e2,e3) -> { result = v2(e1) * v2(e2) * v2(e3) ; }
-            }
-        }
-
-        Mul(e1,Add(_,_)@Mul(_,_)) -> { 
-            result = 9999; 
-            printf ("Oh no, should never get here...\n"); 
-        }
-
-        Mul(e1,e2) -> { result = v2(e1) * v2(e2) ; }
-        Const(v1@v2) -> { result = v1 + v2 ;  }
-    }
-    return result;
-}
-
 int main () {
   Expr *t0 = Mul(Const(2), Const(4)) ;
 
+  if ( value(t0) != 8 ) return 1;
+  
   Expr *t1 = Mul( Const(3), 
-                 Mul(Const(2), Const(4)) ) ;
+                   Mul(Const(2), Const(4)) ) ;
+
+  if ( value(t1) != 24 ) return 2;
 
   Expr *t2 = Add( Mul( Const(3), Const(2) ), 
                   Mul( Const(2), Const(4) ) ) ;
 
-  int result, r2;
+  if ( value(t2) != 14 ) return 3;
 
-  result = value(t0);
-  printf("value of t0 is %d\n", result );
-
-  r2 = v2(t0);
-  printf("v2 of t0 is %d\n", r2 );
-
-  result = value(t1);
-  printf("value of t1 is %d\n", result );
-
-  r2 = v2(t1);
-  printf("v2 of t1 is %d\n", r2 );
-
-  result = value(t2);
-  printf("value of t2 is %d\n", result );
-
-  r2 = v2(t2);
-  printf("v2 of t2 is %d\n", r2 );
-
- 
-  if (result == 14)  
-    return 0;   // correct answer
-  else
-    return 1;   // incorrect answer
-
+  return 0;
 }

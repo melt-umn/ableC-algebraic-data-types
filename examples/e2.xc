@@ -11,7 +11,6 @@ datatype Expr {
   Const (int);
 };
 
-
 int valueE (Expr *e) {
   return
       match (e) (
@@ -23,9 +22,17 @@ int valueE (Expr *e) {
           ) ;
 }
 
-
-
-
+int valueS (Expr *e) {
+    int result = 99;
+    match (e) {
+        Add(e1,e2) -> { result = valueS(e1) + valueS(e2) ; }
+        Sub(e1,e2) -> { result = valueS(e1) - valueS(e2) ; }
+        Mul(e1,e2) -> { result = valueS(e1) * valueS(e2) ; }
+        Div(e1,e2) -> { result = valueS(e1) / valueS(e2) ; }
+        Const(v) -> { result = v ;  }
+    }
+    return result;
+}
 
 int free_Expr (Expr *e) {
   match(e) {
@@ -38,52 +45,21 @@ int free_Expr (Expr *e) {
   free(e);
 }
 
-/*
-void checkConsts (Expr *e, int *result) {
-    match (e) {
-      _   -> { *result = 1; }
-      v   -> { *result = 1; }
-      1   -> { *result = 2; }
-      "1" -> { *result = 3; }
-    }
-}
-*/
-
 int main () {
-  Expr *t = Add( Const(4), 
-                 Mul(Const(2), Const(4)) ) ;
+    Expr *t = Add( Const(4), 
+                   Mul(Const(2), Const(4)) ) ;
  
-  int result = valueE(t);
+    int result1 = valueE(t);
+    int result2 = valueS(t);
 
-  printf("value is %d\n", result );
+    printf("valueE is %d\n", result1 );
+    printf("valueS is %d\n", result2 );
   
-//  free_Expr(t);
+    free_Expr(t);
 
-
-
- 
-  if (result == 11)  
-    return 0;   // correct answer
-  else
-    return 1;   // incorrect answer
+    if (result1 == 12 && result2 == 12)  
+        return 0;   // correct answer
+    else
+        return 1;   // incorrect answer
 
 }
-
-
-int value (Expr *e) {
-    int result = 99;
-    match (e) {
-        Add(Sub(e1,e2),Mul(e3,e4)) -> {
-           result = (value(e1) - value(e2)) + (value(e3) * value(e4)) ; }
-
-        Add(_,Add(e3,e4)) -> { result = 100 ; }
-
-        Add(e1,e2) -> { result = value(e1) + value(e2) ; }
-        Sub(e1,e2) -> { result = value(e1) - value(e2) ; }
-        Mul(e1,e2) -> { result = value(e1) * value(e2) ; }
-        Div(e1,e2) -> { result = value(e1) / value(e2) ; }
-        Const(v) -> { result = v ;  }
-    }
-    return result;
-}
-
