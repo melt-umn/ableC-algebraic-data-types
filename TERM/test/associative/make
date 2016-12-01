@@ -1,3 +1,0 @@
-#!/bin/bash
-
-../../../../ableC/testing/build/make ../../../../ableC $@
