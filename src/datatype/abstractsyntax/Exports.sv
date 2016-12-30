@@ -1,5 +1,5 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:abstractsyntax;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:abstractsyntax;
 
 -- These aren't pure extensions to datatype so we need to include them as options
---option edu:umn:cs:melt:exts:ableC:algDataTypes:rewrite;
---option edu:umn:cs:melt:exts:ableC:algDataTypes:deriving;
+--option edu:umn:cs:melt:exts:ableC:algebraicDataTypes:rewrite;
+--option edu:umn:cs:melt:exts:ableC:algebraicDataTypes:deriving;

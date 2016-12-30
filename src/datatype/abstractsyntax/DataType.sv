@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:abstractsyntax;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:abstractsyntax;
 
 {- 
  - datatype Type {

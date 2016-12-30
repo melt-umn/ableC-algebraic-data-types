@@ -10,6 +10,6 @@ set -e
 # artifact, skeleton, and ableC specification direcoties.
 
 silver -I ../.. -I ../../../ableC -o ableC.jar $@ \
-  edu:umn:cs:melt:exts:ableC:algDataTypes:artifact
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:artifact
 
 rm -f build.xml

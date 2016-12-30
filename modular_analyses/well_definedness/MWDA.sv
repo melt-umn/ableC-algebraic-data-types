@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:skeleton:modular_analyses:well_definedness ;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:modular_analyses:well_definedness ;
 
 {- This Silver specification does not generate a useful working 
    compiler, it only serves as a grammar for running the modular
@@ -7,11 +7,11 @@ grammar edu:umn:cs:melt:exts:ableC:skeleton:modular_analyses:well_definedness ;
 
 import edu:umn:cs:melt:ableC:concretesyntax as cst;
 import edu:umn:cs:melt:ableC:drivers:parseAndPrint;
-import edu:umn:cs:melt:exts:ableC:skeleton;
+import edu:umn:cs:melt:exts:ableC:algebraicDataTypes;
 
 parser extendedParser :: cst:Root {
   edu:umn:cs:melt:ableC:concretesyntax;
-  edu:umn:cs:melt:exts:ableC:skeleton;
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes;
 } 
 
 function main

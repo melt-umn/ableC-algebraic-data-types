@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:abstractsyntax;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:abstractsyntax;
 
 abstract production matchExpr
 e::Expr ::= scrutinee::Expr  clauses::ExprClauses

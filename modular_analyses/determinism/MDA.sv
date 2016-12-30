@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:modular_analyses:determinism ;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:modular_analyses:determinism ;
 
 import edu:umn:cs:melt:ableC:host ;
 
@@ -6,23 +6,23 @@ import edu:umn:cs:melt:ableC:host ;
 -- datatype MDA tests
 copper_mda datatype_datatype(ablecParser) {
   edu:umn:cs:melt:ableC:host;
-  edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:concretesyntax:datatype;
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:concretesyntax:datatype;
 }
 
 copper_mda datatype_datatypeFwd(ablecParser) {
   edu:umn:cs:melt:ableC:host;
-  edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:concretesyntax:datatypeFwd;
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:concretesyntax:datatypeFwd;
 }
 
 
 -- patternmatching MDA tests
 copper_mda patternmatching_matchExpr(ablecParser) {
   edu:umn:cs:melt:ableC:host;
-  edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:concretesyntax:matchExpr;
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:concretesyntax:matchExpr;
 }
 
 copper_mda patternmatching_matchStmt(ablecParser) {
   edu:umn:cs:melt:ableC:host;
-  edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:concretesyntax:matchStmt;
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:concretesyntax:matchStmt;
 }
 

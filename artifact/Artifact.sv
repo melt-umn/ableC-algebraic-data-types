@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:artifact;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:artifact;
 
 {- This Silver specification does litte more than list the desired
    extensions, albeit in a somewhat stylized way.
@@ -13,7 +13,7 @@ import edu:umn:cs:melt:ableC:drivers:compile;
 
 parser extendedParser :: cst:Root {
   edu:umn:cs:melt:ableC:concretesyntax;
-  edu:umn:cs:melt:exts:ableC:algDataTypes;
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes;
 } 
 
 function main

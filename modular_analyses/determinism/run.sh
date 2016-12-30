@@ -5,7 +5,7 @@
 set -v -e
 
 silver -I ../../.. -I ../../../../ableC -o MDA.jar --clean $@ \
-       edu:umn:cs:melt:exts:ableC:algDataTypes:modular_analyses:determinism
+       edu:umn:cs:melt:exts:ableC:algebraicDataTypes:modular_analyses:determinism
 
 # This script runs Silver on the grammar that performs the modular
 # determinism analysis.  A fair amount of information is displayed to

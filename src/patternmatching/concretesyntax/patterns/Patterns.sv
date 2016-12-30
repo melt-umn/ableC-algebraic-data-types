@@ -1,11 +1,11 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:concretesyntax:patterns;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:concretesyntax:patterns;
 
 imports silver:langutil only ast; --, pp, errors; --, err, wrn;
 
 imports edu:umn:cs:melt:ableC:concretesyntax;
 imports edu:umn:cs:melt:ableC:abstractsyntax;
 
-imports edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:abstractsyntax as abs ;
+imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:abstractsyntax as abs ;
 
 terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier}; 
    -- Same as Identifier_t
@@ -18,7 +18,7 @@ terminal When_t 'when' lexer classes {Ckeyword};
 nonterminal Pattern with location, ast<abs:Pattern> ;
 
 {- We need to have algebraic datatype patterns here.  They can't be in
-   an extension to algDataTypes since they don't begin with a
+   an extension to algebraicDataTypes since they don't begin with a
    marking terminal.  -}
 
 concrete productions p::Pattern

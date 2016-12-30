@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:concretesyntax:matchExpr;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:concretesyntax:matchExpr;
 
 imports silver:langutil only ast; --, pp, errors; --, err, wrn;
 --imports silver:langutil:pp with implode as ppImplode ;
@@ -8,16 +8,16 @@ imports edu:umn:cs:melt:ableC:abstractsyntax;
 --imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 --imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
-imports edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:abstractsyntax as abs;
+imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:abstractsyntax as abs;
 
 -- moved up to Exports.sv
-exports edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:concretesyntax:matchKeyword;
-exports edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching:concretesyntax:patterns;
+exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:concretesyntax:matchKeyword;
+exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching:concretesyntax:patterns;
 
---import edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:concretesyntax:patterns;
+--import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax:patterns;
 
 -- trigger the test
---import edu:umn:cs:melt:exts:ableC:algDataTypes:datatype:mda_test;
+--import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:mda_test;
 
 
 

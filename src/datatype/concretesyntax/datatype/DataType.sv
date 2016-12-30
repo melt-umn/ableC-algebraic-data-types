@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:concretesyntax:datatype;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:concretesyntax:datatype;
 
 imports silver:langutil only ast, pp, errors; 
 imports silver:langutil:pp with implode as ppImplode ;
@@ -8,12 +8,12 @@ imports edu:umn:cs:melt:ableC:abstractsyntax;
 imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 --imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
-imports edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:abstractsyntax;
+imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:abstractsyntax;
 
-exports edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:concretesyntax:datatypeKeyword;
+exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:concretesyntax:datatypeKeyword;
 
 -- trigger the test
--- import edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype:mda_test;
+-- import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:mda_test;
 
 {-
 

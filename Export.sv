@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algDataTypes;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes;
 
-exports edu:umn:cs:melt:exts:ableC:algDataTypes:src:datatype;
-exports edu:umn:cs:melt:exts:ableC:algDataTypes:src:patternmatching;
+exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype;
+exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:patternmatching;
