@@ -1,7 +1,9 @@
 #!groovy
 
 /* Set the properties this job has.
-   I think there's a bug where the very first run lacks these... */
+   I think there's a bug where the very first run lacks these...
+   I (EVW) agrees, making a change to see if it works on second
+   time... */
 properties([
   /* Set our config to take a parameter when a build is triggered.
      We should always have defaults, I don't know what happens when
