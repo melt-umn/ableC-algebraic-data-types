@@ -74,7 +74,7 @@ t::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl
 abstract production adtTagReferenceTypeExpr 
 b::BaseTypeExpr ::= q::[Qualifier] n::Name
 {
-  b.pp = concat([ 
+  b.pp = ppConcat([ 
           terminate( space(), map( (.pp), q ) ),
           text("datatype"), space(), 
           n.pp ]);
@@ -104,7 +104,7 @@ b::BaseTypeExpr ::= q::[Qualifier] n::Name
   -- maybe create it here, stick in in defs with some bogus name -
   --    n.name ++ "STRUCT"?
     
-  b.defs = 
+  b.defs := 
     case tags of
     -- not already declared, this is the declaration
     | [ ] -> [  adtTagDef( n.name, adtRefIdTagItem( refId, structRefId ) ) ]

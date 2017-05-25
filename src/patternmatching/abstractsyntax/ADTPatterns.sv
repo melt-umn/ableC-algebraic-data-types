@@ -21,7 +21,7 @@ p::Pattern ::= id::String ps::PatternList
   p.pp = cat( text(id), parens( ppImplode(text(","), ps.pps) ) );
   ps.env = p.env;
   p.decls = ps.decls;
-  p.defs = ps.defs;
+  p.defs := ps.defs;
   
   -- Type checking
   p.errors :=
@@ -111,10 +111,10 @@ p::Pattern ::= id::String ps::PatternList
 
  
           declStmt(
-           variableDecls( [], [], directTypeExpr(p.expectedType),
+           variableDecls( [], nilAttribute(), directTypeExpr(p.expectedType),
              consDeclarator(
                declarator( name("_cons_scrutinee_ptr", location=bogus_loc()), 
-                 pointerTypeExpr ([], baseTypeExpr()), [], 
+                 pointerTypeExpr ([], baseTypeExpr()), nilAttribute(), 
                  justInitializer( exprInitializer( txtExpr( "_curr_scrutinee_ptr",
                                                             location=bogus_loc() ) ) ) ),
                nilDeclarator() ) ) ),
@@ -145,11 +145,11 @@ Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer
   return
     compoundStmt ( foldStmt ([
       declStmt(
-       variableDecls( [], [], directTypeExpr(ptype),
+       variableDecls( [], nilAttribute(), directTypeExpr(ptype),
          consDeclarator(
            declarator( 
              name("_curr_scrutinee_ptr", location=bogus_loc()), 
-             pointerTypeExpr ([], baseTypeExpr()), [], 
+             pointerTypeExpr ([], baseTypeExpr()), nilAttribute(), 
              justInitializer( exprInitializer( 
                txtExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
                         toString(pos),
@@ -284,7 +284,7 @@ ps::PatternList ::= p::Pattern rest::PatternList
   p.env = ps.env;
   rest.env = addEnv(p.defs,ps.env);
   
-  ps.defs = p.defs ++ rest.defs;
+  ps.defs := p.defs ++ rest.defs;
 
   ps.decls = p.decls ++ rest.decls;
 
@@ -318,7 +318,7 @@ ps::PatternList ::= {-empty-}
   ps.pps = [];
   ps.errors := [];
   ps.pslength = 0;
-  ps.defs = [];
+  ps.defs := [];
   ps.decls = [ ];
   ps.transform = [];
 }

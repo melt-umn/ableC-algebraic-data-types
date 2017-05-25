@@ -39,9 +39,9 @@ p::Pattern ::= id::String
 
   p.decls = [declStmt(d)];
   local d :: Decl
-    = variableDecls( [], [], directTypeExpr(p.expectedType), 
+    = variableDecls( [], nilAttribute(), directTypeExpr(p.expectedType), 
         consDeclarator(
-          declarator( name(id, location=p.location), baseTypeExpr(), [], 
+          declarator( name(id, location=p.location), baseTypeExpr(), nilAttribute(), 
             nothingInitializer() ),
           nilDeclarator()) );
 
@@ -52,7 +52,7 @@ p::Pattern ::= id::String
   d.env = emptyEnv(); 
   d.returnType = p.returnType;
   d.isTopLevel = false;
-  p.defs = d.defs;
+  p.defs := d.defs;
 
   p.errors := []; --ToDo: - check for non-linearity
 
@@ -64,7 +64,7 @@ p::Pattern ::=
 {
   p.pp = text("_");
   p.decls = [];
-  p.defs = [];
+  p.defs := [];
   p.errors := [];
   p.transform = nullStmt();
 }
@@ -74,7 +74,7 @@ p::Pattern ::= constExpr::Expr
 {
   p.pp = constExpr.pp;
   p.decls = [];
-  p.defs = [];
+  p.defs := [];
   p.errors := (if compatibleTypes(p.expectedType, constExpr.typerep, false) then [] else
                   [err(p.location, "Unexpected constant in pattern")]);
 
@@ -94,7 +94,7 @@ p::Pattern ::= s::String
 {
   p.pp = text(s);
   p.decls = [];
-  p.defs = [];
+  p.defs := [];
   p.errors := (if compatibleTypes(
                     p.expectedType,
                     pointerType(

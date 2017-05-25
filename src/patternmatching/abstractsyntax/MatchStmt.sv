@@ -4,7 +4,7 @@ abstract production matchStmt
 e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
 {
   e.globalDecls := [];
-  e.pp = concat([ text("match"), space(), parens(scrutinee.pp), line(), 
+  e.pp = ppConcat([ text("match"), space(), parens(scrutinee.pp), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
                     
   -- TODO: Can't forward to an error prod b/c that adds a circular dependancy on

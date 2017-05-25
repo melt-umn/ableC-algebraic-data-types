@@ -27,7 +27,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:abstractsynta
 abstract production datatypeDecl
 top::Decl ::= adt::ADTDecl
 { 
-  top.pp = concat([ text("datatype"), space(), adt.pp ]);
+  top.pp = ppConcat([ text("datatype"), space(), adt.pp ]);
   
   -- TODO: Do local error checking before reporting forward errors once error checking for datatypeDecl is finished
   top.errors <- adt.errors;
@@ -53,7 +53,7 @@ top::Decl ::= adt::ADTDecl
       | _ -> error( "struct decl not found")
       end;
 
-  top.defs = adt.defs ++
+  top.defs := adt.defs ++
     -- We don't really want all of these.
     -- We want the functions for constructing values,
     -- but not the 'struct ADT' defs.
@@ -74,7 +74,7 @@ synthesized attribute adtInfo :: Pair<String [ Pair<String [Type]> ]>;
 abstract production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
 {
-  top.pp = concat([ n.pp, space(), braces(cs.pp) ]);
+  top.pp = ppConcat([ n.pp, space(), braces(cs.pp) ]);
   top.errors := cs.errors; -- TODO: check for redeclaration
 
   {- Since ADTs translate down to structs with the same name, we don't
@@ -99,7 +99,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
 
   cs.env = addEnv(preDefs, top.env);
 
-  top.defs = preDefs ++
+  top.defs := preDefs ++
     [ adtRefIdDef( name_tagRefId_workaround, adtRefIdItem(top, top.structDcl) ) ] ;
 
   local name_refIdIfOld_workaround :: Maybe<String>
@@ -134,7 +134,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   structItems <-
     consStructItem(
       structItem(
-        [],
+        nilAttribute(),
         directTypeExpr(
           builtinType(
             [],
@@ -143,22 +143,22 @@ top::ADTDecl ::= n::Name cs::ConstructorList
               structField(
                 name("refId", location=builtIn()),
                 baseTypeExpr(),
-                []),
+                nilAttribute()),
             nilStructDeclarator())),
       nilStructItem());
       
   local attribute genericAdtDecl::Decl =
     typeExprDecl(
-      [],
+      nilAttribute(),
       structTypeExpr(
         [],
-        structDecl([],
+        structDecl(nilAttribute(),
           justName(name("_GenericDatatype", location=builtIn())),
           appendStructItemList(
             structItems,
             consStructItem(
               structItem(
-                [],
+                nilAttribute(),
                 directTypeExpr(
                   builtinType(
                     [],
@@ -167,7 +167,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                   structField(
                     name("tag", location=builtIn()),
                     baseTypeExpr(),
-                    []),
+                    nilAttribute()),
                   nilStructDeclarator())),
               nilStructItem())),
           location=builtIn())));
@@ -176,15 +176,15 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   local attribute defaultDecls::Decls =
       consDecl(
         typeExprDecl(
-          [],
+          nilAttribute(),
           structTypeExpr(
             [],
-            structDecl([],
+            structDecl(nilAttribute(),
               justName( n ),
               appendStructItemList(
                 structItems,
                 consStructItem(
-                  structItem([],
+                  structItem(nilAttribute(),
                     enumTypeExpr(
                       [],
                       enumDecl(justName(name("_" ++ n.name ++ "_types", location=builtIn())),
@@ -202,14 +202,14 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                       structField(
                         name("tag", location=builtIn()),
                         baseTypeExpr(),
-                        []),
+                        nilAttribute()),
                       nilStructDeclarator())),
                   consStructItem(
-                    structItem([],
+                    structItem(nilAttribute(),
                       unionTypeExpr(
                         [],
                         unionDecl(
-                          [],
+                          nilAttribute(),
                           justName(
                             name("_" ++ n.name ++ "_contents", location=builtIn())),
                           cs.structItems, location=builtIn())),
@@ -217,7 +217,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                         structField(
                           name("contents",location=builtIn()), 
                           baseTypeExpr(),
-                          []),
+                          nilAttribute()),
                         nilStructDeclarator())),
                     nilStructItem()))), location=builtIn()))),
         nilDecl() ) ; --cs.funDecls);
@@ -278,7 +278,7 @@ nonterminal ConstructorList
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
 {
-  top.pp = concat([ c.pp, sep, cl.pp ]) ;
+  top.pp = ppConcat([ c.pp, sep, cl.pp ]) ;
   top.errors := c.errors ++ cl.errors;
   local attribute sep::Document =
     case cl of
@@ -338,7 +338,7 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
   production attribute initStmts::[Stmt] with ++;
   initStmts := [];
 
-  top.pp = concat( [ text(n ++ " ( "), ppImplode (text(", "), tms.pps),
+  top.pp = ppConcat( [ text(n ++ " ( "), ppImplode (text(", "), tms.pps),
                      text(" );") ] );
   top.errors :=
     if !null(lookupValue(n, top.env))
@@ -356,17 +356,17 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
       nothingExpr());
 
   top.structItem =
-    structItem([],
+    structItem(nilAttribute(),
       structTypeExpr(
         [],
-        structDecl([],
+        structDecl(nilAttribute(),
           justName(
             name(top.topTypeName ++ "_" ++ n ++ "_s", location=builtIn())),
           tms.asStructItemList, location=builtIn())),
       consStructDeclarator(
         structField(
           name(n, location=builtIn()),
-          baseTypeExpr(), []),
+          baseTypeExpr(), nilAttribute()),
         nilStructDeclarator()));
 
   top.funDecl =
@@ -382,14 +382,14 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
           tms.asParameters,
           false),
         name(n, location=builtIn()),
-        [],
+        nilAttribute(),
 
         nilDecl(),
 
         foldStmt([
           declStmt(
             variableDecls(
-              [], [],
+              [], nilAttribute(),
               typedefTypeExpr(
                 [], 
                 name(top.topTypeName, location=builtIn())), 
@@ -397,7 +397,7 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
                 declarator(
                   name("temp", location=builtIn()), 
                   pointerTypeExpr([], baseTypeExpr()),
-                  [],
+                  nilAttribute(),
                   nothingInitializer()),
                 nilDeclarator()))),
 

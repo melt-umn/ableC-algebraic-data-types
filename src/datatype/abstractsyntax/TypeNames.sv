@@ -40,18 +40,18 @@ ts::TypeNames ::= t::TypeName rest::TypeNames
         [], bty, mty,
         justName(name("f"++toString(ts.position),
           location=builtIn())), 
-        []),
+        nilAttribute()),
       rest.asParameters) ;
 
   ts.asStructItemList =
     consStructItem(
-      structItem([],
+      structItem(nilAttribute(),
         bty,
         consStructDeclarator(
           structField(
             name("f"++toString(ts.position),location=builtIn()),
             mty,
-            []),
+            nilAttribute()),
           nilStructDeclarator())),
       rest.asStructItemList) ;
 

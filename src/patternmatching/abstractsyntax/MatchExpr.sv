@@ -4,7 +4,7 @@ abstract production matchExpr
 e::Expr ::= scrutinee::Expr  clauses::ExprClauses
 {
   e.globalDecls := [];
-  e.pp = concat([ text("match"), space(), parens(scrutinee.pp), line(), 
+  e.pp = ppConcat([ text("match"), space(), parens(scrutinee.pp), line(), 
                     parens(nestlines(2, clauses.pp)) ]);
 
   clauses.expectedType = scrutinee.typerep;
@@ -15,10 +15,10 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
         txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
 
         declStmt(
-          variableDecls( [], [], directTypeExpr(clauses.typerep),
+          variableDecls( [], nilAttribute(), directTypeExpr(clauses.typerep),
              consDeclarator(
                declarator( name("__result", location=bogus_loc()), 
-                 baseTypeExpr(), [], 
+                 baseTypeExpr(), nilAttribute(), 
                  nothingInitializer () ),
                nilDeclarator() ) ) ),
 

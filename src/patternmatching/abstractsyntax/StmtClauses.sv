@@ -88,7 +88,7 @@ nonterminal StmtClause with location, pp, errors, env,
 abstract production stmtClause
 c::StmtClause ::= p::Pattern s::Stmt
 {
-  c.pp = concat([ p.pp, text("->"), space(), nestlines(2, s.pp) ]);
+  c.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, s.pp) ]);
   c.errors := p.errors ++ s.errors;
 
   s.env = addEnv(p.defs,c.env);
@@ -149,7 +149,7 @@ c::StmtClause ::= p::Pattern s::Stmt
 abstract production guardedStmtClause
 c::StmtClause ::= p::Pattern g::Stmt s::Stmt
 {
-  c.pp = concat([ p.pp, space(), text("where"), space(), g.pp,
+  c.pp = ppConcat([ p.pp, space(), text("where"), space(), g.pp,
                   text("->"), space(), nestlines(2, s.pp) ]);
   c.errors := p.errors ++ s.errors;
 }

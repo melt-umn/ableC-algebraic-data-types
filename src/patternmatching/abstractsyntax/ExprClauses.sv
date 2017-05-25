@@ -84,7 +84,7 @@ nonterminal ExprClause with location, pp, errors, env, returnType,
 abstract production exprClause
 c::ExprClause ::= p::Pattern e::Expr
 {
-  c.pp = concat([ p.pp, text("->"), space(), nestlines(2, e.pp), text(";")]);
+  c.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, e.pp), text(";")]);
   c.errors := p.errors ++ e.errors;
 
   e.env = addEnv(p.defs,c.env);
@@ -182,7 +182,7 @@ c::ExprClause ::= p::Pattern e::Expr
 abstract production guardedExprClause
 c::ExprClause ::= p::Pattern g::Expr s::Expr
 {
-  c.pp = concat([ p.pp, space(), text("where"), space(), g.pp,
+  c.pp = ppConcat([ p.pp, space(), text("where"), space(), g.pp,
                   text("->"), space(), nestlines(2, s.pp) ]);
   c.errors := p.errors ++ s.errors;
 }

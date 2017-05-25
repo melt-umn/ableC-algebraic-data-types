@@ -3,10 +3,10 @@
 abstract production patternBoth
 p::Pattern ::= p1::Pattern p2::Pattern
 {
-  p.pp = concat([p1.pp, space(), text("@"), space(), p2.pp ]);
+  p.pp = ppConcat([p1.pp, space(), text("@"), space(), p2.pp ]);
   p.errors := p1.errors ++ p2.errors;
 
-  p.defs = p1.defs ++ p2.defs;
+  p.defs := p1.defs ++ p2.defs;
   p1.env = p.env;
 
   --ToDo - ensure pattern vars from p1 are visible in p2 for use
@@ -33,7 +33,7 @@ p::Pattern ::= p1::Pattern
   p.pp = cat(text("! "), p1.pp);
   p.errors := p1.errors; -- TODO: Exclude variable patterns
   
-  p.defs = p1.defs;
+  p.defs := p1.defs;
   p1.env = p.env;
   p1.expectedType = p.expectedType;
   p.decls = p1.decls;
@@ -51,7 +51,7 @@ p::Pattern ::= e::Expr
 {
   p.pp = cat( text("when"), parens(e.pp));
   p.decls = [];
-  p.defs = [];
+  p.defs := [];
   p.errors := e.errors;
   p.transform = ifStmt(e, nullStmt(), txtStmt("_match = 0;") );
 }
