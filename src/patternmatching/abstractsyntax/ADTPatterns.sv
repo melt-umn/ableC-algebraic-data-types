@@ -50,8 +50,10 @@ p::Pattern ::= id::String ps::PatternList
   -- 1. get the RefIdItem for the expected type
   local adtTypeInfo :: Pair<Boolean [RefIdItem]>
     = case p.expectedType of
-      | adtTagType( _, adtRefId,_) -> pair(true, lookupRefId(adtRefId, p.env))
+      | adtTagType( _, adtRefId, _) -> pair( true, lookupRefId(adtRefId, p.env))
+      | tagType( _, refIdTagType(_,_,refId)) -> pair( true, lookupRefId(refId, p.env) )
       | pointerType( _, adtTagType(_,adtRefId,_) ) -> pair(true, lookupRefId(adtRefId, p.env))
+      | pointerType( _, tagType(_,refIdTagType(_,_,refId)) ) -> error("BOOM..." ++ refId) -- pair(true, lookupRefId(refId, p.env))
       | errorType() -> pair(true, [])
       | _ -> pair(false, [])
       end;
@@ -114,7 +116,7 @@ p::Pattern ::= id::String ps::PatternList
            variableDecls( [], nilAttribute(), directTypeExpr(p.expectedType),
              consDeclarator(
                declarator( name("_cons_scrutinee_ptr", location=bogus_loc()), 
-                 pointerTypeExpr ([], baseTypeExpr()), nilAttribute(), 
+                 pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
                  justInitializer( exprInitializer( txtExpr( "_curr_scrutinee_ptr",
                                                             location=bogus_loc() ) ) ) ),
                nilDeclarator() ) ) ),
@@ -149,7 +151,7 @@ Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer
          consDeclarator(
            declarator( 
              name("_curr_scrutinee_ptr", location=bogus_loc()), 
-             pointerTypeExpr ([], baseTypeExpr()), nilAttribute(), 
+             pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
              justInitializer( exprInitializer( 
                txtExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
                         toString(pos),

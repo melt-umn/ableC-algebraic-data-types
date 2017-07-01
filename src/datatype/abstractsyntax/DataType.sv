@@ -137,7 +137,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
         nilAttribute(),
         directTypeExpr(
           builtinType(
-            [],
+            nilQualifier(),
             unsignedType(intType()))),
             consStructDeclarator(
               structField(
@@ -151,7 +151,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
     typeExprDecl(
       nilAttribute(),
       structTypeExpr(
-        [],
+        nilQualifier(),
         structDecl(nilAttribute(),
           justName(name("_GenericDatatype", location=builtIn())),
           appendStructItemList(
@@ -161,7 +161,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                 nilAttribute(),
                 directTypeExpr(
                   builtinType(
-                    [],
+                    nilQualifier(),
                     unsignedType(intType()))),
                 consStructDeclarator(
                   structField(
@@ -178,7 +178,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
         typeExprDecl(
           nilAttribute(),
           structTypeExpr(
-            [],
+            nilQualifier(),
             structDecl(nilAttribute(),
               justName( n ),
               appendStructItemList(
@@ -186,7 +186,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                 consStructItem(
                   structItem(nilAttribute(),
                     enumTypeExpr(
-                      [],
+                      nilQualifier(),
                       enumDecl(justName(name("_" ++ n.name ++ "_types", location=builtIn())),
                       case cs.enumItems of
                         nilEnumItem() ->
@@ -207,7 +207,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                   consStructItem(
                     structItem(nilAttribute(),
                       unionTypeExpr(
-                        [],
+                        nilQualifier(),
                         unionDecl(
                           nilAttribute(),
                           justName(
@@ -358,7 +358,7 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
   top.structItem =
     structItem(nilAttribute(),
       structTypeExpr(
-        [],
+        nilQualifier(),
         structDecl(nilAttribute(),
           justName(
             name(top.topTypeName ++ "_" ++ n ++ "_s", location=builtIn())),
@@ -375,10 +375,10 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
         [staticStorageClass()],
         [inlineQualifier()],
         typedefTypeExpr(
-          [],
+          nilQualifier(),
           name(top.topTypeName, location=builtIn())),
         functionTypeExprWithArgs(
-          pointerTypeExpr([], baseTypeExpr()),
+          pointerTypeExpr(nilQualifier(), baseTypeExpr()),
           tms.asParameters,
           false),
         name(n, location=builtIn()),
@@ -391,12 +391,12 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
             variableDecls(
               [], nilAttribute(),
               typedefTypeExpr(
-                [], 
+                nilQualifier(), 
                 name(top.topTypeName, location=builtIn())), 
               consDeclarator(
                 declarator(
                   name("temp", location=builtIn()), 
-                  pointerTypeExpr([], baseTypeExpr()),
+                  pointerTypeExpr(nilQualifier(), baseTypeExpr()),
                   nilAttribute(),
                   nothingInitializer()),
                 nilDeclarator()))),

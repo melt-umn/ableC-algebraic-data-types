@@ -35,13 +35,13 @@ abstract production adtTagDef
 d::Def ::= n::String t::TagItem
 {
   d.tagContribs = [pair(n,t)];
-  forwards to tagDef(n,t);
+  --forwards to tagDef(n,t);
 }
 abstract production adtRefIdDef
 d::Def ::= n::String r::RefIdItem
 {
   d.refIdContribs = [pair(n,r)];
-  forwards to refIdDef(n,r);
+  --forwards to refIdDef(n,r);
 }
 
 
@@ -72,10 +72,10 @@ t::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl
 -- e.g. "datatype Expr;"
 -- mirroring C structure of 'struct Expr'
 abstract production adtTagReferenceTypeExpr 
-b::BaseTypeExpr ::= q::[Qualifier] n::Name
+b::BaseTypeExpr ::= q::Qualifiers n::Name
 {
   b.pp = ppConcat([ 
-          terminate( space(), map( (.pp), q ) ),
+          terminate( space(), q.pps ),
           text("datatype"), space(), 
           n.pp ]);
 
@@ -148,7 +148,7 @@ t::Type ::= name::String adtRefId::String structRefId::String
 {
   t.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")"); -- TODO
   t.rpp = notext();
-  forwards to tagType( [],
+  forwards to tagType( nilQualifier(),
                 refIdTagType( structSEU(), name, structRefId ) );
 }
 

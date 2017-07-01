@@ -75,7 +75,7 @@ p::Pattern ::= constExpr::Expr
   p.pp = constExpr.pp;
   p.decls = [];
   p.defs := [];
-  p.errors := (if compatibleTypes(p.expectedType, constExpr.typerep, false) then [] else
+  p.errors := (if compatibleTypes(p.expectedType, constExpr.typerep, false, false) then [] else
                   [err(p.location, "Unexpected constant in pattern")]);
 
   p.transform 
@@ -98,11 +98,11 @@ p::Pattern ::= s::String
   p.errors := (if compatibleTypes(
                     p.expectedType,
                     pointerType(
-                      [],
+                      nilQualifier(),
                       builtinType(
-                        [constQualifier()],
+                        consQualifier(constQualifier(),nilQualifier()),
                         signedType(charType()))),
-                    false) then [] else
+                    false, false) then [] else
                   [err(p.location, "Unexpected string constant in pattern")]) ++
               (if !null(lookupValue("strcmp", p.env)) then [] else
                   [err(p.location, "Pattern string literals require <string.h> to be included")]);

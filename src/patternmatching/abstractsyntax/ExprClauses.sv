@@ -99,7 +99,7 @@ c::ExprClause ::= p::Pattern e::Expr
         txtStmt( "/* ... declarations of pattern variables */"),
 	foldStmt( p.decls ),
 
-        mkDecl ("_curr_scrutinee_ptr", pointerType( [], c.expectedType), 
+        mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), c.expectedType), 
                 -- unaryOpExpr( dereferenceOp(location=c.location), 
                              declRefExpr( name("_match_scrutinee_ptr", 
                                                location=c.location),
