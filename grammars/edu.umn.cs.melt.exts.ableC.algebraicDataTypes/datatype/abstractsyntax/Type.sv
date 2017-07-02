@@ -53,7 +53,8 @@ d::Def ::= n::String r::RefIdItem
 abstract production adtRefIdTagItem
 t::TagItem ::= adtRefId::String structRefId::String
 {
- forwards to refIdTagItem (structSEU(), structRefId) ;
+  t.pp = text("ADT, adtRefId = " ++ adtRefId ++ ", structRefId = " ++ structRefId);
+  forwards to refIdTagItem (structSEU(), structRefId) ;
 }
 {- adtRefIdItem: when looking up this type by RefId in the env,
    this is the structure that is returned.  It has a reference
@@ -62,6 +63,7 @@ t::TagItem ::= adtRefId::String structRefId::String
 abstract production adtRefIdItem
 t::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl 
 {
+  t.pp = text("ADTDecl: adt.refId=" ++ adt.refId ++ ", s.refId=" ++ s.refId);
   forwards to structRefIdItem (s);
 }
 
@@ -148,6 +150,7 @@ t::Type ::= name::String adtRefId::String structRefId::String
 {
   t.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")"); -- TODO
   t.rpp = notext();
+  t.withTypeQualifiers = t; -- TODO: Hack, discarding type qualifiers here!
   forwards to tagType( nilQualifier(),
                 refIdTagType( structSEU(), name, structRefId ) );
 }

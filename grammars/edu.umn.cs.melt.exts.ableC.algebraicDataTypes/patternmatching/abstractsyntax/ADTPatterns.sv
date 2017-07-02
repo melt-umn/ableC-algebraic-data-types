@@ -53,7 +53,6 @@ p::Pattern ::= id::String ps::PatternList
       | adtTagType( _, adtRefId, _) -> pair( true, lookupRefId(adtRefId, p.env))
       | tagType( _, refIdTagType(_,_,refId)) -> pair( true, lookupRefId(refId, p.env) )
       | pointerType( _, adtTagType(_,adtRefId,_) ) -> pair(true, lookupRefId(adtRefId, p.env))
-      | pointerType( _, tagType(_,refIdTagType(_,_,refId)) ) -> error("BOOM..." ++ refId) -- pair(true, lookupRefId(refId, p.env))
       | errorType() -> pair(true, [])
       | _ -> pair(false, [])
       end;

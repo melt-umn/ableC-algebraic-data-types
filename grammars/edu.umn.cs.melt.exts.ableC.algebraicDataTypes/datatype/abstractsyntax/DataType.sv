@@ -65,7 +65,7 @@ top::Decl ::= adt::ADTDecl
 
 synthesized attribute transform<a> :: a;
 
-nonterminal ADTDecl with pp, env, defs, errors, returnType, structRefId, structDcl, name, adtInfo, transform<Decl>;
+nonterminal ADTDecl with pp, env, defs, errors, returnType, structRefId, structDcl, name, adtInfo, refId, transform<Decl>;
 
 inherited attribute structRefId :: String;
 inherited attribute structDcl :: Decorated StructDecl;
@@ -114,6 +114,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
     = name_refIdIfOld_workaround.isJust;
 
   top.adtInfo = pair(n.name,cs.constructors);
+  top.refId = name_tagRefId_workaround;
 
   cs.topTypeName = n.name;
   
