@@ -1,1 +1,0 @@
-../../examples/clean.sh
