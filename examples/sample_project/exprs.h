@@ -1,8 +1,6 @@
 #ifndef EXPR_H
 #define EXPR_H
 
-datatype Expr ;
-
 typedef  datatype Expr  Expr;
 
 datatype Expr {

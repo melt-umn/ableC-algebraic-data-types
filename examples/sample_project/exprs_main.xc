@@ -18,8 +18,8 @@ int main () {
 
  
   if (result == 11)  
-    return 0;   // correct answer
+   return 0;   // correct answer
   else
-    return 1;   // incorrect answer
+   return 1;   // incorrect answer
 
 }

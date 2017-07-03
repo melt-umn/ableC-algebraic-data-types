@@ -11,13 +11,12 @@ datatype Expr {
 
 int value (Expr *e) {
     int result = 99;
-    /*
+    
     match (e) {
         Add(e1,e2) -> { result = value(e1) + value(e2) ; }
         Mul(e1,e2) -> { result = value(e1) * value(e2) ; }
         Const(v) -> { result = v ;  }
     }
-*/
     return result;
 }
 
