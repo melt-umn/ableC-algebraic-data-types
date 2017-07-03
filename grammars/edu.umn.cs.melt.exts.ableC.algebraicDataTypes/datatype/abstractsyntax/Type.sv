@@ -151,6 +151,7 @@ t::Type ::= name::String adtRefId::String structRefId::String
   t.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")"); -- TODO
   t.rpp = notext();
   t.withTypeQualifiers = t; -- TODO: Hack, discarding type qualifiers here!
+  t.withoutAttributes = t;
   forwards to tagType( nilQualifier(),
                 refIdTagType( structSEU(), name, structRefId ) );
 }

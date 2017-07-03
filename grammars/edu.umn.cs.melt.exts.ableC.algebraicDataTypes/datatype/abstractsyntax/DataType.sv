@@ -53,14 +53,19 @@ top::Decl ::= adt::ADTDecl
       | _ -> error( "struct decl not found")
       end;
 
-  top.defs := adt.defs ++
+--  top.defs := adt.defs ++
     -- We don't really want all of these.
     -- We want the functions for constructing values,
     -- but not the 'struct ADT' defs.
-    forward.defs;
+  --  forward.defs;
 
-  -- TODO, obviously bad to change env manually!  
-  forwards to adt.transform with {env = addEnv(adt.defs, top.env);};
+  -- TODO, obviously bad to change env manually!
+
+
+
+  forwards to
+    decls(foldDecl([defsDecl(adt.defs), adt.transform]));
+    -- adt.transform with {env = addEnv(adt.defs, top.env);};
 }
 
 synthesized attribute transform<a> :: a;
