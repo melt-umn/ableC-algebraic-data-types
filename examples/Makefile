@@ -49,6 +49,7 @@ LIBS=$(SRC_DIRS:src=libs)
 SRC_SOURCES=$(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 
 all: $(ABLEC_JAR) $(C_FILES) $(OBJECTS) $(EXECUTABLES) $(TESTS)
+	cd sample_project && make
 
 libs: $(LIBS)
 
