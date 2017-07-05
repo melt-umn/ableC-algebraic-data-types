@@ -3,7 +3,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 abstract production matchStmt
 e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
 {
-  e.globalDecls := [];
+  --e.globalDecls := [];
   e.pp = ppConcat([ text("match"), space(), parens(scrutinee.pp), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
 

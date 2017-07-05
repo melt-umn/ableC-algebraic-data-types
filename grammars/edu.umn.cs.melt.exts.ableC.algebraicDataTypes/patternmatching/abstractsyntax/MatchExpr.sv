@@ -17,7 +17,7 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
         declStmt(
           variableDecls( [], nilAttribute(), directTypeExpr(clauses.typerep),
              consDeclarator(
-               declarator( name("__result", location=bogus_loc()), 
+               declarator( name("__result", location=e.location), 
                  baseTypeExpr(), nilAttribute(), 
                  nothingInitializer () ),
                nilDeclarator() ) ) ),

@@ -56,7 +56,14 @@ p::Pattern ::= id::String
 
   p.errors := []; --ToDo: - check for non-linearity
 
-  p.transform = txtStmt(id ++ " = * _curr_scrutinee_ptr;") ;
+  p.transform =
+    mkAssign(
+      id,
+      mkDereferenceOf (
+        declRefExpr (name("_curr_scrutinee_ptr",location=p.location), location=p.location),
+	p.location),
+      p.location);
+    -- txtStmt(id ++ " = * _curr_scrutinee_ptr;") ;
 }
 
 abstract production patternWildcard

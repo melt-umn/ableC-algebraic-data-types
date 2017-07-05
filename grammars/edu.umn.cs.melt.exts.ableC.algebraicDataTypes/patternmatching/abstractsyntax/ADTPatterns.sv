@@ -114,34 +114,34 @@ p::Pattern ::= id::String ps::PatternList
           declStmt(
            variableDecls( [], nilAttribute(), directTypeExpr(p.expectedType),
              consDeclarator(
-               declarator( name("_cons_scrutinee_ptr", location=bogus_loc()), 
+               declarator( name("_cons_scrutinee_ptr", location=p.location), 
                  pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
                  justInitializer( exprInitializer( txtExpr( "_curr_scrutinee_ptr",
-                                                            location=bogus_loc() ) ) ) ),
+                                                            location=p.location ) ) ) ),
                nilDeclarator() ) ) ),
 
 
           (if length(ps.transform) == length(ps.expectedTypes)
-           then mkTrans(ps.transform, ps.expectedTypes, id, 0)
-           else txtStmt("/* Error - ps.transform and ps.expectedTypes have " ++ 
-                        "different lengths */") )
+           then mkTrans(ps.transform, ps.expectedTypes, id, 0, ps.locations)
+           else warnStmt([err(p.location,"/* Error - ps.transform and ps.expectedTypes have " ++ 
+                        "different lengths */")] ) )
          ] )
       )
     ] );
 }
 
 function mkTrans
-Stmt ::= pts::[Stmt] ptypes::[Type] tag::String pos::Integer
+Stmt ::= pts::[Stmt] ptypes::[Type] tag::String pos::Integer locations::[Location]
 {
   return
     if null(pts)
     then nullStmt()
-    else seqStmt( mkTran (head(pts), head(ptypes), tag, pos), 
-                  mkTrans (tail(pts), tail(ptypes), tag, pos+1) );
+    else seqStmt( mkTran (head(pts), head(ptypes), tag, pos, head(locations)), 
+                  mkTrans (tail(pts), tail(ptypes), tag, pos+1, tail(locations)) );
 }
 
 function mkTran
-Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer
+Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer l::Location
 {
   return
     compoundStmt ( foldStmt ([
@@ -149,12 +149,12 @@ Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer
        variableDecls( [], nilAttribute(), directTypeExpr(ptype),
          consDeclarator(
            declarator( 
-             name("_curr_scrutinee_ptr", location=bogus_loc()), 
+             name("_curr_scrutinee_ptr", location=l),
              pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
              justInitializer( exprInitializer( 
                txtExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
                         toString(pos),
-                        location=bogus_loc()
+                        location=l
                 ) ) ) ),
            nilDeclarator() ) ) ),
 
@@ -177,7 +177,7 @@ Expr * * _curr_scrutinee_ptr = & (* _curr_scrutinee_ptr)->contents.Add.f0;") ;
 
 }
 
-function bogus_loc
+function bogus_locX
 Location ::= 
 { return loc("", -1, -1, -1, -1, -1, -1); }
 
@@ -264,9 +264,11 @@ Pair<String [ Pair<String [Type]> ]> ::= t::Type e::Decorated Env
 -- PatternList --
 -----------------
 synthesized attribute pslength::Integer;
+synthesized attribute locations::[Location];
 nonterminal PatternList with location, pps, errors,
   env, defs, decls, expectedTypes, 
   transform<[Stmt]>,
+  locations,
   pslength,
   returnType;
 
@@ -281,7 +283,7 @@ ps::PatternList ::= p::Pattern rest::PatternList
   ps.pps = p.pp :: rest.pps;
   ps.errors := p.errors ++ rest.errors;
   ps.pslength = 1 + rest.pslength;
-
+  ps.locations = p.location :: rest.locations;
   p.env = ps.env;
   rest.env = addEnv(p.defs,ps.env);
   
@@ -319,6 +321,7 @@ ps::PatternList ::= {-empty-}
   ps.pps = [];
   ps.errors := [];
   ps.pslength = 0;
+  ps.locations = [];
   ps.defs := [];
   ps.decls = [ ];
   ps.transform = [];
