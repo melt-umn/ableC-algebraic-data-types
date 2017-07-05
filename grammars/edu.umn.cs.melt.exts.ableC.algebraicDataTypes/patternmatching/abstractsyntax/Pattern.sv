@@ -32,6 +32,13 @@ inherited attribute expectedTypes :: [Type];
 attribute transform<Stmt> occurs on Pattern; 
 
 
+-- * e
+function mkDereferenceOf
+Expr ::= e::Expr l::Location
+{ return unaryOpExpr( dereferenceOp(location=l), e, location=l );
+}
+
+
 abstract production patternVariable
 p::Pattern ::= id::String
 {
