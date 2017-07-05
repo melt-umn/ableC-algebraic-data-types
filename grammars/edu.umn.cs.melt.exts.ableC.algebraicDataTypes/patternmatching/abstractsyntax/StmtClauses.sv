@@ -92,6 +92,7 @@ c::StmtClause ::= p::Pattern s::Stmt
   c.errors := p.errors ++ s.errors;
 
   s.env = addEnv(p.defs,c.env);
+  local l :: Location = c.location;
 
   c.transform = 
     foldStmt( [
@@ -106,7 +107,10 @@ c::StmtClause ::= p::Pattern s::Stmt
                                                location=c.location),
                                           location=c.location ),
                 --             location=c.location),
-                c.location),
+                  -- TODO: don't change line number as workaround for Cilk extension
+                  loc(l.filename, l.line + 150000, l.column, l.endLine,
+                      l.endColumn, l.index, l.endIndex)),
+--                c.location),
 
         ifStmt (
             -- condition: code to match the pattern

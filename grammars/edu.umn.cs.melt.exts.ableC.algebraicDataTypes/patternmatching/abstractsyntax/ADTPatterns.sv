@@ -143,18 +143,24 @@ Stmt ::= pts::[Stmt] ptypes::[Type] tag::String pos::Integer locations::[Locatio
 function mkTran
 Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer l::Location
 {
+  -- TODO: don't change line number as workaround for Cilk extension
+  local fakeloc :: Location =
+    loc(l.filename, l.line + 100000 * (pos+1), l.column, l.endLine,
+        l.endColumn, l.index, l.endIndex);
   return
     compoundStmt ( foldStmt ([
       declStmt(
        variableDecls( [], nilAttribute(), directTypeExpr(ptype),
          consDeclarator(
            declarator( 
-             name("_curr_scrutinee_ptr", location=l),
+--             name("_curr_scrutinee_ptr", location=l),
+             name("_curr_scrutinee_ptr", location=fakeloc),
              pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
              justInitializer( exprInitializer( 
                txtExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
                         toString(pos),
-                        location=l
+--                        location=l
+                        location=fakeloc
                 ) ) ) ),
            nilDeclarator() ) ) ),
 
