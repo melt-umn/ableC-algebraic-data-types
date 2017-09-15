@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax:matchStmt;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
 imports silver:langutil only ast; --, pp, errors; --, err, wrn;
 --imports silver:langutil:pp with implode as ppImplode ;
@@ -10,16 +10,12 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:construction only foldStmt;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax as abs ;
 
--- moved up to Exports.sv
-exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax:matchKeyword;
-exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax:patterns;
-
 --import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax:patterns;
 
 -- trigger the test
 --import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:mda_test;
 
-
+marking terminal Match_t 'match' lexer classes {Ckeyword};
 
 -- Match statement --
 concrete production match_c
