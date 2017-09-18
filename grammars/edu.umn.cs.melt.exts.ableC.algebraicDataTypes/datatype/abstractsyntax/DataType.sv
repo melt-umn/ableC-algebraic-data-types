@@ -374,7 +374,7 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
     functionDeclaration(
       functionDecl(
         [staticStorageClass()],
-        [inlineQualifier()],
+        consSpecialSpecifier(inlineQualifier(), nilSpecialSpecifier()),
         typedefTypeExpr(
           nilQualifier(),
           name(top.topTypeName, location=builtIn())),
