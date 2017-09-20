@@ -1,28 +1,10 @@
-grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax:matchExpr;
-
-imports silver:langutil only ast; --, pp, errors; --, err, wrn;
---imports silver:langutil:pp with implode as ppImplode ;
-
-imports edu:umn:cs:melt:ableC:concretesyntax;
-imports edu:umn:cs:melt:ableC:abstractsyntax;
---imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
---imports edu:umn:cs:melt:ableC:abstractsyntax:env;
-
-imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax as abs;
-
--- moved up to Exports.sv
-exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax:matchKeyword;
-exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax:patterns;
-
---import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax:patterns;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
 -- trigger the test
 --import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:mda_test;
 
-
-
 -- Match expression --
-concrete production match_c
+concrete production matchMatch_c
 e::PrimaryExpr_c ::= 'match' m::Match
 {
   e.ast = m.ast ;
