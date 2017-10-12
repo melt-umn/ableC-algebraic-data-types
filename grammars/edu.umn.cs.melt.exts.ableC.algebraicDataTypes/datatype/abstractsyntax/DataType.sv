@@ -328,13 +328,16 @@ top::Constructor ::= n::String tms::TypeNames
   forwards to
     allocConstructor(
       n, tms,
-      \ty::String -> txtExpr(s"""(${ty}*) malloc (sizeof(${ty}))""", location=top.location),
+      \ty::String -> parseStmt(s"""
+        proto_typedef ${ty};
+        temp = (${ty}*) malloc (sizeof(${ty}));
+        """),
       location=top.location);
 }
 
 -- Takes a function that takes a String and returns an Expr that does the allocation for that type
 abstract production allocConstructor
-top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
+top::Constructor ::= n::String tms::TypeNames allocStmt::(Stmt ::= String)
 {
   production attribute initStmts::[Stmt] with ++;
   initStmts := [];
@@ -402,8 +405,7 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
                   nothingInitializer()),
                 nilDeclarator()))),
 
-
-          mkAssign("temp", allocExpr(top.topTypeName), builtIn()),
+          allocStmt(top.topTypeName),
           
           exprStmt(
             binaryOpExpr(
