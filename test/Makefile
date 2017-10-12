@@ -62,14 +62,14 @@ $(ABLEC_JAR): $(GRAMMAR_SOURCES)
 	silver -o $(ABLEC_JAR) $(SVFLAGS) $(ARTIFACT)
 
 %.c: %.xc $(ABLEC_JAR)
-	java -jar $(ABLEC_JAR) $< $(XCFLAGS)
+	java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS)
 
 %.out: %.o $(SRC_SOURCES) | libs
 	$(CC) $(LDFLAGS) $< $(LOADLIBES) $(LDLIBS) -o $@
 
 translate_error/%.test: translate_error/%.xc $(ABLEC_JAR)
-	@echo "java -jar $(ABLEC_JAR) $< $(XCFLAGS)"
-	@if java -jar $(ABLEC_JAR) $< $(XCFLAGS); then echo "Failed to error"; exit 1; fi
+	@echo "java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS)"
+	@if java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS); then echo "Failed to error"; exit 1; fi
 	touch $@
 
 runtime_error/%.test: runtime_error/%.out
