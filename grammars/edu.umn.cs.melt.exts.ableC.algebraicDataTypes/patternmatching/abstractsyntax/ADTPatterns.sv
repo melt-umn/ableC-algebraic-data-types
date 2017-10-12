@@ -98,17 +98,16 @@ p::Pattern ::= id::String ps::PatternList
   -- ps.transformIn = nullStmt();
 
   p.transform = foldStmt ( [
-      txtStmt( "/* matching against a ADT constructor pattern */" ),
-      txtStmt( "/* match against constructor */" ),
+      exprStmt(comment("matching against a ADT constructor pattern" , location=p.location)),
+      exprStmt(comment("match against constructor", location=p.location)),
       ifStmt(
-        txtExpr( " (* _curr_scrutinee_ptr)->tag != " ++ tag_name ++ " ", 
-                 location = p.location ),
+        parseExpr( " (* _curr_scrutinee_ptr)->tag != " ++ tag_name ++ " "),
         -- then
-        txtStmt( "_match = 0;" ),
+        parseStmt( "_match = 0;" ),
         -- else
         foldStmt( [
-          txtStmt( "/* match against sub-patterns," ++
-                   " setting _match to 0 on a fail */" ) ,
+          exprStmt(comment("match against sub-patterns," ++
+                   " setting _match to 0 on a fail", location=p.location)),
 
  
           declStmt(
@@ -116,8 +115,7 @@ p::Pattern ::= id::String ps::PatternList
              consDeclarator(
                declarator( name("_cons_scrutinee_ptr", location=p.location), 
                  pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
-                 justInitializer( exprInitializer( txtExpr( "_curr_scrutinee_ptr",
-                                                            location=p.location ) ) ) ),
+                 justInitializer( exprInitializer( parseExpr( "_curr_scrutinee_ptr") ) ) ),
                nilDeclarator() ) ) ),
 
 
@@ -157,10 +155,10 @@ Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer l::Location
              name("_curr_scrutinee_ptr", location=fakeloc),
              pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
              justInitializer( exprInitializer( 
-               txtExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
-                        toString(pos),
+               parseExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
+                        toString(pos)
 --                        location=l
-                        location=fakeloc
+                        
                 ) ) ) ),
            nilDeclarator() ) ) ),
 
@@ -171,7 +169,7 @@ Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer l::Location
 
 
 {-
-    [ txtStmt ("FIX 
+    [ parseStmt ("FIX 
 
 Expr * * _curr_scrutinee_ptr = & (* _curr_scrutinee_ptr)->contents.Add.f0;") ;
 
@@ -200,7 +198,7 @@ Boolean ::= n::String cnst::Pair<String [Type]>
   p.transform =
    foldStmt (
      (if   p.depth > 0 
-      then [txtStmt("_current_ADT" ++ "[" ++ toString(p.depth) ++ "] = " ++
+      then [parseStmt("_current_ADT" ++ "[" ++ toString(p.depth) ++ "] = " ++
                     "( void *)" ++
                     "((" ++ p.parent_idType ++ ")" ++
                     "_current_ADT" ++ "[" ++ 
@@ -211,7 +209,7 @@ Boolean ::= n::String cnst::Pair<String [Type]>
 
     [ ifStmt(
         -- check that the 'tag' field of the current node has the tag for this pattern.
-        txtExpr(" ((" ++ idType ++ ")" ++ 
+        parseExpr(" ((" ++ idType ++ ")" ++ 
                 "_current_ADT" ++ "[" ++ toString(p.depth) ++ "])->tag == " ++
                 " " ++ idTypeIndicator ++ "_" ++ id, location=p.location),
       

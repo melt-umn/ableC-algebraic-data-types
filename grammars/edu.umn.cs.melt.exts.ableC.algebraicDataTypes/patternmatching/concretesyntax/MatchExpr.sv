@@ -18,7 +18,7 @@ m::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses ')'
   m.ast = abs:matchExpr( scrutinee.ast, cs.ast, location=m.location );
 --  cs.defaultClauseAST = 
 --    abs:defaultClause(
---      stmtExpr( txtStmt("printf(\"BOOM!\\n\"); exit(1);"), scrutinee.ast, location=m.location), 
+--      stmtExpr( parseStmt("printf(\"BOOM!\\n\"); exit(1);"), scrutinee.ast, location=m.location), 
 --      location=m.location
 --     );
 }

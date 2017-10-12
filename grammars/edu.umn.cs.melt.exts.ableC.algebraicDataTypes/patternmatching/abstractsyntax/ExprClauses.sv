@@ -74,7 +74,7 @@ cs::ExprClauses ::= c::ExprClause
   cs.errors := c.errors;
 
   cs.transform = c.transform;
-  c.transformIn = txtStmt("printf(\"Failed to match any patterns in match expression.\\n\"); exit(1);\n");
+  c.transformIn = parseStmt("printf(\"Failed to match any patterns in match expression.\\n\"); exit(1);\n");
   cs.typerep = c.typerep;
 }
 
@@ -94,9 +94,9 @@ c::ExprClause ::= p::Pattern e::Expr
 
   c.transform
     = foldStmt( [
-        txtStmt( "/* matching for pattern " ++ show(80,p.pp) ++ " */"),
+        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=c.location)),
 
-        txtStmt( "/* ... declarations of pattern variables */"),
+        exprStmt(comment("... declarations of pattern variables", location=c.location)),
 	foldStmt( p.decls ),
 
         mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), c.expectedType), 

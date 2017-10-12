@@ -34,7 +34,7 @@ m::MatchStmt ::= '(' scrutinee::Expr_c ')' '{' cs::StmtClauses '}'
 
 --  cs.defaultClauseAST = 
 --    abs:defaultClause(
---      stmtExpr( txtStmt("printf(\"BOOM!\\n\"); exit(1);"), scrutinee.ast, location=m.location), 
+--      stmtExpr( parseStmt("printf(\"BOOM!\\n\"); exit(1);"), scrutinee.ast, location=m.location), 
 --      location=m.location
 --     );
 }

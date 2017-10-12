@@ -56,7 +56,7 @@ cs::StmtClauses ::=
   cs.pp = text("");
   cs.errors := [];
 
-  cs.transform = txtStmt("/* no match, do nothing. */");
+  cs.transform = exprStmt(comment("no match, do nothing.", location=cs.location));
 }
   
 
@@ -96,8 +96,8 @@ c::StmtClause ::= p::Pattern s::Stmt
 
   c.transform = 
     foldStmt( [
-        txtStmt( "/* matching for pattern " ++ show(80,p.pp) ++ " */"),
-        txtStmt( "/* ... declarations of pattern variables */"),
+        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=c.location)),
+        exprStmt(comment("... declarations of pattern variables", location=c.location)),
         
         foldStmt( p.decls ),
 

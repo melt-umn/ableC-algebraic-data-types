@@ -328,7 +328,7 @@ top::Constructor ::= n::String tms::TypeNames
   forwards to
     allocConstructor(
       n, tms,
-      \ty::String -> txtExpr("(" ++ ty ++ " *) malloc (sizeof(" ++ ty ++ "))", location=builtIn()),
+      \ty::String -> txtExpr(s"""(${ty}*) malloc (sizeof(${ty}))""", location=top.location),
       location=top.location);
 }
 

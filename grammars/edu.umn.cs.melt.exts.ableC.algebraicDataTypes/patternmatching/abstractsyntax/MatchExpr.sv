@@ -12,7 +12,7 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
   local fwrd::Expr =
     stmtExpr (
       foldStmt( [
-        txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
+        exprStmt(comment("match (" ++ show(100,scrutinee.pp) ++ ") ...", location=e.location)),
 
         declStmt(
           variableDecls( [], nilAttribute(), directTypeExpr(clauses.typerep),
