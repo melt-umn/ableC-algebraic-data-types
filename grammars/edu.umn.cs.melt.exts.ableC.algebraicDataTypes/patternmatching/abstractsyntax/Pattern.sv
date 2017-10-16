@@ -70,7 +70,7 @@ p::Pattern ::= id::String
         declRefExpr (name("_curr_scrutinee_ptr",location=p.location), location=p.location),
 	p.location),
       p.location);
-    -- txtStmt(id ++ " = * _curr_scrutinee_ptr;") ;
+    -- parseStmt(id ++ " = * _curr_scrutinee_ptr;") ;
 }
 
 abstract production patternWildcard
@@ -94,10 +94,9 @@ p::Pattern ::= constExpr::Expr
 
   p.transform 
     = ifStmt(
-        txtExpr("( *_curr_scrutinee_ptr != " ++ show(10, constExpr.pp) ++ ")",
-                location=p.location),
+        parseExpr("( *_curr_scrutinee_ptr != " ++ show(10, constExpr.pp) ++ ")"),
         -- then clause
-        txtStmt("_match = 0;"),
+        parseStmt("_match = 0;"),
         -- else clause
         nullStmt()
       );
@@ -123,10 +122,9 @@ p::Pattern ::= s::String
 
   p.transform =
     ifStmt(
-      txtExpr("strcmp( *_curr_scrutinee_ptr,(" ++ s ++ "))",
-              location=p.location),
+      parseExpr("strcmp( *_curr_scrutinee_ptr,(" ++ s ++ "))"),
         -- then clause
-        txtStmt("_match = 0;"),
+        parseStmt("_match = 0;"),
         -- else clause
         nullStmt()
       );

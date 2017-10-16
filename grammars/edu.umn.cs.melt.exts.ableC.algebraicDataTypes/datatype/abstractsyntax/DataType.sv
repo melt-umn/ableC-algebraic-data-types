@@ -328,7 +328,9 @@ top::Constructor ::= n::String tms::TypeNames
   forwards to
     allocConstructor(
       n, tms,
-      \ty::String -> txtExpr("(" ++ ty ++ " *) malloc (sizeof(" ++ ty ++ "))", location=builtIn()),
+      \ty::String -> parseExpr(s"""
+        ({proto_typedef ${ty};
+          (${ty}*) malloc (sizeof(${ty}));})"""),
       location=top.location);
 }
 
@@ -401,7 +403,6 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
                   nilAttribute(),
                   nothingInitializer()),
                 nilDeclarator()))),
-
 
           mkAssign("temp", allocExpr(top.topTypeName), builtIn()),
           

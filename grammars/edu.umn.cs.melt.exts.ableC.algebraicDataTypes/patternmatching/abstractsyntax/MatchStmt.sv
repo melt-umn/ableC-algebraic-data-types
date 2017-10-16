@@ -19,7 +19,7 @@ e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
     then warnStmt(lerrors)
     else
       compoundStmt(foldStmt( [
-        txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
+        exprStmt(comment("match (" ++ show(100,scrutinee.pp) ++ ") ...", location=scrutinee.location)),
 
         mkDecl( "_match_scrutinee_val", scrutinee.typerep, scrutinee, 
                 scrutinee.location),
