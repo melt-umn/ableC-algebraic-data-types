@@ -383,7 +383,8 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
         functionTypeExprWithArgs(
           pointerTypeExpr(nilQualifier(), baseTypeExpr()),
           tms.asParameters,
-          false),
+          false,
+          nilQualifier()),
         name(n, location=builtIn()),
         nilAttribute(),
 
@@ -407,26 +408,22 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
           mkAssign("temp", allocExpr(top.topTypeName), builtIn()),
           
           exprStmt(
-            binaryOpExpr(
+            eqExpr(
               memberExpr(
                 declRefExpr(
                   name("temp",location=builtIn()),location=builtIn()),
                 true,
                 name("tag",location=builtIn()),location=builtIn()),
-              assignOp(
-                eqOp(location=builtIn()),location=builtIn()), 
               declRefExpr(
                 name(top.topTypeName++"_"++n,location=builtIn()),location=builtIn()),location=builtIn())),
 
           exprStmt(
-            binaryOpExpr(
+            eqExpr(
               memberExpr(
                 declRefExpr(
                   name("temp",location=builtIn()),location=builtIn()),
                 true,
                 name("refId",location=builtIn()),location=builtIn()),
-              assignOp(
-                eqOp(location=builtIn()),location=builtIn()), 
               realConstant(
                 integerConstant(
                   case lookupTag(top.topTypeName, top.env) of

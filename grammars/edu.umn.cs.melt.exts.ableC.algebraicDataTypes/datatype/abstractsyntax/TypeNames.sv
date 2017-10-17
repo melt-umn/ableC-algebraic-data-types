@@ -58,7 +58,7 @@ ts::TypeNames ::= t::TypeName rest::TypeNames
   ts.asAssignments =
     seqStmt(
       exprStmt(
-        binaryOpExpr(
+        eqExpr(
           memberExpr(
             memberExpr(
               memberExpr(
@@ -70,8 +70,6 @@ ts::TypeNames ::= t::TypeName rest::TypeNames
               name(ts.name_i,location=builtIn()),location=builtIn()),
             false,
             name("f"++toString(ts.position),location=builtIn()),location=builtIn()),
-          assignOp(
-            eqOp(location=builtIn()),location=builtIn()),
           declRefExpr(
             name("f"++toString(ts.position),location=builtIn()),location=builtIn()),location=builtIn())),
       rest.asAssignments);

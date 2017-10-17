@@ -35,7 +35,7 @@ attribute transform<Stmt> occurs on Pattern;
 -- * e
 function mkDereferenceOf
 Expr ::= e::Expr l::Location
-{ return unaryOpExpr( dereferenceOp(location=l), e, location=l );
+{ return dereferenceExpr( e, location=l );
 }
 
 
@@ -113,7 +113,7 @@ p::Pattern ::= s::String
                     pointerType(
                       nilQualifier(),
                       builtinType(
-                        consQualifier(constQualifier(),nilQualifier()),
+                        consQualifier(constQualifier(location=p.location),nilQualifier()),
                         signedType(charType()))),
                     false, false) then [] else
                   [err(p.location, "Unexpected string constant in pattern")]) ++

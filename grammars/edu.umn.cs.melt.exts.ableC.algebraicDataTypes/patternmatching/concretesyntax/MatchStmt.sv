@@ -4,7 +4,7 @@ imports silver:langutil only ast; --, pp, errors; --, err, wrn;
 --imports silver:langutil:pp with implode as ppImplode ;
 
 imports edu:umn:cs:melt:ableC:concretesyntax;
-imports edu:umn:cs:melt:ableC:abstractsyntax;
+imports edu:umn:cs:melt:ableC:abstractsyntax:host;
 imports edu:umn:cs:melt:ableC:abstractsyntax:construction only foldStmt;
 --imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
