@@ -24,10 +24,9 @@ e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
         mkDecl( "_match_scrutinee_val", scrutinee.typerep, scrutinee, 
                 scrutinee.location),
         mkDecl( "_match_scrutinee_ptr", pointerType( nilQualifier(), scrutinee.typerep), 
-                  unaryOpExpr( addressOfOp(location=scrutinee.location), 
-                               declRefExpr(name("_match_scrutinee_val", location=scrutinee.location),
-                                           location=scrutinee.location),
-                               location=scrutinee.location),
+                  addressOfExpr( declRefExpr(name("_match_scrutinee_val", location=scrutinee.location),
+                                             location=scrutinee.location),
+                                 location=scrutinee.location),
                   scrutinee.location),
 
         clauses.transform 
