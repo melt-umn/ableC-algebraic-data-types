@@ -12,12 +12,12 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
   local fwrd::Expr =
     stmtExpr (
       foldStmt( [
-        txtStmt ("/* match (" ++ show(100,scrutinee.pp) ++ ") ... */"),
+        exprStmt(comment("match (" ++ show(100,scrutinee.pp) ++ ") ...", location=e.location)),
 
         declStmt(
           variableDecls( [], nilAttribute(), directTypeExpr(clauses.typerep),
              consDeclarator(
-               declarator( name("__result", location=bogus_loc()), 
+               declarator( name("__result", location=e.location), 
                  baseTypeExpr(), nilAttribute(), 
                  nothingInitializer () ),
                nilDeclarator() ) ) ),
@@ -26,10 +26,9 @@ e::Expr ::= scrutinee::Expr  clauses::ExprClauses
                 scrutinee.location),
 
         mkDecl( "_match_scrutinee_ptr", pointerType( nilQualifier(), scrutinee.typerep), 
-                unaryOpExpr( addressOfOp(location=scrutinee.location), 
-                             declRefExpr(name("_match_scrutinee_val", location=scrutinee.location),
-                                         location=scrutinee.location),
-                             location=scrutinee.location),
+                addressOfExpr( declRefExpr(name("_match_scrutinee_val", location=scrutinee.location),
+                                           location=scrutinee.location),
+                               location=scrutinee.location),
                 scrutinee.location),
 
         clauses.transform 

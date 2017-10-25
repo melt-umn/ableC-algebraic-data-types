@@ -1,11 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax:patterns;
-
-imports silver:langutil only ast; --, pp, errors; --, err, wrn;
-
-imports edu:umn:cs:melt:ableC:concretesyntax;
-imports edu:umn:cs:melt:ableC:abstractsyntax;
-
-imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax as abs ;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
 terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier}; 
    -- Same as Identifier_t

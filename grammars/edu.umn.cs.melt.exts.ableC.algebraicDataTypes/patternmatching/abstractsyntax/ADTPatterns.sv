@@ -98,63 +98,67 @@ p::Pattern ::= id::String ps::PatternList
   -- ps.transformIn = nullStmt();
 
   p.transform = foldStmt ( [
-      txtStmt( "/* matching against a ADT constructor pattern */" ),
-      txtStmt( "/* match against constructor */" ),
+      exprStmt(comment("matching against a ADT constructor pattern" , location=p.location)),
+      exprStmt(comment("match against constructor", location=p.location)),
       ifStmt(
-        txtExpr( " (* _curr_scrutinee_ptr)->tag != " ++ tag_name ++ " ", 
-                 location = p.location ),
+        parseExpr( " (* _curr_scrutinee_ptr)->tag != " ++ tag_name ++ " "),
         -- then
-        txtStmt( "_match = 0;" ),
+        parseStmt( "_match = 0;" ),
         -- else
         foldStmt( [
-          txtStmt( "/* match against sub-patterns," ++
-                   " setting _match to 0 on a fail */" ) ,
+          exprStmt(comment("match against sub-patterns," ++
+                   " setting _match to 0 on a fail", location=p.location)),
 
  
           declStmt(
            variableDecls( [], nilAttribute(), directTypeExpr(p.expectedType),
              consDeclarator(
-               declarator( name("_cons_scrutinee_ptr", location=bogus_loc()), 
+               declarator( name("_cons_scrutinee_ptr", location=p.location), 
                  pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
-                 justInitializer( exprInitializer( txtExpr( "_curr_scrutinee_ptr",
-                                                            location=bogus_loc() ) ) ) ),
+                 justInitializer( exprInitializer( parseExpr( "_curr_scrutinee_ptr") ) ) ),
                nilDeclarator() ) ) ),
 
 
           (if length(ps.transform) == length(ps.expectedTypes)
-           then mkTrans(ps.transform, ps.expectedTypes, id, 0)
-           else txtStmt("/* Error - ps.transform and ps.expectedTypes have " ++ 
-                        "different lengths */") )
+           then mkTrans(ps.transform, ps.expectedTypes, id, 0, ps.locations)
+           else warnStmt([err(p.location,"/* Error - ps.transform and ps.expectedTypes have " ++ 
+                        "different lengths */")] ) )
          ] )
       )
     ] );
 }
 
 function mkTrans
-Stmt ::= pts::[Stmt] ptypes::[Type] tag::String pos::Integer
+Stmt ::= pts::[Stmt] ptypes::[Type] tag::String pos::Integer locations::[Location]
 {
   return
     if null(pts)
     then nullStmt()
-    else seqStmt( mkTran (head(pts), head(ptypes), tag, pos), 
-                  mkTrans (tail(pts), tail(ptypes), tag, pos+1) );
+    else seqStmt( mkTran (head(pts), head(ptypes), tag, pos, head(locations)), 
+                  mkTrans (tail(pts), tail(ptypes), tag, pos+1, tail(locations)) );
 }
 
 function mkTran
-Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer
+Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer l::Location
 {
+  -- TODO: don't change line number as workaround for Cilk extension
+  local fakeloc :: Location =
+    loc(l.filename, l.line + 100000 * (pos+1), l.column, l.endLine,
+        l.endColumn, l.index, l.endIndex);
   return
     compoundStmt ( foldStmt ([
       declStmt(
        variableDecls( [], nilAttribute(), directTypeExpr(ptype),
          consDeclarator(
            declarator( 
-             name("_curr_scrutinee_ptr", location=bogus_loc()), 
+--             name("_curr_scrutinee_ptr", location=l),
+             name("_curr_scrutinee_ptr", location=fakeloc),
              pointerTypeExpr (nilQualifier(), baseTypeExpr()), nilAttribute(), 
              justInitializer( exprInitializer( 
-               txtExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
-                        toString(pos),
-                        location=bogus_loc()
+               parseExpr( "& (* _cons_scrutinee_ptr)->contents." ++ tag ++ ".f" ++ 
+                        toString(pos)
+--                        location=l
+                        
                 ) ) ) ),
            nilDeclarator() ) ) ),
 
@@ -165,7 +169,7 @@ Stmt ::= pt::Stmt ptype::Type tag::String pos::Integer
 
 
 {-
-    [ txtStmt ("FIX 
+    [ parseStmt ("FIX 
 
 Expr * * _curr_scrutinee_ptr = & (* _curr_scrutinee_ptr)->contents.Add.f0;") ;
 
@@ -177,7 +181,7 @@ Expr * * _curr_scrutinee_ptr = & (* _curr_scrutinee_ptr)->contents.Add.f0;") ;
 
 }
 
-function bogus_loc
+function bogus_locX
 Location ::= 
 { return loc("", -1, -1, -1, -1, -1, -1); }
 
@@ -194,7 +198,7 @@ Boolean ::= n::String cnst::Pair<String [Type]>
   p.transform =
    foldStmt (
      (if   p.depth > 0 
-      then [txtStmt("_current_ADT" ++ "[" ++ toString(p.depth) ++ "] = " ++
+      then [parseStmt("_current_ADT" ++ "[" ++ toString(p.depth) ++ "] = " ++
                     "( void *)" ++
                     "((" ++ p.parent_idType ++ ")" ++
                     "_current_ADT" ++ "[" ++ 
@@ -205,7 +209,7 @@ Boolean ::= n::String cnst::Pair<String [Type]>
 
     [ ifStmt(
         -- check that the 'tag' field of the current node has the tag for this pattern.
-        txtExpr(" ((" ++ idType ++ ")" ++ 
+        parseExpr(" ((" ++ idType ++ ")" ++ 
                 "_current_ADT" ++ "[" ++ toString(p.depth) ++ "])->tag == " ++
                 " " ++ idTypeIndicator ++ "_" ++ id, location=p.location),
       
@@ -264,9 +268,11 @@ Pair<String [ Pair<String [Type]> ]> ::= t::Type e::Decorated Env
 -- PatternList --
 -----------------
 synthesized attribute pslength::Integer;
+synthesized attribute locations::[Location];
 nonterminal PatternList with location, pps, errors,
   env, defs, decls, expectedTypes, 
   transform<[Stmt]>,
+  locations,
   pslength,
   returnType;
 
@@ -281,7 +287,7 @@ ps::PatternList ::= p::Pattern rest::PatternList
   ps.pps = p.pp :: rest.pps;
   ps.errors := p.errors ++ rest.errors;
   ps.pslength = 1 + rest.pslength;
-
+  ps.locations = p.location :: rest.locations;
   p.env = ps.env;
   rest.env = addEnv(p.defs,ps.env);
   
@@ -319,6 +325,7 @@ ps::PatternList ::= {-empty-}
   ps.pps = [];
   ps.errors := [];
   ps.pslength = 0;
+  ps.locations = [];
   ps.defs := [];
   ps.decls = [ ];
   ps.transform = [];

@@ -333,7 +333,9 @@ top::Constructor ::= n::String tms::TypeNames
   forwards to
     allocConstructor(
       n, tms,
-      \ty::String -> txtExpr("(" ++ ty ++ " *) malloc (sizeof(" ++ ty ++ "))", location=builtIn()),
+      \ty::String -> parseExpr(s"""
+        ({proto_typedef ${ty};
+          (${ty}*) malloc (sizeof(${ty}));})"""),
       location=top.location);
 }
 
@@ -379,14 +381,15 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
     functionDeclaration(
       functionDecl(
         [staticStorageClass()],
-        [inlineQualifier()],
+        consSpecialSpecifier(inlineQualifier(), nilSpecialSpecifier()),
         typedefTypeExpr(
           nilQualifier(),
           name(top.topTypeName, location=builtIn())),
         functionTypeExprWithArgs(
           pointerTypeExpr(nilQualifier(), baseTypeExpr()),
           tms.asParameters,
-          false),
+          false,
+          nilQualifier()),
         name(n, location=builtIn()),
         nilAttribute(),
 
@@ -407,30 +410,25 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
                   nothingInitializer()),
                 nilDeclarator()))),
 
-
           mkAssign("temp", allocExpr(top.topTypeName), builtIn()),
           
           exprStmt(
-            binaryOpExpr(
+            eqExpr(
               memberExpr(
                 declRefExpr(
                   name("temp",location=builtIn()),location=builtIn()),
                 true,
                 name("tag",location=builtIn()),location=builtIn()),
-              assignOp(
-                eqOp(location=builtIn()),location=builtIn()), 
               declRefExpr(
                 name(top.topTypeName++"_"++n,location=builtIn()),location=builtIn()),location=builtIn())),
 
           exprStmt(
-            binaryOpExpr(
+            eqExpr(
               memberExpr(
                 declRefExpr(
                   name("temp",location=builtIn()),location=builtIn()),
                 true,
                 name("refId",location=builtIn()),location=builtIn()),
-              assignOp(
-                eqOp(location=builtIn()),location=builtIn()), 
               realConstant(
                 integerConstant(
                   case lookupTag(top.topTypeName, top.env) of

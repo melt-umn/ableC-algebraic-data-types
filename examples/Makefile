@@ -61,7 +61,7 @@ $(ABLEC_JAR): $(GRAMMAR_SOURCES)
 	silver -o $@ $(SVFLAGS) $(ARTIFACT)
 
 %.c: %.xc $(ABLEC_JAR)
-	java -jar $(ABLEC_JAR) $< $(XCFLAGS)
+	java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS)
 
 %.out: %.o $(SRC_SOURCES) | libs
 	$(CC) $(LDFLAGS) $< $(LOADLIBES) $(LDLIBS) -o $@

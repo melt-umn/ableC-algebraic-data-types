@@ -32,6 +32,13 @@ inherited attribute expectedTypes :: [Type];
 attribute transform<Stmt> occurs on Pattern; 
 
 
+-- * e
+function mkDereferenceOf
+Expr ::= e::Expr l::Location
+{ return dereferenceExpr( e, location=l );
+}
+
+
 abstract production patternVariable
 p::Pattern ::= id::String
 {
@@ -56,7 +63,14 @@ p::Pattern ::= id::String
 
   p.errors := []; --ToDo: - check for non-linearity
 
-  p.transform = txtStmt(id ++ " = * _curr_scrutinee_ptr;") ;
+  p.transform =
+    mkAssign(
+      id,
+      mkDereferenceOf (
+        declRefExpr (name("_curr_scrutinee_ptr",location=p.location), location=p.location),
+	p.location),
+      p.location);
+    -- parseStmt(id ++ " = * _curr_scrutinee_ptr;") ;
 }
 
 abstract production patternWildcard
@@ -80,10 +94,9 @@ p::Pattern ::= constExpr::Expr
 
   p.transform 
     = ifStmt(
-        txtExpr("( *_curr_scrutinee_ptr != " ++ show(10, constExpr.pp) ++ ")",
-                location=p.location),
+        parseExpr("( *_curr_scrutinee_ptr != " ++ show(10, constExpr.pp) ++ ")"),
         -- then clause
-        txtStmt("_match = 0;"),
+        parseStmt("_match = 0;"),
         -- else clause
         nullStmt()
       );
@@ -100,7 +113,7 @@ p::Pattern ::= s::String
                     pointerType(
                       nilQualifier(),
                       builtinType(
-                        consQualifier(constQualifier(),nilQualifier()),
+                        consQualifier(constQualifier(location=p.location),nilQualifier()),
                         signedType(charType()))),
                     false, false) then [] else
                   [err(p.location, "Unexpected string constant in pattern")]) ++
@@ -109,10 +122,9 @@ p::Pattern ::= s::String
 
   p.transform =
     ifStmt(
-      txtExpr("strcmp( *_curr_scrutinee_ptr,(" ++ s ++ "))",
-              location=p.location),
+      parseExpr("strcmp( *_curr_scrutinee_ptr,(" ++ s ++ "))"),
         -- then clause
-        txtStmt("_match = 0;"),
+        parseStmt("_match = 0;"),
         -- else clause
         nullStmt()
       );

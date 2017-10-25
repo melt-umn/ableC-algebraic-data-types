@@ -41,7 +41,7 @@ p::Pattern ::= p1::Pattern
 
   p.transform = seqStmt (p1.transform, flip_match);
   local flip_match :: Stmt = 
-    txtStmt ("if (_match == 0) { _match = 1; } else { _match = 0; }");
+    parseStmt ("if (_match == 0) { _match = 1; } else { _match = 0; }");
 }
 
 
@@ -53,5 +53,5 @@ p::Pattern ::= e::Expr
   p.decls = [];
   p.defs := [];
   p.errors := e.errors;
-  p.transform = ifStmt(e, nullStmt(), txtStmt("_match = 0;") );
+  p.transform = ifStmt(e, nullStmt(), parseStmt("_match = 0;") );
 }

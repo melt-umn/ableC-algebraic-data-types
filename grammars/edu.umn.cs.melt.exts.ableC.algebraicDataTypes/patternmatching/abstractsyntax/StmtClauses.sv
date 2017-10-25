@@ -56,7 +56,7 @@ cs::StmtClauses ::=
   cs.pp = text("");
   cs.errors := [];
 
-  cs.transform = txtStmt("/* no match, do nothing. */");
+  cs.transform = exprStmt(comment("no match, do nothing.", location=cs.location));
 }
   
 
@@ -92,11 +92,12 @@ c::StmtClause ::= p::Pattern s::Stmt
   c.errors := p.errors ++ s.errors;
 
   s.env = addEnv(p.defs,c.env);
+  local l :: Location = c.location;
 
   c.transform = 
     foldStmt( [
-        txtStmt( "/* matching for pattern " ++ show(80,p.pp) ++ " */"),
-        txtStmt( "/* ... declarations of pattern variables */"),
+        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=c.location)),
+        exprStmt(comment("... declarations of pattern variables", location=c.location)),
         
         foldStmt( p.decls ),
 
@@ -106,7 +107,10 @@ c::StmtClause ::= p::Pattern s::Stmt
                                                location=c.location),
                                           location=c.location ),
                 --             location=c.location),
-                c.location),
+                  -- TODO: don't change line number as workaround for Cilk extension
+                  loc(l.filename, l.line + 150000, l.column, l.endLine,
+                      l.endColumn, l.index, l.endIndex)),
+--                c.location),
 
         ifStmt (
             -- condition: code to match the pattern
