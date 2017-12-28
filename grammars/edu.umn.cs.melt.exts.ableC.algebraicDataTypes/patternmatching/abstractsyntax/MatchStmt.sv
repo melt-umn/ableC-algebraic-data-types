@@ -12,7 +12,7 @@ e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
   production attribute lerrors :: [Message] with ++;
   lerrors := clauses.errors ++ scrutinee.errors;
   
-  e.functiondefs := []; -- TODO: Hack to avoid cyclic dependancy on env when forwarding
+  e.functionDefs := [];
   
   forwards to
     if !null(lerrors)

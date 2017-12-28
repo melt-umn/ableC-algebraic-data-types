@@ -37,7 +37,7 @@ top::Decl ::= adt::ADTDecl
   -- Env to look up tag and refId
   -- tag isn't always in scope, so we open another scope with the incoming env to get it
   -- in the case of a forward decl
-  local lookupEnv::Decorated Env = addEnv(forward.defs, openScope(top.env));
+  local lookupEnv::Decorated Env = addEnv(forward.defs, openScopeEnv(top.env));
 
   -- Get the struct RefId and StructDecl off of forwards to tree since
   -- they are to be used in the ADT tag and ref Def items.
