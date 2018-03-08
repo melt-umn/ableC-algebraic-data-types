@@ -1,7 +1,7 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
-imports silver:langutil only pp, errors, err, Message; 
-imports silver:langutil:pp with implode as ppImplode;
+imports silver:langutil; 
+imports silver:langutil:pp;
 
 imports edu:umn:cs:melt:ableC:abstractsyntax:host;
 imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
