@@ -152,8 +152,8 @@ t::Type ::= name::String adtRefId::String structRefId::String
   t.rpp = notext();
   t.withTypeQualifiers = t; -- TODO: Hack, discarding type qualifiers here!
   t.withoutAttributes = t;
-  forwards to tagType( nilQualifier(),
-                refIdTagType( structSEU(), name, structRefId ) );
+  forwards to extType( nilQualifier(),
+                refIdExtType( structSEU(), name, structRefId ) );
 }
 
 

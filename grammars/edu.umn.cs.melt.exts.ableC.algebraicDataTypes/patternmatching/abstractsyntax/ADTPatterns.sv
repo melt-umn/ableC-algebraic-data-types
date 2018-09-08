@@ -51,7 +51,7 @@ p::Pattern ::= id::String ps::PatternList
   local adtTypeInfo :: Pair<Boolean [RefIdItem]>
     = case p.expectedType of
       | adtTagType( _, adtRefId, _) -> pair( true, lookupRefId(adtRefId, p.env))
-      | tagType( _, refIdTagType(_,_,refId)) -> pair( true, lookupRefId(refId, p.env) )
+      | extType( _, refIdExtType(_,_,refId)) -> pair( true, lookupRefId(refId, p.env) )
       | pointerType( _, adtTagType(_,adtRefId,_) ) -> pair(true, lookupRefId(adtRefId, p.env))
       | errorType() -> pair(true, [])
       | _ -> pair(false, [])
