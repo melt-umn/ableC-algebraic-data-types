@@ -147,7 +147,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
             unsignedType(intType()))),
             consStructDeclarator(
               structField(
-                name("refId", location=builtIn()),
+                name("refId", location=builtin),
                 baseTypeExpr(),
                 nilAttribute()),
             nilStructDeclarator())),
@@ -159,7 +159,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
       structTypeExpr(
         nilQualifier(),
         structDecl(nilAttribute(),
-          justName(name("_GenericDatatype", location=builtIn())),
+          justName(name("_GenericDatatype", location=builtin)),
           appendStructItemList(
             structItems,
             consStructItem(
@@ -171,12 +171,12 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                     unsignedType(intType()))),
                 consStructDeclarator(
                   structField(
-                    name("tag", location=builtIn()),
+                    name("tag", location=builtin),
                     baseTypeExpr(),
                     nilAttribute()),
                   nilStructDeclarator())),
               nilStructItem())),
-          location=builtIn())));
+          location=builtin)));
   
 
   local attribute defaultDecls::Decls =
@@ -193,20 +193,20 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                   structItem(nilAttribute(),
                     enumTypeExpr(
                       nilQualifier(),
-                      enumDecl(justName(name("_" ++ n.name ++ "_types", location=builtIn())),
+                      enumDecl(justName(name("_" ++ n.name ++ "_types", location=builtin)),
                       case cs.enumItems of
                         nilEnumItem() ->
                           consEnumItem(
                             enumItem(
-                              name("_dummy_" ++ n.name ++ "_enum_item", location=builtIn()),
+                              name("_dummy_" ++ n.name ++ "_enum_item", location=builtin),
                               nothingExpr()),
                             nilEnumItem())
                       | _ -> cs.enumItems
                       end,
-                      location=builtIn())),
+                      location=builtin)),
                      consStructDeclarator(
                       structField(
-                        name("tag", location=builtIn()),
+                        name("tag", location=builtin),
                         baseTypeExpr(),
                         nilAttribute()),
                       nilStructDeclarator())),
@@ -217,15 +217,15 @@ top::ADTDecl ::= n::Name cs::ConstructorList
                         unionDecl(
                           nilAttribute(),
                           justName(
-                            name("_" ++ n.name ++ "_contents", location=builtIn())),
-                          cs.structItems, location=builtIn())),
+                            name("_" ++ n.name ++ "_contents", location=builtin)),
+                          cs.structItems, location=builtin)),
                       consStructDeclarator(
                         structField(
-                          name("contents",location=builtIn()), 
+                          name("contents",location=builtin), 
                           baseTypeExpr(),
                           nilAttribute()),
                         nilStructDeclarator())),
-                    nilStructItem()))), location=builtIn()))),
+                    nilStructItem()))), location=builtin))),
         nilDecl() ) ; --cs.funDecls);
 
 --  top.transform = decls(appendDecls(defaultDecls, adtDecls));
@@ -360,7 +360,7 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
 
   top.enumItem =
     enumItem(
-      name( top.topTypeName ++ "_" ++ n, location=builtIn() ),
+      name( top.topTypeName ++ "_" ++ n, location=builtin ),
       nothingExpr());
 
   top.structItem =
@@ -369,11 +369,11 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
         nilQualifier(),
         structDecl(nilAttribute(),
           justName(
-            name(top.topTypeName ++ "_" ++ n ++ "_s", location=builtIn())),
-          tms.asStructItemList, location=builtIn())),
+            name(top.topTypeName ++ "_" ++ n ++ "_s", location=builtin)),
+          tms.asStructItemList, location=builtin)),
       consStructDeclarator(
         structField(
-          name(n, location=builtIn()),
+          name(n, location=builtin),
           baseTypeExpr(), nilAttribute()),
         nilStructDeclarator()));
 
@@ -384,13 +384,13 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
         consSpecialSpecifier(inlineQualifier(), nilSpecialSpecifier()),
         typedefTypeExpr(
           nilQualifier(),
-          name(top.topTypeName, location=builtIn())),
+          name(top.topTypeName, location=builtin)),
         functionTypeExprWithArgs(
           pointerTypeExpr(nilQualifier(), baseTypeExpr()),
           tms.asParameters,
           false,
           nilQualifier()),
-        name(n, location=builtIn()),
+        name(n, location=builtin),
         nilAttribute(),
 
         nilDecl(),
@@ -401,34 +401,34 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
               [], nilAttribute(),
               typedefTypeExpr(
                 nilQualifier(), 
-                name(top.topTypeName, location=builtIn())), 
+                name(top.topTypeName, location=builtin)), 
               consDeclarator(
                 declarator(
-                  name("temp", location=builtIn()), 
+                  name("temp", location=builtin), 
                   pointerTypeExpr(nilQualifier(), baseTypeExpr()),
                   nilAttribute(),
                   nothingInitializer()),
                 nilDeclarator()))),
 
-          mkAssign("temp", allocExpr(top.topTypeName), builtIn()),
+          mkAssign("temp", allocExpr(top.topTypeName), builtin),
           
           exprStmt(
             eqExpr(
               memberExpr(
                 declRefExpr(
-                  name("temp",location=builtIn()),location=builtIn()),
+                  name("temp",location=builtin),location=builtin),
                 true,
-                name("tag",location=builtIn()),location=builtIn()),
+                name("tag",location=builtin),location=builtin),
               declRefExpr(
-                name(top.topTypeName++"_"++n,location=builtIn()),location=builtIn()),location=builtIn())),
+                name(top.topTypeName++"_"++n,location=builtin),location=builtin),location=builtin)),
 
           exprStmt(
             eqExpr(
               memberExpr(
                 declRefExpr(
-                  name("temp",location=builtIn()),location=builtIn()),
+                  name("temp",location=builtin),location=builtin),
                 true,
-                name("refId",location=builtIn()),location=builtIn()),
+                name("refId",location=builtin),location=builtin),
               realConstant(
                 integerConstant(
                   case lookupTag(top.topTypeName, top.env) of
@@ -437,113 +437,15 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
                   end,
                   true, -- Lucas, verify that this should be true and not false
                   noIntSuffix(),
-                  location=builtIn()),
-                location=builtIn()),
-              location=builtIn())),
+                  location=builtin),
+                location=builtin),
+              location=builtin)),
           foldStmt(initStmts),
           tms.asAssignments,
-          returnStmt(justExpr(declRefExpr(name("temp",location=builtIn()),location=builtIn())))
+          returnStmt(justExpr(declRefExpr(name("temp",location=builtin),location=builtin)))
 
 
         ])
 
        ));
 }
-
-
-{-
- - New location for expressions which don't have real locations
- -}
-abstract production builtIn
-top::Location ::=
-{
-  forwards to loc("Built In", 0, 0, 0, 0, 0, 0);
-}
-
-{-
-function convertTypeNamesToParameters
-Parameters ::= tms::[TypeName]
-{
-  return convertTypeNamesToParametersHelper( tms, 0 );
-}
-
-function convertTypeNamesToParametersHelper
-Parameters ::= tms::[TypeName] i::Integer
-{
-  return
-    if null(tms) then nilParameters()
-    else case head(tms) of
-         | typeName(bty,mty) ->
-             consParameters(
-               parameterDecl(
-                 [],
-                 bty,
-                 mty,
-                 justName(name("f"++toString(i),location=builtIn())),
-                 []),
-               convertTypeNamesToParametersHelper( tail(tms), i+1 ))
-         end;
-}
-
-function convertTypeNamesToStructItems
-StructItemList ::= tms::[TypeName]
-{
-  return convertTypeNamesToStructItemsHelper( tms, 0 );
-}
-
-function convertTypeNamesToStructItemsHelper
-StructItemList ::= tms::[TypeName] i::Integer
-{
-  return
-    if null(tms) then nilStructItem()
-    else case head(tms) of
-         | typeName(bty,mty) ->
-             consStructItem(
-               structItem([],
-                 bty,
-                 consStructDeclarator(
-                   structField(
-                     name("f"++toString(i),location=builtIn()),
-                     mty,
-                     []),
-                   nilStructDeclarator())),
-               convertTypeNamesToStructItemsHelper( tail(tms), i+1 ))
-         end;
-}
-
-function convertTypeNamesToAssignments
-Stmt ::= tms::[TypeName] n::String
-{
-  return convertTypeNamesToAssignmentsHelper( tms, n, 0 );
-}
-
-function convertTypeNamesToAssignmentsHelper
-Stmt ::= tms::[TypeName] n::String i::Integer
-{
-  return
-    if null(tms) then nullStmt()
-    else case head(tms) of
-         | typeName(btw,mty) ->
-             seqStmt(
-               exprStmt(
-                 binaryOpExpr(
-                   memberExpr(
-                     memberExpr(
-                       memberExpr(
-                         declRefExpr(
-                           name("temp",location=builtIn()),location=builtIn()),
-                         true,
-                         name("contents",location=builtIn()),location=builtIn()),
-                       false,
-                       name(n,location=builtIn()),location=builtIn()),
-                     false,
-                     name("f"++toString(i),location=builtIn()),location=builtIn()),
-                   assignOp(
-                     eqOp(location=builtIn()),location=builtIn()),
-                   declRefExpr(
-                     name("f"++toString(i),location=builtIn()),location=builtIn()),location=builtIn())),
-               convertTypeNamesToAssignmentsHelper( tail(tms), n, i+1 ))
-         end;
-}
--}
-

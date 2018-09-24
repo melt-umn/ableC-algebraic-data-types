@@ -32,15 +32,15 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 ---------
 -- New defs for adding ADT tag items and refId items.
 abstract production adtTagDef
-d::Def ::= n::String t::TagItem
+top::Def ::= n::String t::TagItem
 {
-  d.tagContribs = [pair(n,t)];
+  top.tagContribs = [pair(n,t)];
   --forwards to tagDef(n,t);
 }
 abstract production adtRefIdDef
-d::Def ::= n::String r::RefIdItem
+top::Def ::= n::String r::RefIdItem
 {
-  d.refIdContribs = [pair(n,r)];
+  top.refIdContribs = [pair(n,r)];
   --forwards to refIdDef(n,r);
 }
 
@@ -51,9 +51,9 @@ d::Def ::= n::String r::RefIdItem
    this is the structure that is returned.
  -}
 abstract production adtRefIdTagItem
-t::TagItem ::= adtRefId::String structRefId::String
+top::TagItem ::= adtRefId::String structRefId::String
 {
-  t.pp = text("ADT, adtRefId = " ++ adtRefId ++ ", structRefId = " ++ structRefId);
+  top.pp = text("ADT, adtRefId = " ++ adtRefId ++ ", structRefId = " ++ structRefId);
   forwards to refIdTagItem (structSEU(), structRefId) ;
 }
 {- adtRefIdItem: when looking up this type by RefId in the env,
@@ -61,9 +61,9 @@ t::TagItem ::= adtRefId::String structRefId::String
    to the ADT declaration in the syntax tree. 
  -}
 abstract production adtRefIdItem
-t::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl 
+top::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl 
 {
-  t.pp = text("ADTDecl: adt.refId=" ++ adt.refId ++ ", s.refId=" ++ s.refId);
+  top.pp = text("ADTDecl: adt.refId=" ++ adt.refId ++ ", s.refId=" ++ s.refId);
   forwards to structRefIdItem (s);
 }
 
@@ -74,14 +74,14 @@ t::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl
 -- e.g. "datatype Expr;"
 -- mirroring C structure of 'struct Expr'
 abstract production adtTagReferenceTypeExpr 
-b::BaseTypeExpr ::= q::Qualifiers n::Name
+top::BaseTypeExpr ::= q::Qualifiers n::Name
 {
-  b.pp = ppConcat([ 
+  top.pp = ppConcat([ 
           terminate( space(), q.pps ),
           text("datatype"), space(), 
           n.pp ]);
 
-  local tags :: [TagItem] = lookupTag(n.name, b.env);
+  local tags :: [TagItem] = lookupTag(n.name, top.env);
 
   local name_refIdIfOld_workaround :: Maybe<String>
     = case n.tagLocalLookup of
@@ -106,7 +106,7 @@ b::BaseTypeExpr ::= q::Qualifiers n::Name
   -- maybe create it here, stick in in defs with some bogus name -
   --    n.name ++ "STRUCT"?
     
-  b.defs := 
+  top.defs := 
     case tags of
     -- not already declared, this is the declaration
     | [ ] -> [  adtTagDef( n.name, adtRefIdTagItem( refId, structRefId ) ) ]
@@ -114,7 +114,7 @@ b::BaseTypeExpr ::= q::Qualifiers n::Name
     | _ -> [] 
     end ;
 
-  b.typerep = 
+  top.typerep = 
     case tags of
     -- Don't see the declaration, so we're adding it.
     | [ ] ->  adtTagType( n.name, refId, structRefId )
@@ -138,7 +138,7 @@ b::BaseTypeExpr ::= q::Qualifiers n::Name
 -- e.g. "datatype Expr { ... }"
 
 abstract production adtTypeExpr
-t::BaseTypeExpr ::= q::[Qualifier] def::StructDecl
+top::BaseTypeExpr ::= q::[Qualifier] def::StructDecl
 {
 }
 --}
@@ -146,21 +146,12 @@ t::BaseTypeExpr ::= q::[Qualifier] def::StructDecl
 -- Type --
 ----------
 abstract production adtTagType
-t::Type ::= name::String adtRefId::String structRefId::String
+top::Type ::= name::String adtRefId::String structRefId::String
 {
-  t.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")"); -- TODO
-  t.rpp = notext();
-  t.withTypeQualifiers = t; -- TODO: Hack, discarding type qualifiers here!
-  t.withoutAttributes = t;
+  top.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")"); -- TODO
+  top.rpp = notext();
+  top.withTypeQualifiers = top; -- TODO: Hack, discarding type qualifiers here!
+  top.withoutAttributes = top;
   forwards to extType( nilQualifier(),
                 refIdExtType( structSEU(), name, structRefId ) );
 }
-
-
-nonterminal ADTInfo with name;
-abstract production adtInfo
-a::ADTInfo ::= n::String
-{
-  a.name = n;
-}
-

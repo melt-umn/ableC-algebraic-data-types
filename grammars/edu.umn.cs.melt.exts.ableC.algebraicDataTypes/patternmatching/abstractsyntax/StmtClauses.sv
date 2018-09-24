@@ -37,26 +37,26 @@ nonterminal StmtClauses with location, pp, errors, env, returnType,
   expectedType, transform<Stmt>; 
 
 abstract production consStmtClause
-cs::StmtClauses ::= c::StmtClause rest::StmtClauses
+top::StmtClauses ::= c::StmtClause rest::StmtClauses
 { 
-  cs.pp = cat( c.pp, rest.pp );
+  top.pp = cat( c.pp, rest.pp );
 
-  c.expectedType = cs.expectedType;
-  rest.expectedType = cs.expectedType;
+  c.expectedType = top.expectedType;
+  rest.expectedType = top.expectedType;
 
-  cs.errors := c.errors ++ rest.errors;
+  top.errors := c.errors ++ rest.errors;
 
-  cs.transform = c.transform;
+  top.transform = c.transform;
   c.transformIn = rest.transform;
 }
 
 abstract production failureStmtClause
-cs::StmtClauses ::= 
+top::StmtClauses ::= 
 {
-  cs.pp = text("");
-  cs.errors := [];
+  top.pp = text("");
+  top.errors := [];
 
-  cs.transform = exprStmt(comment("no match, do nothing.", location=cs.location));
+  top.transform = exprStmt(comment("no match, do nothing.", location=builtin));
 }
   
 
@@ -86,84 +86,47 @@ nonterminal StmtClause with location, pp, errors, env,
  -}
 
 abstract production stmtClause
-c::StmtClause ::= p::Pattern s::Stmt
+top::StmtClause ::= p::Pattern s::Stmt
 {
-  c.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, s.pp) ]);
-  c.errors := p.errors ++ s.errors;
+  top.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, s.pp) ]);
+  top.errors := p.errors ++ s.errors;
 
-  s.env = addEnv(p.defs,c.env);
-  local l :: Location = c.location;
+  s.env = addEnv(p.defs,top.env);
+  local l :: Location = builtin;
 
-  c.transform = 
+  top.transform = 
     foldStmt( [
-        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=c.location)),
-        exprStmt(comment("... declarations of pattern variables", location=c.location)),
+        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=builtin)),
+        exprStmt(comment("... declarations of pattern variables", location=builtin)),
         
         foldStmt( p.decls ),
 
-        mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), c.expectedType), 
-                -- unaryOpExpr( dereferenceOp(location=c.location), 
+        mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), top.expectedType), 
+                -- unaryOpExpr( dereferenceOp(location=builtin), 
                              declRefExpr( name("_match_scrutinee_ptr", 
-                                               location=c.location),
-                                          location=c.location ),
-                --             location=c.location),
-                  -- TODO: don't change line number as workaround for Cilk extension
-                  loc(l.filename, l.line + 150000, l.column, l.endLine,
-                      l.endColumn, l.index, l.endIndex)),
---                c.location),
+                                               location=builtin),
+                                          location=builtin ),
+                --             location=builtin),
+                builtin),
 
         ifStmt (
             -- condition: code to match the pattern
             stmtExpr( 
               foldStmt ([
-                mkIntDeclInit ("_match", "1", p.location),
+                mkIntDeclInit ("_match", "1", builtin),
                 p.transform
               ]),
               -- The stmtExpr result is the value of _match, which would be set
               -- by the translation of the pattern p, above.
-              declRefExpr (name("_match", location=p.location), location=p.location),
-              location=p.location
+              declRefExpr (name("_match", location=builtin), location=builtin),
+              location=builtin
             ), 
             -- then part 
             s,
             -- else part 
-            c.transformIn
+            top.transformIn
         )
       ] );
 
-  p.expectedType = c.expectedType;
-
-{-
-
-  p.transformIn = mkIntAssign( "_match", "1", p.location );
-  p.position = 0;
-  p.depth = 0;
-  p.parentTag = "NoParent";  
-  
-  p.parent_id = "NoParent";
-  p.parent_idType = "NoParent";
-  p.parent_idTypeIndicator = scrutineeTypeInfo.fst;
-
-  local scrutineeTypeInfo :: Pair<String [ Pair<String [Type]> ]> 
-    = getExpectedADTTypeInfo ( c.expectedType, c.env );
--}
+  p.expectedType = top.expectedType;
 }
-
-{-
-abstract production guardedStmtClause
-c::StmtClause ::= p::Pattern g::Stmt s::Stmt
-{
-  c.pp = ppConcat([ p.pp, space(), text("where"), space(), g.pp,
-                  text("->"), space(), nestlines(2, s.pp) ]);
-  c.errors := p.errors ++ s.errors;
-}
-
-abstract production defaultStmtClause
-c::StmtClause ::= e::Stmt
-{
-  c.pp = e.pp;
-  c.errors := e.errors;
---  c.transform = e;
-}
-
--}

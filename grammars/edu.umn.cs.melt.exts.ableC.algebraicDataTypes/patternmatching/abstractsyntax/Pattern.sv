@@ -40,15 +40,15 @@ Expr ::= e::Expr l::Location
 
 
 abstract production patternVariable
-p::Pattern ::= id::String
+top::Pattern ::= id::String
 {
-  p.pp = text(id);
+  top.pp = text(id);
 
-  p.decls = [declStmt(d)];
+  top.decls = [declStmt(d)];
   local d :: Decl
-    = variableDecls( [], nilAttribute(), directTypeExpr(p.expectedType), 
+    = variableDecls( [], nilAttribute(), directTypeExpr(top.expectedType), 
         consDeclarator(
-          declarator( name(id, location=p.location), baseTypeExpr(), nilAttribute(), 
+          declarator( name(id, location=builtin), baseTypeExpr(), nilAttribute(), 
             nothingInitializer() ),
           nilDeclarator()) );
 
@@ -57,42 +57,42 @@ p::Pattern ::= id::String
      attributes on host language synthesized attributes.  So we know 
      that 'defs' depends on 'env' and nothing else.   -}
   d.env = emptyEnv(); 
-  d.returnType = p.returnType;
+  d.returnType = top.returnType;
   d.isTopLevel = false;
-  p.defs := d.defs;
+  top.defs := d.defs;
 
-  p.errors := []; --ToDo: - check for non-linearity
+  top.errors := []; --ToDo: - check for non-linearity
 
-  p.transform =
+  top.transform =
     mkAssign(
       id,
       mkDereferenceOf (
-        declRefExpr (name("_curr_scrutinee_ptr",location=p.location), location=p.location),
-	p.location),
-      p.location);
+        declRefExpr (name("_curr_scrutinee_ptr",location=builtin), location=builtin),
+	builtin),
+      builtin);
     -- parseStmt(id ++ " = * _curr_scrutinee_ptr;") ;
 }
 
 abstract production patternWildcard
-p::Pattern ::=
+top::Pattern ::=
 {
-  p.pp = text("_");
-  p.decls = [];
-  p.defs := [];
-  p.errors := [];
-  p.transform = nullStmt();
+  top.pp = text("_");
+  top.decls = [];
+  top.defs := [];
+  top.errors := [];
+  top.transform = nullStmt();
 }
 
 abstract production patternConst
-p::Pattern ::= constExpr::Expr
+top::Pattern ::= constExpr::Expr
 {
-  p.pp = constExpr.pp;
-  p.decls = [];
-  p.defs := [];
-  p.errors := (if compatibleTypes(p.expectedType, constExpr.typerep, false, false) then [] else
-                  [err(p.location, "Unexpected constant in pattern")]);
+  top.pp = constExpr.pp;
+  top.decls = [];
+  top.defs := [];
+  top.errors := (if compatibleTypes(top.expectedType, constExpr.typerep, false, false) then [] else
+                  [err(builtin, "Unexpected constant in pattern")]);
 
-  p.transform 
+  top.transform 
     = ifStmt(
         parseExpr("( *_curr_scrutinee_ptr != " ++ show(10, constExpr.pp) ++ ")"),
         -- then clause
@@ -103,24 +103,24 @@ p::Pattern ::= constExpr::Expr
 }
 
 abstract production patternStringLiteral
-p::Pattern ::= s::String
+top::Pattern ::= s::String
 {
-  p.pp = text(s);
-  p.decls = [];
-  p.defs := [];
-  p.errors := (if compatibleTypes(
-                    p.expectedType,
+  top.pp = text(s);
+  top.decls = [];
+  top.defs := [];
+  top.errors := (if compatibleTypes(
+                    top.expectedType,
                     pointerType(
                       nilQualifier(),
                       builtinType(
-                        consQualifier(constQualifier(location=p.location),nilQualifier()),
+                        consQualifier(constQualifier(location=builtin),nilQualifier()),
                         signedType(charType()))),
                     false, false) then [] else
-                  [err(p.location, "Unexpected string constant in pattern")]) ++
-              (if !null(lookupValue("strcmp", p.env)) then [] else
-                  [err(p.location, "Pattern string literals require <string.h> to be included")]);
+                  [err(builtin, "Unexpected string constant in pattern")]) ++
+              (if !null(lookupValue("strcmp", top.env)) then [] else
+                  [err(builtin, "Pattern string literals require <string.h> to be included")]);
 
-  p.transform =
+  top.transform =
     ifStmt(
       parseExpr("strcmp( *_curr_scrutinee_ptr,(" ++ s ++ "))"),
         -- then clause

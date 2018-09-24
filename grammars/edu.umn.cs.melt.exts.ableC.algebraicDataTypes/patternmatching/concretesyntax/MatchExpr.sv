@@ -1,8 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
--- trigger the test
---import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:mda_test;
-
 -- Match expression --
 concrete production matchMatch_c
 e::PrimaryExpr_c ::= 'match' m::Match
@@ -16,11 +13,6 @@ concrete production matchExpr_c
 m::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses ')'
 {
   m.ast = abs:matchExpr( scrutinee.ast, cs.ast, location=m.location );
---  cs.defaultClauseAST = 
---    abs:defaultClause(
---      stmtExpr( parseStmt("printf(\"BOOM!\\n\"); exit(1);"), scrutinee.ast, location=m.location), 
---      location=m.location
---     );
 }
 
 
@@ -74,29 +66,3 @@ followed by '->'.
   }
 
 -}
-
-
-
-{-
-
-We don't really need a "default" clause.  One can just use the
-wildcard pattern "_" to match anything.
-
-concrete production matchExprWithDefault_c
-m::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses def::DefaultClause ')'
-{
-  m.ast = abs:matchExpr( scrutinee.ast, cs.ast, location=m.location );
-  cs.defaultClauseAST = def.ast;
-}
-
-nonterminal DefaultClause with location, ast<abs:ExprClause> ;
-
-terminal Defualt_t 'default' lexer classes {Ckeyword};
-
-concrete productions c::DefaultClause
-| 'default' ':' e::Expr_c ';'
-  { c.ast = 
-      abs:defaultClause( e.ast, location=c.location ); 
-  }
--}
-

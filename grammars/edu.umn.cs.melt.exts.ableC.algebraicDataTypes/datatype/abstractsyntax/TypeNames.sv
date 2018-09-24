@@ -11,18 +11,18 @@ attribute asParameters, asStructItemList, asAssignments, len, position, name_i
   occurs on TypeNames ;
 
 aspect production nilTypeName
-ts::TypeNames ::= 
+top::TypeNames ::= 
 { 
-  ts.asParameters = nilParameters();
-  ts.asStructItemList = nilStructItem();
-  ts.asAssignments = nullStmt();
-  ts.len = 0;
+  top.asParameters = nilParameters();
+  top.asStructItemList = nilStructItem();
+  top.asAssignments = nullStmt();
+  top.len = 0;
 }
 
 aspect production consTypeName
-ts::TypeNames ::= t::TypeName rest::TypeNames
+top::TypeNames ::= t::TypeName rest::TypeNames
 {
-  rest.position = 1 + ts.position ;
+  rest.position = 1 + top.position ;
 
   local bty::BaseTypeExpr =
     case t of
@@ -34,28 +34,28 @@ ts::TypeNames ::= t::TypeName rest::TypeNames
     | typeName(_,mty) -> mty
     end ;
 
-  ts.asParameters =
+  top.asParameters =
     consParameters(
       parameterDecl(
         [], bty, mty,
-        justName(name("f"++toString(ts.position),
-          location=builtIn())), 
+        justName(name("f"++toString(top.position),
+          location=builtin)), 
         nilAttribute()),
       rest.asParameters) ;
 
-  ts.asStructItemList =
+  top.asStructItemList =
     consStructItem(
       structItem(nilAttribute(),
         bty,
         consStructDeclarator(
           structField(
-            name("f"++toString(ts.position),location=builtIn()),
+            name("f"++toString(top.position),location=builtin),
             mty,
             nilAttribute()),
           nilStructDeclarator())),
       rest.asStructItemList) ;
 
-  ts.asAssignments =
+  top.asAssignments =
     seqStmt(
       exprStmt(
         eqExpr(
@@ -63,16 +63,16 @@ ts::TypeNames ::= t::TypeName rest::TypeNames
             memberExpr(
               memberExpr(
                 declRefExpr(
-                  name("temp",location=builtIn()),location=builtIn()),
+                  name("temp",location=builtin),location=builtin),
                 true,
-                name("contents",location=builtIn()),location=builtIn()),
+                name("contents",location=builtin),location=builtin),
               false,
-              name(ts.name_i,location=builtIn()),location=builtIn()),
+              name(top.name_i,location=builtin),location=builtin),
             false,
-            name("f"++toString(ts.position),location=builtIn()),location=builtIn()),
+            name("f"++toString(top.position),location=builtin),location=builtin),
           declRefExpr(
-            name("f"++toString(ts.position),location=builtIn()),location=builtIn()),location=builtIn())),
+            name("f"++toString(top.position),location=builtin),location=builtin),location=builtin)),
       rest.asAssignments);
 
-  ts.len = rest.len + 1;
+  top.len = rest.len + 1;
 }
