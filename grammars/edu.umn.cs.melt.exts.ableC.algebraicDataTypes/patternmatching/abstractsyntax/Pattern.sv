@@ -3,7 +3,6 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 nonterminal Pattern with location, pp, decls, expectedType, errors, 
   defs, env,
   returnType;
---Remove: position, depth, parentTag, decls, parent_id, parent_idType, , parent_idTypeIndicator;
 
 
 {-- This attribute collects declarations for pattern variables.
@@ -45,18 +44,14 @@ top::Pattern ::= id::String
   top.pp = text(id);
 
   top.decls = [declStmt(d)];
-  local d :: Decl
-    = variableDecls( [], nilAttribute(), directTypeExpr(top.expectedType), 
-        consDeclarator(
-          declarator( name(id, location=builtin), baseTypeExpr(), nilAttribute(), 
-            nothingInitializer() ),
-          nilDeclarator()) );
+  local d :: Decl =
+    variableDecls( [], nilAttribute(), directTypeExpr(top.expectedType), 
+      consDeclarator(
+        declarator( name(id, location=builtin), baseTypeExpr(), nilAttribute(), 
+          nothingInitializer() ),
+        nilDeclarator()) );
 
-  {- This is actually OK, due to the modular well-definedness analysis.
-     We know that extensions cannot add new dependencies of inherited 
-     attributes on host language synthesized attributes.  So we know 
-     that 'defs' depends on 'env' and nothing else.   -}
-  d.env = emptyEnv(); 
+  d.env = top.env; 
   d.returnType = top.returnType;
   d.isTopLevel = false;
   top.defs := d.defs;

@@ -58,7 +58,7 @@ $(LIBS):
 
 $(ABLEC_JAR): $(GRAMMAR_SOURCES)
 	touch $(wildcard $(ARTIFACT)/*.sv)
-	silver -o $@ $(SVFLAGS) $(ARTIFACT)
+	silver-ableC -o $@ $(SVFLAGS) $(ARTIFACT)
 
 %.c: %.xc $(ABLEC_JAR)
 	java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS)

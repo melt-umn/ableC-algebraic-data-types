@@ -50,9 +50,8 @@ top::Pattern ::= id::String ps::PatternList
   -- 1. get the RefIdItem for the expected type
   local adtTypeInfo :: Pair<Boolean [RefIdItem]>
     = case top.expectedType of
-      | adtTagType( _, adtRefId, _) -> pair( true, lookupRefId(adtRefId, top.env))
-      | extType( _, refIdExtType(_,_,refId)) -> pair( true, lookupRefId(refId, top.env) )
-      | pointerType( _, adtTagType(_,adtRefId,_) ) -> pair(true, lookupRefId(adtRefId, top.env))
+      | extType( _, adtExtType( _, adtRefId)) -> pair( true, lookupRefId(adtRefId, top.env))
+      | pointerType( _, extType( _, adtExtType(_, adtRefId))) -> pair(true, lookupRefId(adtRefId, top.env))
       | errorType() -> pair(true, [])
       | _ -> pair(false, [])
       end;
@@ -62,7 +61,7 @@ top::Pattern ::= id::String ps::PatternList
     = case adtTypeInfo.snd of
       | [] -> nothing()
       | xs -> case head(xs) of
-              | adtRefIdItem(adtDcl,_) -> just(adtDcl)
+              | adtRefIdItem(adtDcl) -> just(adtDcl)
               | _ -> nothing()
               end
       end;
@@ -71,7 +70,7 @@ top::Pattern ::= id::String ps::PatternList
   local all_ADT_constructors :: [ Pair<String [Type]> ]
     = case maybe_adtDcl of
       | nothing() -> error("ADT decl not found!")
-      | just(adtDcl) -> adtDcl.adtInfo.snd
+      | just(adtDcl) -> adtDcl.constructors
       end;
 
   -- 4. we want adtDecl.name ++ "_" ++ id to make the tag name to match against

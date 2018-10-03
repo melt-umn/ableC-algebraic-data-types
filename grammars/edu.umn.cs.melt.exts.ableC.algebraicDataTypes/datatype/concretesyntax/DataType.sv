@@ -38,7 +38,7 @@ nonterminal ADTDecl_c with ast<Decl>, location ;
 
 concrete productions top::ADTDecl_c 
 | n::Identifier_t '{' c::ConstructorList_c '}'
-    { top.ast = datatypeDecl( adtDecl(fromId(n), c.ast) ); }
+    { top.ast = datatypeDecl( adtDecl(fromId(n), c.ast, location=builtin) ); }
 
 
 nonterminal ConstructorList_c with ast<ConstructorList>;
