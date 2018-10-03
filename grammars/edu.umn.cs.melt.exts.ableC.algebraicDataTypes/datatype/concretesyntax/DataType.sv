@@ -1,7 +1,7 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax;
 
 imports silver:langutil only ast, pp, errors; 
-imports silver:langutil:pp with implode as ppImplode ;
+imports silver:langutil:pp;
 
 imports edu:umn:cs:melt:ableC:concretesyntax;
 imports edu:umn:cs:melt:ableC:abstractsyntax:host;
@@ -9,9 +9,6 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
-
--- trigger the test
--- import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:src:datatype:mda_test;
 
 {-
 

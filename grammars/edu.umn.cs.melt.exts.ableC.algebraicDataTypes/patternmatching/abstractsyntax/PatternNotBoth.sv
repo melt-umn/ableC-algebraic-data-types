@@ -16,15 +16,12 @@ top::Pattern ::= p1::Pattern p2::Pattern
 
   p1.expectedType = top.expectedType;
   p2.expectedType = top.expectedType;
+  p1.transformIn = top.transformIn;
+  p2.transformIn = top.transformIn;
 
   top.decls = p1.decls ++ p2.decls;
 
-  top.transform =
-    seqStmt(
-      p1.transform,
-      ifStmtNoElse(
-        declRefExpr(name("_match", location=builtin), location=builtin),
-        p2.transform));
+  top.transform = andExpr(p1.transform, p2.transform, location=builtin);
 }
 
 abstract production patternNot
@@ -39,9 +36,7 @@ top::Pattern ::= p::Pattern
   top.decls = p.decls;
 
 
-  top.transform = seqStmt (p.transform, flip_match);
-  local flip_match :: Stmt = 
-    parseStmt ("if (_match == 0) { _match = 1; } else { _match = 0; }");
+  top.transform = notExpr(p.transform, location=builtin);
 }
 
 abstract production patternWhen
@@ -51,5 +46,5 @@ top::Pattern ::= e::Expr
   top.decls = [];
   top.defs := [];
   top.errors := e.errors;
-  top.transform = ifStmt(e, nullStmt(), parseStmt("_match = 0;") );
+  top.transform = e;
 }

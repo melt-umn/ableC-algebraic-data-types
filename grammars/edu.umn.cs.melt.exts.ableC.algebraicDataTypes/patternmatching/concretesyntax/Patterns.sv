@@ -4,11 +4,12 @@ terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier};
    -- Same as Identifier_t
 
 terminal NamedPatternOp_t '@' precedence = 0, lexer classes {Csymbol};
-terminal AntipatternOp_t '!'  precedence = 1, lexer classes {Csymbol};
+terminal AntipatternOp_t  '!' precedence = 1, lexer classes {Csymbol};
+terminal PointerOp_t      '&' precedence = 1, lexer classes {Csymbol};
 
 terminal When_t 'when' lexer classes {Ckeyword};
 
-nonterminal Pattern with location, ast<abs:Pattern> ;
+nonterminal Pattern with location, ast<abs:Pattern>;
 
 {- We need to have algebraic datatype patterns here.  They can't be in
    an extension to algebraicDataTypes since they don't begin with a
@@ -16,37 +17,32 @@ nonterminal Pattern with location, ast<abs:Pattern> ;
 
 concrete productions p::Pattern
 | id::PatternName_t '(' ps::PatternList ')'
-  { p.ast = abs:constructorPattern( id.lexeme, ps.ast, location=p.location );
-  }
+  { p.ast = abs:constructorPattern(id.lexeme, ps.ast, location=p.location); }
 
 | id::PatternName_t '(' ')'
   { p.ast = 
-      abs:constructorPattern( id.lexeme, abs:nilPattern(location=p.location),
-        location=p.location );
+      abs:constructorPattern(id.lexeme, abs:nilPattern(location=p.location),
+        location=p.location);
   }
 
 -- | id::Identifier_t
 | id::PatternName_t   -- why use this?
   { p.ast = if id.lexeme == "_"
-            then abs:patternWildcard( location=p.location )
-            else abs:patternVariable( id.lexeme, location=p.location );
+            then abs:patternWildcard(location=p.location)
+            else abs:patternVariable(id.lexeme, location=p.location);
   }
 
 |  p1::Pattern '@' p2::Pattern
-  { p.ast = 
-      abs:patternBoth( p1.ast, p2.ast,
-        location=p.location );
-  }
+  { p.ast = abs:patternBoth(p1.ast, p2.ast, location=p.location); }
 
-| op::AntipatternOp_t p1::Pattern
-  { p.ast = 
-      abs:patternNot( p1.ast,
-        location=p.location );
-  }
+| AntipatternOp_t p1::Pattern
+  { p.ast = abs:patternNot(p1.ast, location=p.location); }
+
+| PointerOp_t p1::Pattern
+  { p.ast = abs:patternPointer(p1.ast, location=p.location); }
 
 | 'when' '(' e::Expr_c ')'
-  { p.ast = abs:patternWhen( e.ast, location=p.location );
-  }
+  { p.ast = abs:patternWhen(e.ast, location=p.location); }
 
 
 -- PatternList --
@@ -55,23 +51,23 @@ nonterminal PatternList with location, ast<abs:PatternList> ;
 
 concrete productions ps::PatternList
 | p::Pattern ',' rest::PatternList
-  { ps.ast = abs:consPattern( p.ast, rest.ast, location=ps.location ); }
+  { ps.ast = abs:consPattern(p.ast, rest.ast, location=ps.location); }
 
 | p::Pattern
   { ps.ast = 
-      abs:consPattern( p.ast, abs:nilPattern(location=ps.location),
-        location=p.location ); 
+      abs:consPattern(p.ast, abs:nilPattern(location=ps.location),
+        location=p.location);
   }
 
 
 -- TODO: This is only allowing constPattern as the last element in PatternList?  
 | p::ConstPattern ',' rest::PatternList
-  { ps.ast = abs:consPattern( p.ast, rest.ast, location=ps.location ); }
+  { ps.ast = abs:consPattern(p.ast, rest.ast, location=ps.location); }
 
 | p::ConstPattern
   { ps.ast = 
-      abs:consPattern( p.ast, abs:nilPattern(location=ps.location),
-        location=p.location ); 
+      abs:consPattern(p.ast, abs:nilPattern(location=ps.location),
+        location=p.location);
   }
 
 

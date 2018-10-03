@@ -1,4 +1,4 @@
-grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:ref:abstractsyntax;
 
 imports silver:langutil; 
 imports silver:langutil:pp;

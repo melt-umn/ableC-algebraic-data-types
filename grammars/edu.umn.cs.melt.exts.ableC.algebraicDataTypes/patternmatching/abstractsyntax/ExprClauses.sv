@@ -13,19 +13,15 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     becomes
 
      {(
-       type-of-scrutinee  __result; 
+       type-of-scrutinee  _result; 
        if ( ... p1 matches ... ) {    
-         __result = e1;
-       } else {
-       if ( ... p2 matches ... ) {
-         __result = e2;
-       } else {
-       ...
-       } else {
-       if ( ... pn matches ... ) {
-         __result = en;
-       } ;
-       __result;
+         _result = e1;
+       } else if ( ... p2 matches ... ) {
+         _result = e2;
+       } else ... if ( ... pn matches ... ) {
+         _result = en;
+       }
+       _result;
      })
 
     Thus, the translation of later clauses are children of the
@@ -34,12 +30,11 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
  -}
 
 {-  Patterns are checked against an expected type, which is initially
-    the type of the scrutinne.  The following inherited attribute are
+    the type of the scrutinee.  The following inherited attribute are
     used to pass these types down the clause and pattern ASTs.
  -}
 
-nonterminal ExprClauses with location, pp, errors, env,
-  expectedType, transform<Stmt>, returnType, typerep;
+nonterminal ExprClauses with location, pp, errors, env, expectedType, transform<Stmt>, returnType, typerep;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -54,8 +49,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     if typeAssignableTo(c.typerep, rest.typerep)
     then []
     else [err(c.location,
-              "Incompatible types in rhs of pattern, expected " ++ showType(rest.typerep) ++
-              " but found " ++ showType(c.typerep))];
+              s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
 
   top.transform = c.transform;
   c.transformIn = rest.transform;
@@ -72,14 +66,29 @@ top::ExprClauses ::= c::ExprClause
   top.pp = c.pp;
   c.expectedType = top.expectedType;
   top.errors := c.errors;
+  top.errors <-
+    if null(lookupValue("exit", top.env))
+    then [err(builtin, "Pattern match requires definition of exit (include <stdlib.h>?)")]
+    else [];
+  top.errors <-
+    if null(lookupValue("fprintf", top.env))
+    then [err(builtin, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
+    else [];
+  top.errors <-
+    if null(lookupValue("stderr", top.env))
+    then [err(builtin, "Pattern match requires definition of stderr (include <stdio.h>?)")]
+    else [];
 
   top.transform = c.transform;
-  c.transformIn = parseStmt("printf(\"Failed to match any patterns in match expression.\\n\"); exit(1);\n");
+  c.transformIn =
+    ableC_Stmt {
+      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${c.location.unparse}"});
+      exit(1);
+    };
   top.typerep = c.typerep;
 }
 
-nonterminal ExprClause with location, pp, errors, env, returnType, 
-  expectedType, transform<Stmt>, transformIn<Stmt>, typerep;
+nonterminal ExprClause with location, pp, errors, env, returnType, expectedType, transform<Stmt>, transformIn<Stmt>, typerep;
 
 abstract production exprClause
 top::ExprClause ::= p::Pattern e::Expr
@@ -92,35 +101,14 @@ top::ExprClause ::= p::Pattern e::Expr
 
   top.typerep = e.typerep;
 
-  top.transform
-    = foldStmt( [
-        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=builtin)),
-
-        exprStmt(comment("... declarations of pattern variables", location=builtin)),
-	foldStmt( p.decls ),
-
-        mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), top.expectedType), 
-                             declRefExpr( name("_match_scrutinee_ptr", 
-                                               location=builtin),
-                                          location=builtin ),
-                builtin),
-
-        ifStmt (
-            -- condition: code to match the pattern
-            stmtExpr( 
-              foldStmt ([
-                mkIntDeclInit ("_match", "1", builtin),
-                p.transform
-              ]),
-              -- The stmtExpr result is the value of _match, which would be set
-              -- by the translation of the pattern p, above.
-              declRefExpr (name("_match", location=builtin), location=builtin),
-              location=builtin
-            ), 
-            -- then part 
-            mkAssign ("__result", e, builtin),
-            -- else part 
-            top.transformIn 
-        )
-      ] );
+  top.transform =
+    ableC_Stmt {
+      $Stmt{foldStmt(p.decls)}
+      if ($Expr{p.transform}) {
+        _result = $Expr{e};
+      } else {
+        $Stmt{top.transformIn}
+      }
+    };
+  p.transformIn = ableC_Expr { _match_scrutinee_val };
 }

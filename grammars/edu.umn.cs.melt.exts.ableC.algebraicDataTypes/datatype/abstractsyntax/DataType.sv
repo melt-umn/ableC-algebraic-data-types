@@ -88,6 +88,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
       struct __attribute__((refId($stringLiteralExpr{structRefId}))) $name{structName} {
         enum $name{enumName} {
           $EnumItemList{
+            -- Ensure we don't generate an empty enum if there are no constructors
             case cs.enumItems of
               nilEnumItem() ->
                 consEnumItem(
@@ -105,6 +106,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
       };
     };
   
+  -- Decorate struct declaration here to compute tagEnv
   transStructDecl.env = top.env;
   transStructDecl.returnType = top.returnType;
   transStructDecl.isTopLevel = top.isTopLevel;
@@ -112,8 +114,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   top.tagEnv = case transStructDecl of typeExprDecl(_, structTypeExpr(_, d)) -> d.tagEnv end;
   
   {- This attribute is for extensions to use to add additional auto-generated functions
-     for ADT, for example an auto-generated recursive freeing function.
-  -}
+     for ADT, for example an auto-generated recursive freeing function. -}
   production attribute adtDecls::Decls with appendDecls;
   adtDecls := nilDecl();
   
@@ -122,8 +123,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   adtProtos := nilDecl();
   
   {- This attribute is for extensions to use to add additional members to the generated
-     ADT struct.
-  -}
+     ADT struct. -}
   production attribute structItems::StructItemList with appendStructItemList;
   structItems := nilStructItem();
 
@@ -146,8 +146,8 @@ synthesized attribute funDecls :: Decls;
 -- Used to pass down the datatype's name for naming conventions
 autocopy attribute topTypeName :: String;
 
--- Cosntructor list used, e.g., when type checking patterns
-synthesized attribute constructors :: [ Pair<String [Type]> ];
+-- Constructor list used, e.g., when type checking patterns
+synthesized attribute constructors :: [Pair<String [Type]>];
 
 nonterminal ConstructorList
   with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, topTypeName, constructors;
@@ -155,14 +155,14 @@ nonterminal ConstructorList
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
 {
-  top.pp = ppConcat([ c.pp, sep, cl.pp ]);
-  top.errors := c.errors ++ cl.errors;
-  top.defs := c.defs ++ cl.defs;
-  local attribute sep::Document =
+  local sep::Document =
     case cl of
     | consConstructor(_,_) -> line()
     | nilConstructor() -> notext()
-    end ;
+    end;
+  top.pp = ppConcat([ c.pp, sep, cl.pp ]);
+  top.errors := c.errors ++ cl.errors;
+  top.defs := c.defs ++ cl.defs;
   top.enumItems = consEnumItem(c.enumItem, cl.enumItems);
   top.structItems = consStructItem(c.structItem, cl.structItems);
   top.funDecls = consDecl(c.funDecl, cl.funDecls);
@@ -183,7 +183,6 @@ top::ConstructorList ::=
   top.constructors = [];
 }
 
-
 -- Constructs the enum item for each constructor
 synthesized attribute enumItem :: EnumItem;
 
@@ -198,23 +197,11 @@ nonterminal Constructor
        returnType, -- because Types may contain Exprs
        location;
 
--- Default ADT pointer allocation using malloc
 abstract production constructor
 top::Constructor ::= n::String tms::TypeNames
 {
-  forwards to
-    allocConstructor(
-      n, tms,
-      \ty::String -> parseExpr(s"""
-        ({proto_typedef ${ty};
-          (${ty}*) malloc (sizeof(${ty}));})"""),
-      location=top.location);
-}
-
--- Takes a function that takes a String and returns an Expr that does the allocation for that type
-abstract production allocConstructor
-top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
-{
+  {- This attribute is for extensions to use to initialize additional members added
+     to the generated ADT struct. -}
   production attribute initStmts::[Stmt] with ++;
   initStmts := [];
 
@@ -228,74 +215,37 @@ top::Constructor ::= n::String tms::TypeNames allocExpr::(Expr ::= String)
   top.defs := tms.defs;
   
   tms.position = 0;  
-  tms.name_i = n;
+  tms.constructorName = n;
 
-  top.constructors = [ pair(n, tms.typereps) ];
+  top.constructors = [pair(n, tms.typereps)];
 
-  top.enumItem =
-    enumItem(
-      name( top.topTypeName ++ "_" ++ n, location=builtin ),
-      nothingExpr());
+  top.enumItem = enumItem(name(top.topTypeName ++ "_" ++ n, location=builtin), nothingExpr());
 
   top.structItem =
-    structItem(nilAttribute(),
+    structItem(
+      nilAttribute(),
       structTypeExpr(
         nilQualifier(),
-        structDecl(nilAttribute(),
-          justName(
-            name(top.topTypeName ++ "_" ++ n ++ "_s", location=builtin)),
+        structDecl(
+          nilAttribute(),
+          justName(name(top.topTypeName ++ "_" ++ n ++ "_s", location=builtin)),
           tms.asStructItemList, location=builtin)),
       consStructDeclarator(
         structField(
           name(n, location=builtin),
           baseTypeExpr(), nilAttribute()),
         nilStructDeclarator()));
-
+  
+  local resultTypeExpr::BaseTypeExpr =
+    adtTagReferenceTypeExpr(nilQualifier(), name(top.topTypeName, location=builtin));
   top.funDecl =
-    functionDeclaration(
-      functionDecl(
-        [staticStorageClass()],
-        consSpecialSpecifier(inlineQualifier(), nilSpecialSpecifier()),
-        typedefTypeExpr(
-          nilQualifier(),
-          name(top.topTypeName, location=builtin)),
-        functionTypeExprWithArgs(
-          pointerTypeExpr(nilQualifier(), baseTypeExpr()),
-          tms.asParameters,
-          false,
-          nilQualifier()),
-        name(n, location=builtin),
-        nilAttribute(),
-
-        nilDecl(),
-
-        foldStmt([
-          declStmt(
-            variableDecls(
-              [], nilAttribute(),
-              typedefTypeExpr(
-                nilQualifier(), 
-                name(top.topTypeName, location=builtin)), 
-              consDeclarator(
-                declarator(
-                  name("temp", location=builtin), 
-                  pointerTypeExpr(nilQualifier(), baseTypeExpr()),
-                  nilAttribute(),
-                  nothingInitializer()),
-                nilDeclarator()))),
-
-          mkAssign("temp", allocExpr(top.topTypeName), builtin),
-          
-          exprStmt(
-            eqExpr(
-              memberExpr(
-                declRefExpr(
-                  name("temp",location=builtin),location=builtin),
-                true,
-                name("tag",location=builtin),location=builtin),
-              declRefExpr(
-                name(top.topTypeName++"_"++n,location=builtin),location=builtin),location=builtin)),
-          foldStmt(initStmts),
-          tms.asAssignments,
-          returnStmt(justExpr(declRefExpr(name("temp",location=builtin),location=builtin)))])));
+    ableC_Decl {
+      static inline $BaseTypeExpr{resultTypeExpr} $name{n}($Parameters{tms.asParameters}) {
+        $BaseTypeExpr{resultTypeExpr} result;
+        result.tag = $name{top.topTypeName ++ "_" ++ n};
+        $Stmt{tms.asAssignments}
+        $Stmt{foldStmt(initStmts)}
+        return result;
+      }
+    };
 }

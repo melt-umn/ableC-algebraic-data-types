@@ -53,6 +53,19 @@ top::TagItem ::= refId::String
 {
   top.pp = text("ADT, refId = " ++ refId);
 }
+
+-- RefIdItem --
+--------------
+synthesized attribute adtName::Maybe<String> occurs on RefIdItem;
+attribute constructors occurs on RefIdItem;
+
+aspect default production
+top::RefIdItem ::=
+{
+  top.adtName = nothing();
+  top.constructors = [];
+}
+ 
 {- adtRefIdItem: when looking up this type by RefId in the env,
    this is the structure that is returned.  It has a reference
    to the ADT declaration in the syntax tree. 
@@ -63,6 +76,8 @@ top::RefIdItem ::= adt::Decorated ADTDecl
   top.pp = text("ADTDecl: adt.refId=" ++ adt.refId);
   top.tagEnv = adt.tagEnv;
   top.hasConstField = false; -- ADT is always assignable
+  top.adtName = just(adt.name);
+  top.constructors = adt.constructors;
 }
 
 
