@@ -12,25 +12,6 @@ top::Pattern ::= id::String ps::PatternList
   top.defs := ps.defs;
   
   -- Type checking
-  top.errors :=
-    case top.expectedType, adtLookup, constructorParamLookup of
-    -- Check that expected type for this pattern is an ADT type of some sort.
-    | errorType(), _, _ -> []
-    | extType(_, _), [], _ -> [err(top.location, s"${showType(top.expectedType)} does not have a definiton.")]
-    | _, [], _ -> [err(top.location, s"${showType(top.expectedType)} is not a datatype.")]
-    | _, item :: _, _ ->
-      if !item.adtName.isJust
-      then [err(top.location, s"${showType(top.expectedType)} is not a datatype.")]
-      else []
-    -- Check that this pattern is a constructor for the expected ADT type.
-    | _, _, just(paramTypes) ->
-      -- Check that the number of patterns matches number of arguments for this constructor.
-      if ps.len != length(paramTypes)
-      then [err(top.location, s"This pattern has ${toString(ps.len)} arguments, but ${toString(length(paramTypes))} were expected.")]
-      else []
-    | _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${id}.")]
-    end;
-  
   local adtLookup::[RefIdItem] =
     case top.expectedType of
     | extType( _, e) ->
@@ -41,10 +22,10 @@ top::Pattern ::= id::String ps::PatternList
     | _ -> []
     end;
   
-  local adtName::String =
+  local adtName::Maybe<String> =
     case adtLookup of
-    | item :: _ -> item.adtName.fromJust
-    | _ -> error("adtName demanded when lookup failed")
+    | item :: _ -> item.adtName
+    | _ -> nothing()
     end;
   
   local constructors::[Pair<String [Type]>] =
@@ -54,13 +35,33 @@ top::Pattern ::= id::String ps::PatternList
     end;
   
   local constructorParamLookup::Maybe<[Type]> = lookupBy(stringEq, id, constructors);
+  
+  top.errors :=
+    case top.expectedType, adtName, constructorParamLookup of
+    -- Check that expected type for this pattern is an ADT type of some sort, with a definition.
+    | errorType(), _, _ -> []
+    | t, nothing(), _ -> [err(top.location, s"Constructor pattern expected to match a defined datatype (got ${showType(t)}).")]
+    -- Check that this pattern is a constructor for the expected ADT type.
+    | _, _, just(paramTypes) ->
+      -- Check that the number of patterns matches number of arguments for this constructor.
+      if ps.len != length(paramTypes)
+      then [err(top.location, s"This pattern has ${toString(ps.len)} arguments, but ${toString(length(paramTypes))} were expected.")]
+      else []
+    | _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${id}.")]
+    end;
+  
   ps.expectedTypes = fromMaybe([], constructorParamLookup);
   
-  -- adtName ++ "_" ++ id is the tag name to match against
   top.transform =
-    ableC_Expr {
-      $Expr{top.transformIn}.tag == $name{adtName ++ "_" ++ id} && $Expr{ps.transform}
-    };
+    case adtName of
+    | just(adtName) ->
+      -- adtName ++ "_" ++ id is the tag name to match against
+      ableC_Expr {
+        $Expr{top.transformIn}.tag == $name{adtName ++ "_" ++ id} && $Expr{ps.transform}
+      }
+    -- An error has occured, don't generate the tag check to avoid creating additional errors
+    | nothing() -> ps.transform
+    end;
   ps.transformIn = ableC_Expr { $Expr{top.transformIn}.contents.$name{id} };
   ps.position = 0;
 }

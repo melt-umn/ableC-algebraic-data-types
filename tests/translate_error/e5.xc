@@ -3,11 +3,7 @@
 
 typedef  datatype Expr  Expr;
 
-datatype Expr {
-  Add (Expr*, Expr*);
-  Mul (Expr*, Expr*);
-  Const (int);
-};
+// Datatype lacks a definition
 
 int value (Expr *e) {
   int result = 99;

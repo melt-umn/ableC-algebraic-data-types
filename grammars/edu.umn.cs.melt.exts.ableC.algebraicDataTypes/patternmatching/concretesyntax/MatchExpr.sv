@@ -2,35 +2,35 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesy
 
 -- Match expression --
 concrete production matchMatch_c
-e::PrimaryExpr_c ::= 'match' m::Match
+top::PrimaryExpr_c ::= 'match' m::Match
 {
-  e.ast = m.ast;
+  top.ast = m.ast;
 }
 
 nonterminal Match with ast<Expr>, location;
 
 concrete production matchExpr_c
-m::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses ')'
+top::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses ')'
 {
-  m.ast = abs:matchExpr(scrutinee.ast, cs.ast, location=m.location);
+  top.ast = abs:matchExpr(scrutinee.ast, cs.ast, location=top.location);
 }
 
 nonterminal ExprClauses with location, ast<abs:ExprClauses>;
 
-concrete productions cs::ExprClauses
+concrete productions top::ExprClauses
 | c::ExprClause rest::ExprClauses
-  { cs.ast = abs:consExprClause(c.ast, rest.ast, location=cs.location); }
+  { top.ast = abs:consExprClause(c.ast, rest.ast, location=top.location); }
 | c::ExprClause 
-  { cs.ast = abs:oneExprClause (c.ast, location=cs.location); }
+  { top.ast = abs:oneExprClause (c.ast, location=top.location); }
 
 nonterminal ExprClause with location, ast<abs:ExprClause> ;
 terminal Where_t 'where';
 
-concrete productions c::ExprClause
+concrete productions top::ExprClause
 | p::Pattern '->' e::Expr_c ';'
-  { c.ast = abs:exprClause(p.ast, e.ast, location=c.location); }
+  { top.ast = abs:exprClause(p.ast, e.ast, location=top.location); }
 | p::ConstPattern '->' e::Expr_c ';'
-  { c.ast = abs:exprClause(p.ast, e.ast, location=c.location); }
+  { top.ast = abs:exprClause(p.ast, e.ast, location=top.location); }
 
 {-
 
@@ -38,8 +38,8 @@ Following causes a shift/reduce error since PostfixExpr_c in host is
 followed by '->'.
 
 | p::Pattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { c.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=c.location); }
+  { top.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=top.location); }
 | p::ConstPattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { c.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=c.location); }
+  { top.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=top.location); }
 
 -}

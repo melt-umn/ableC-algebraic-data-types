@@ -82,7 +82,7 @@ top::ExprClauses ::= c::ExprClause
   top.transform = c.transform;
   c.transformIn =
     ableC_Stmt {
-      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${c.location.unparse}"});
+      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${c.location.unparse}\n"});
       exit(1);
     };
   top.typerep = c.typerep;

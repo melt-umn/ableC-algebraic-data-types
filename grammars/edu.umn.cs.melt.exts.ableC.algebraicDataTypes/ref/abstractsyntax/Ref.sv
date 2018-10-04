@@ -3,6 +3,8 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:ref:abstractsyntax;
 abstract production refExpr
 top::Expr ::= e::Expr  allocator::Expr
 {
+  top.pp = pp"ref(${e.pp}, ${allocator.pp})";
+  
   local expectedAllocatorType::Type =
     functionType(
       pointerType(

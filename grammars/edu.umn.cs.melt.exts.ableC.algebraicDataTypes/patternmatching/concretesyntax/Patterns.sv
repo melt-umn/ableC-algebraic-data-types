@@ -15,58 +15,64 @@ nonterminal Pattern with location, ast<abs:Pattern>;
    an extension to algebraicDataTypes since they don't begin with a
    marking terminal.  -}
 
-concrete productions p::Pattern
+concrete productions top::Pattern
 | id::PatternName_t '(' ps::PatternList ')'
-  { p.ast = abs:constructorPattern(id.lexeme, ps.ast, location=p.location); }
+  { top.ast = abs:constructorPattern(id.lexeme, ps.ast, location=top.location); }
 
 | id::PatternName_t '(' ')'
-  { p.ast = 
-      abs:constructorPattern(id.lexeme, abs:nilPattern(location=p.location),
-        location=p.location);
+  { top.ast = 
+      abs:constructorPattern(id.lexeme, abs:nilPattern(location=top.location),
+        location=top.location);
   }
 
 -- | id::Identifier_t
 | id::PatternName_t   -- why use this?
-  { p.ast = if id.lexeme == "_"
-            then abs:patternWildcard(location=p.location)
-            else abs:patternVariable(id.lexeme, location=p.location);
+  { top.ast = if id.lexeme == "_"
+            then abs:patternWildcard(location=top.location)
+            else abs:patternVariable(id.lexeme, location=top.location);
   }
 
 |  p1::Pattern '@' p2::Pattern
-  { p.ast = abs:patternBoth(p1.ast, p2.ast, location=p.location); }
+  { top.ast = abs:patternBoth(p1.ast, p2.ast, location=top.location); }
 
 | AntipatternOp_t p1::Pattern
-  { p.ast = abs:patternNot(p1.ast, location=p.location); }
+  { top.ast = abs:patternNot(p1.ast, location=top.location); }
 
 | PointerOp_t p1::Pattern
-  { p.ast = abs:patternPointer(p1.ast, location=p.location); }
+  { top.ast = abs:patternPointer(p1.ast, location=top.location); }
 
 | 'when' '(' e::Expr_c ')'
-  { p.ast = abs:patternWhen(e.ast, location=p.location); }
+  { top.ast = abs:patternWhen(e.ast, location=top.location); }
+
+| '(' p1::Pattern ')'
+  { top.ast = abs:patternParens(p1.ast, location=top.location); }
+
+| '(' p1::ConstPattern ')'
+  { top.ast = abs:patternParens(p1.ast, location=top.location); }
 
 
 -- PatternList --
 -----------------
 nonterminal PatternList with location, ast<abs:PatternList> ;
 
-concrete productions ps::PatternList
+concrete productions top::PatternList
 | p::Pattern ',' rest::PatternList
-  { ps.ast = abs:consPattern(p.ast, rest.ast, location=ps.location); }
+  { top.ast = abs:consPattern(p.ast, rest.ast, location=top.location); }
 
 | p::Pattern
-  { ps.ast = 
-      abs:consPattern(p.ast, abs:nilPattern(location=ps.location),
+  { top.ast = 
+      abs:consPattern(p.ast, abs:nilPattern(location=top.location),
         location=p.location);
   }
 
 
 -- TODO: This is only allowing constPattern as the last element in PatternList?  
 | p::ConstPattern ',' rest::PatternList
-  { ps.ast = abs:consPattern(p.ast, rest.ast, location=ps.location); }
+  { top.ast = abs:consPattern(p.ast, rest.ast, location=top.location); }
 
 | p::ConstPattern
-  { ps.ast = 
-      abs:consPattern(p.ast, abs:nilPattern(location=ps.location),
+  { top.ast = 
+      abs:consPattern(p.ast, abs:nilPattern(location=top.location),
         location=p.location);
   }
 
@@ -88,9 +94,9 @@ concrete productions ps::PatternList
 
 nonterminal ConstPattern with location, ast<abs:Pattern> ;
 
-concrete productions p::ConstPattern
-| c::Constant_c 
-    { p.ast = abs:patternConst(c.ast, location=p.location); }
+concrete productions top::ConstPattern
+| c::Constant_c
+    { top.ast = abs:patternConst(c.ast, location=top.location); }
 
 | sl::StringConstant_c
-    { p.ast = abs:patternStringLiteral(sl.ast, location=p.location); }
+    { top.ast = abs:patternStringLiteral(sl.ast, location=top.location); }

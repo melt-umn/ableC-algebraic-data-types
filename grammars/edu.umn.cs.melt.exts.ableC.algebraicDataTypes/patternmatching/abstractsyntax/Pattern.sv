@@ -67,7 +67,7 @@ top::Pattern ::= constExpr::Expr
   top.errors := [];
   top.errors <-
     if !compatibleTypes(top.expectedType, constExpr.typerep, false, false)
-    then [err(builtin, s"Constant pattern expected type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
+    then [err(constExpr.location, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
     else [];
   
   top.transform = equalsExpr(top.transformIn, constExpr, location=builtin);
@@ -89,7 +89,7 @@ top::Pattern ::= s::String
         signedType(charType())));
   top.errors <-
     if !compatibleTypes(top.expectedType, stringType, false, false)
-    then [err(builtin, s"Constant pattern expected type ${showType(stringType)} (got ${showType(top.expectedType)})")]
+    then [err(builtin, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
     else [];
   top.errors <-
     if null(lookupValue("strcmp", top.env))
@@ -110,7 +110,7 @@ top::Pattern ::= p::Pattern
     case top.expectedType.withoutAttributes of
     | pointerType(_, _) -> []
     | errorType() -> []
-    | _ -> [err(builtin, s"Pointer pattern expected pointer type (got ${showType(top.expectedType)})")]
+    | _ -> [err(builtin, s"Pointer pattern expected to match pointer type (got ${showType(top.expectedType)})")]
     end;
   
   p.expectedType =
@@ -128,4 +128,17 @@ top::Pattern ::= p::Pattern
       ({$directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};
         $Expr{p.transform};})
     };
+}
+
+abstract production patternParens
+top::Pattern ::= p::Pattern
+{
+  top.pp = parens(p.pp);
+  top.decls = p.decls;
+  top.defs := p.defs;
+  top.errors := p.errors;
+  top.transform = p.transform;
+  
+  p.expectedType = top.expectedType;
+  p.transformIn = top.transformIn;
 }
