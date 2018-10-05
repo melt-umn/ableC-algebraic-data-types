@@ -27,19 +27,5 @@ nonterminal ExprClause with location, ast<abs:ExprClause> ;
 terminal Where_t 'where';
 
 concrete productions top::ExprClause
-| p::Pattern '->' e::Expr_c ';'
+| p::Pattern_c '->' e::Expr_c ';'
   { top.ast = abs:exprClause(p.ast, e.ast, location=top.location); }
-| p::ConstPattern '->' e::Expr_c ';'
-  { top.ast = abs:exprClause(p.ast, e.ast, location=top.location); }
-
-{-
-
-Following causes a shift/reduce error since PostfixExpr_c in host is
-followed by '->'.
-
-| p::Pattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { top.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=top.location); }
-| p::ConstPattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { top.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=top.location); }
-
--}

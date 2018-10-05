@@ -39,24 +39,7 @@ concrete productions top::StmtClauses
 nonterminal StmtClause with location, ast<abs:StmtClause>;
 
 concrete productions top::StmtClause
-| p::Pattern '->' '{' l::BlockItemList_c '}'
+| p::Pattern_c '->' '{' l::BlockItemList_c '}'
   { top.ast = abs:stmtClause(p.ast, foldStmt(l.ast), location=top.location); }
-| p::Pattern '->' '{' '}'
+| p::Pattern_c '->' '{' '}'
   { top.ast = abs:stmtClause(p.ast, nullStmt(), location=top.location); }
-| p::ConstPattern '->' '{' l::BlockItemList_c '}'
-  { top.ast = abs:stmtClause(p.ast, foldStmt(l.ast), location=top.location); }
-| p::ConstPattern '->' '{' '}'
-  { top.ast = abs:stmtClause(p.ast, nullStmt(), location=top.location); }
-
-{-
-
-Following causes a shift/reduce error since PostfixExpr_c in host is
-followed by '->'.
-
-| p::Pattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { top.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=top.location); }
-| p::ConstPattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { top.ast = abs:guardedExprClause(p.ast, guard.ast, e.ast, location=top.location); }
-
--}
-

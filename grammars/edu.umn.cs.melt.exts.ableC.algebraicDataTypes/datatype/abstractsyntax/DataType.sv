@@ -26,7 +26,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 
 abstract production datatypeDecl
 top::Decl ::= adt::ADTDecl
-{ 
+{
   top.pp = ppConcat([ text("datatype"), space(), adt.pp ]);
   
   forwards to
@@ -54,7 +54,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
      We have to do this for ADTs as well.
    -} 
   top.name = n.name;
-
+  
   local preDefs :: [Def] = 
     if name_tagHasForwardDcl_workaround
     then []
