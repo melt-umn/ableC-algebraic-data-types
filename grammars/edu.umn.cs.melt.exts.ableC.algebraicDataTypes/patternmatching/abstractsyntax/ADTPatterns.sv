@@ -2,7 +2,6 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 
 -- ADT Patterns --
 -------------------
-
 abstract production constructorPattern
 top::Pattern ::= id::String ps::PatternList
 {
@@ -28,13 +27,13 @@ top::Pattern ::= id::String ps::PatternList
     | _ -> nothing()
     end;
   
-  local constructors::[Pair<String [Type]>] =
+  local constructors::[Pair<String Decorated Parameters>] =
     case adtLookup of
     | item :: _ -> item.constructors
     | [] -> []
     end;
   
-  local constructorParamLookup::Maybe<[Type]> = lookupBy(stringEq, id, constructors);
+  local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, id, constructors);
   
   top.errors :=
     case top.expectedType, adtName, constructorParamLookup of
@@ -42,15 +41,21 @@ top::Pattern ::= id::String ps::PatternList
     | errorType(), _, _ -> []
     | t, nothing(), _ -> [err(top.location, s"Constructor pattern expected to match a defined datatype (got ${showType(t)}).")]
     -- Check that this pattern is a constructor for the expected ADT type.
-    | _, _, just(paramTypes) ->
+    | _, _, just(params) ->
       -- Check that the number of patterns matches number of arguments for this constructor.
-      if ps.len != length(paramTypes)
-      then [err(top.location, s"This pattern has ${toString(ps.len)} arguments, but ${toString(length(paramTypes))} were expected.")]
+      if ps.count != params.count
+      then [err(top.location, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
       else []
     | _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${id}.")]
     end;
   
-  ps.expectedTypes = fromMaybe([], constructorParamLookup);
+  ps.expectedTypes =
+    case constructorParamLookup of
+    | just(params) -> params.typereps
+    | nothing() -> []
+    end;
+  
+  ps.fieldNamesIn = constructorParamLookup.fromJust.fieldNames;
   
   top.transform =
     case adtName of
@@ -63,12 +68,12 @@ top::Pattern ::= id::String ps::PatternList
     | nothing() -> ps.transform
     end;
   ps.transformIn = ableC_Expr { $Expr{top.transformIn}.contents.$name{id} };
-  ps.position = 0;
 }
 
 -- PatternList --
 -----------------
-nonterminal PatternList with location, pps, errors, env, returnType, defs, decls, expectedTypes, len, position, transform<Expr>, transformIn<Expr>;
+inherited attribute fieldNamesIn::[String];
+nonterminal PatternList with location, pps, errors, env, returnType, defs, decls, expectedTypes, fieldNamesIn, count, transform<Expr>, transformIn<Expr>;
 
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
@@ -77,7 +82,7 @@ top::PatternList ::= p::Pattern rest::PatternList
   top.errors := p.errors ++ rest.errors;
   top.defs := p.defs ++ rest.defs;
   top.decls = p.decls ++ rest.decls;
-  top.len = 1 + rest.len;
+  top.count = 1 + rest.count;
   
   p.env = top.env;
   rest.env = addEnv(p.defs, top.env);
@@ -89,12 +94,12 @@ top::PatternList ::= p::Pattern rest::PatternList
     end;
   p.expectedType = splitTypes.fst;
   rest.expectedTypes = splitTypes.snd;
+  rest.fieldNamesIn = tail(top.fieldNamesIn);
   
   top.transform = andExpr(p.transform, rest.transform, location=builtin);
   p.transformIn =
-    ableC_Expr { $Expr{top.transformIn}.$name{"f" ++ toString(top.position)} };
+    ableC_Expr { $Expr{top.transformIn}.$name{head(top.fieldNamesIn)} };
   rest.transformIn = top.transformIn;
-  rest.position = top.position + 1;
 }
 
 abstract production nilPattern
@@ -102,7 +107,7 @@ top::PatternList ::= {-empty-}
 {
   top.pps = [];
   top.errors := [];
-  top.len = 0;
+  top.count = 0;
   top.defs := [];
   top.decls = [];
   top.transform = mkIntConst(1, builtin);

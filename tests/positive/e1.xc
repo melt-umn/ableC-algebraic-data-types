@@ -4,9 +4,9 @@
 typedef  datatype Expr  Expr;
 
 datatype Expr {
-  Add (Expr*, Expr*);
-  Mul (Expr*, Expr*);
-  Const (int);
+  Add (Expr *e1, Expr *e2);
+  Mul (Expr *e1, Expr *e2);
+  Const (int val);
 };
 
 int value (Expr *e) {

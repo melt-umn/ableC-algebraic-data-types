@@ -48,22 +48,7 @@ concrete productions top::ConstructorList_c
 
 nonterminal Constructor_c with ast<Constructor>, location;
 concrete productions top::Constructor_c
-| n::Identifier_t '(' ad::TypeNameList_c ')' ';'
-     { top.ast = constructor(n.lexeme, ad.ast, location=top.location); }
-
-
-nonterminal TypeNameList_c with ast<TypeNames>;
-concrete productions top::TypeNameList_c
-| tn::TypeName_c tl::TailTypeNameList_c
-     { top.ast = consTypeName(tn.ast, tl.ast); }
-|
-     { top.ast = nilTypeName() ; }
-
-nonterminal TailTypeNameList_c with ast<TypeNames>;
-concrete productions top::TailTypeNameList_c
-| ',' tn::TypeName_c tl::TailTypeNameList_c
-     { top.ast = consTypeName(tn.ast, tl.ast); }
-|
-     { top.ast = nilTypeName() ; }
-
-
+| n::Identifier_t '(' ad::ParameterTypeList_c ')' ';'
+     { top.ast = constructor(n.lexeme, foldParameterDecl(ad.ast), location=top.location); }
+| n::Identifier_t '(' ')' ';'
+     { top.ast = constructor(n.lexeme, nilParameters(), location=top.location); }

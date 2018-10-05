@@ -4,20 +4,20 @@
 typedef  datatype Expr  Expr;
 
 datatype Expr {
-  Add (Expr*, Expr*);
-  Mul (Expr*, Expr*);
-  Const (int);
+  Add (Expr *e1, Expr *e2);
+  Mul (Expr *e1, Expr *e2);
+  Const (int val);
 };
 
 int value (Expr *e) {
-    int result = 99;
+  int result = 99;
     
-    match (e) {
-        &Add(e1,e2) -> { result = value(e1) + value(e2) ; }
-        &Mul(e1,e2) -> { result = value(e1) * value(e2) ; }
-        &Const(v) -> { result = v ;  }
-    }
-    return result;
+  match (e) {
+    &Add(e1,e2) -> { result = value(e1) + value(e2) ; }
+    &Mul(e1,e2) -> { result = value(e1) * value(e2) ; }
+    &Const(v) -> { result = v ;  }
+  }
+  return result;
 }
 
 int main () {
@@ -33,7 +33,7 @@ int main () {
   Expr *t2 = &#Add( &#Mul( &#Const(3), &#Const(2) ), 
                     &#Mul( &#Const(2), &#Const(4) ) ) ;
 
-                  if ( value(t2) != 14 ) return 3;
+  if ( value(t2) != 14 ) return 3;
 
   return 0;
 }
