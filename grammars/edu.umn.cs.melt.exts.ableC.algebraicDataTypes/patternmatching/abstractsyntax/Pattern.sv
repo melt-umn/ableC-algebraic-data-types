@@ -27,6 +27,17 @@ inherited attribute expectedTypes :: [Type];
 attribute transformIn<Expr> occurs on Pattern; 
 attribute transform<Expr> occurs on Pattern;
 
+abstract production patternName
+top::Pattern ::= n::Name
+{
+  top.pp = n.pp;
+  forwards to
+    case n.valueItem of
+    | enumValueItem(_) -> patternConst(declRefExpr(n, location=builtin), location=top.location)
+    | _ -> patternVariable(n, location=top.location)
+    end;
+}
+
 abstract production patternVariable
 top::Pattern ::= n::Name
 {

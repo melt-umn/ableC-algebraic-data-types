@@ -82,7 +82,7 @@ concrete productions top::BasicPattern_c
   { top.ast =
       if id.lexeme == "_"
       then abs:patternWildcard(location=top.location)
-      else abs:patternVariable(fromPatternName(id), location=top.location);
+      else abs:patternName(fromPatternName(id), location=top.location);
   }
 | 'when' '(' e::Expr_c ')'
   { top.ast = abs:patternWhen(e.ast, location=top.location); }
