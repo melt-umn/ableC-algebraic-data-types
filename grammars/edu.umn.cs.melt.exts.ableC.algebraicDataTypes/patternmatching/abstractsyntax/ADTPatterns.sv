@@ -11,6 +11,12 @@ top::Pattern ::= n::Name ps::PatternList
   top.defs := ps.defs;
   
   -- Type checking
+  local adtName::Maybe<String> =
+    case top.expectedType of
+    | extType( _, e) -> e.adtName
+    | _ -> nothing()
+    end;
+  
   local adtLookup::[RefIdItem] =
     case top.expectedType of
     | extType( _, e) ->
@@ -19,12 +25,6 @@ top::Pattern ::= n::Name ps::PatternList
       | nothing() -> []
       end
     | _ -> []
-    end;
-  
-  local adtName::Maybe<String> =
-    case adtLookup of
-    | item :: _ -> item.adtName
-    | _ -> nothing()
     end;
   
   local constructors::[Pair<String Decorated Parameters>] =
@@ -36,17 +36,19 @@ top::Pattern ::= n::Name ps::PatternList
   local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, n.name, constructors);
   
   top.errors :=
-    case top.expectedType, adtName, constructorParamLookup of
-    -- Check that expected type for this pattern is an ADT type of some sort, with a definition.
-    | errorType(), _, _ -> []
-    | t, nothing(), _ -> [err(top.location, s"Constructor pattern expected to match a defined datatype (got ${showType(t)}).")]
+    case top.expectedType, adtName, adtLookup, constructorParamLookup of
+    | errorType(), _, _, _ -> []
+    -- Check that expected type for this pattern is an ADT of some sort
+    | t, nothing(), _, _ -> [err(top.location, s"Constructor pattern expected to match a datatype (got ${showType(t)}).")]
+    -- Check that this ADT has a definition
+    | _, just(id), [], _ -> [err(top.location, s"datatype ${id} does not have a definition.")]
     -- Check that this pattern is a constructor for the expected ADT type.
-    | _, _, just(params) ->
+    | _, _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${n.name}.")]
+    | _, _, _, just(params) ->
       -- Check that the number of patterns matches number of arguments for this constructor.
       if ps.count != params.count
       then [err(top.location, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
       else []
-    | _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${n.name}.")]
     end;
   
   ps.expectedTypes =

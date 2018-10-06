@@ -56,13 +56,11 @@ top::TagItem ::= refId::String
 
 -- RefIdItem --
 --------------
-synthesized attribute adtName::Maybe<String> occurs on RefIdItem;
 attribute constructors occurs on RefIdItem;
 
 aspect default production
 top::RefIdItem ::=
 {
-  top.adtName = nothing();
   top.constructors = [];
 }
  
@@ -76,7 +74,6 @@ top::RefIdItem ::= adt::Decorated ADTDecl
   top.pp = text("ADTDecl: adt.refId=" ++ adt.refId);
   top.tagEnv = adt.tagEnv;
   top.hasConstField = false; -- ADT is always assignable
-  top.adtName = just(adt.name);
   top.constructors = adt.constructors;
 }
 
@@ -117,6 +114,14 @@ top::BaseTypeExpr ::= q::Qualifiers n::Name
 
 -- Type --
 ----------
+synthesized attribute adtName::Maybe<String> occurs on ExtType;
+
+aspect default production
+top::ExtType ::=
+{
+  top.adtName = nothing();
+}
+
 abstract production adtExtType
 top::ExtType ::= n::String refId::String
 {
@@ -132,4 +137,5 @@ top::ExtType ::= n::String refId::String
       | _ -> false
       end;
   top.maybeRefId = just(refId);
+  top.adtName = just(n);
 }
