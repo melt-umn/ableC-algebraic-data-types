@@ -34,15 +34,15 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     used to pass these types down the clause and pattern ASTs.
  -}
 
-nonterminal ExprClauses with location, pp, errors, env, expectedType, transform<Stmt>, returnType, typerep;
+nonterminal ExprClauses with location, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
 { 
   top.pp = cat( c.pp, rest.pp );
 
-  c.expectedType = top.expectedType;
-  rest.expectedType = top.expectedType;
+  c.expectedTypes = top.expectedTypes;
+  rest.expectedTypes = top.expectedTypes;
 
   top.errors := c.errors ++ rest.errors;
   top.errors <-
@@ -64,7 +64,7 @@ abstract production oneExprClause
 top::ExprClauses ::= c::ExprClause
 {
   top.pp = c.pp;
-  c.expectedType = top.expectedType;
+  c.expectedTypes = top.expectedTypes;
   top.errors := c.errors;
   top.errors <-
     if null(lookupValue("exit", top.env))
@@ -88,27 +88,31 @@ top::ExprClauses ::= c::ExprClause
   top.typerep = c.typerep;
 }
 
-nonterminal ExprClause with location, pp, errors, env, returnType, expectedType, transform<Stmt>, transformIn<Stmt>, typerep;
+nonterminal ExprClause with location, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep;
 
 abstract production exprClause
-top::ExprClause ::= p::Pattern e::Expr
+top::ExprClause ::= ps::PatternList e::Expr
 {
-  top.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, e.pp), text(";")]);
-  top.errors := p.errors ++ e.errors;
+  top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, e.pp), text(";")]);
+  top.errors := ps.errors ++ e.errors;
+  top.errors <-
+    if ps.count != length(top.expectedTypes)
+    then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
+    else [];
 
-  e.env = addEnv(p.defs,top.env);
-  p.expectedType = top.expectedType;
+  e.env = addEnv(ps.defs, top.env);
+  ps.expectedTypes = top.expectedTypes;
 
   top.typerep = e.typerep;
 
   top.transform =
     ableC_Stmt {
-      $Stmt{foldStmt(p.decls)}
-      if ($Expr{p.transform}) {
+      $Stmt{foldStmt(ps.decls)}
+      if ($Expr{ps.transform}) {
         _result = $Expr{e};
       } else {
         $Stmt{top.transformIn}
       }
     };
-  p.transformIn = ableC_Expr { _match_scrutinee_val };
+  ps.transformIn = top.scrutineesIn;
 }

@@ -55,8 +55,6 @@ top::Pattern ::= id::String ps::PatternList
     | nothing() -> []
     end;
   
-  ps.fieldNamesIn = constructorParamLookup.fromJust.fieldNames;
-  
   top.transform =
     case adtName of
     | just(adtName) ->
@@ -67,50 +65,9 @@ top::Pattern ::= id::String ps::PatternList
     -- An error has occured, don't generate the tag check to avoid creating additional errors
     | nothing() -> ps.transform
     end;
-  ps.transformIn = ableC_Expr { $Expr{top.transformIn}.contents.$name{id} };
+  ps.transformIn =
+    do (bindList, returnList) {
+      fieldName::String <- constructorParamLookup.fromJust.fieldNames;
+      return ableC_Expr { $Expr{top.transformIn}.contents.$name{id}.$name{fieldName} };
+    };
 }
-
--- PatternList --
------------------
-inherited attribute fieldNamesIn::[String];
-nonterminal PatternList with location, pps, errors, env, returnType, defs, decls, expectedTypes, fieldNamesIn, count, transform<Expr>, transformIn<Expr>;
-
-abstract production consPattern
-top::PatternList ::= p::Pattern rest::PatternList
-{
-  top.pps = p.pp :: rest.pps;
-  top.errors := p.errors ++ rest.errors;
-  top.defs := p.defs ++ rest.defs;
-  top.decls = p.decls ++ rest.decls;
-  top.count = 1 + rest.count;
-  
-  p.env = top.env;
-  rest.env = addEnv(p.defs, top.env);
-
-  local splitTypes :: Pair<Type [Type]> =
-    case top.expectedTypes of
-    | t::ts -> pair(t, ts)
-    | [] -> pair(errorType(), [])
-    end;
-  p.expectedType = splitTypes.fst;
-  rest.expectedTypes = splitTypes.snd;
-  rest.fieldNamesIn = tail(top.fieldNamesIn);
-  
-  top.transform = andExpr(p.transform, rest.transform, location=builtin);
-  p.transformIn =
-    ableC_Expr { $Expr{top.transformIn}.$name{head(top.fieldNamesIn)} };
-  rest.transformIn = top.transformIn;
-}
-
-abstract production nilPattern
-top::PatternList ::= {-empty-}
-{
-  top.pps = [];
-  top.errors := [];
-  top.count = 0;
-  top.defs := [];
-  top.decls = [];
-  top.transform = mkIntConst(1, builtin);
-}
-
-

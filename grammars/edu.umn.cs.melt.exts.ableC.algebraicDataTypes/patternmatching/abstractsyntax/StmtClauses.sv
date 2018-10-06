@@ -32,9 +32,10 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 
 synthesized attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
+autocopy attribute scrutineesIn::[Expr];
 
 nonterminal StmtClauses with location, pp, errors, env, returnType,
-  expectedType, transform<Stmt>; 
+  expectedTypes, scrutineesIn, transform<Stmt>; 
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -45,8 +46,8 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
   top.transform = c.transform;
   c.transformIn = rest.transform;
 
-  c.expectedType = top.expectedType;
-  rest.expectedType = top.expectedType;
+  c.expectedTypes = top.expectedTypes;
+  rest.expectedTypes = top.expectedTypes;
 }
 
 abstract production failureStmtClause
@@ -60,7 +61,7 @@ top::StmtClauses ::=
   
 
 nonterminal StmtClause with location, pp, errors, env, 
-  expectedType, returnType,
+  expectedTypes, returnType, scrutineesIn,
   transform<Stmt>, transformIn<Stmt>;
 
 {- A statement clause becomes a Stmt, in the form:
@@ -76,22 +77,26 @@ nonterminal StmtClause with location, pp, errors, env,
  -}
 
 abstract production stmtClause
-top::StmtClause ::= p::Pattern s::Stmt
+top::StmtClause ::= ps::PatternList s::Stmt
 {
-  top.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, s.pp) ]);
-  top.errors := p.errors ++ s.errors;
+  top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, s.pp) ]);
+  top.errors := ps.errors ++ s.errors;
+  top.errors <-
+    if ps.count != length(top.expectedTypes)
+    then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
+    else [];
   
   top.transform =
     ableC_Stmt {
-      $Stmt{foldStmt(p.decls)}
-      if ($Expr{p.transform}) {
+      $Stmt{foldStmt(ps.decls)}
+      if ($Expr{ps.transform}) {
         $Stmt{s}
       } else {
         $Stmt{top.transformIn}
       }
     };
   
-  p.expectedType = top.expectedType;
-  p.transformIn = ableC_Expr { _match_scrutinee_val };
-  s.env = addEnv(p.defs, top.env);
+  ps.expectedTypes = top.expectedTypes;
+  ps.transformIn = top.scrutineesIn;
+  s.env = addEnv(ps.defs, top.env);
 }

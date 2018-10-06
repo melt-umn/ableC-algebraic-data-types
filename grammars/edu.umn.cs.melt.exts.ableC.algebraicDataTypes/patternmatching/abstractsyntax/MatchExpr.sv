@@ -1,19 +1,20 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
 abstract production matchExpr
-top::Expr ::= scrutinee::Expr  clauses::ExprClauses
+top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
 {
-  top.globalDecls := [];
-  top.pp = ppConcat([ text("match"), space(), parens(scrutinee.pp), line(), 
+  top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     parens(nestlines(2, clauses.pp)) ]);
 
-  clauses.expectedType = scrutinee.typerep;
+  scrutinees.argumentPosition = 0;
+  clauses.expectedTypes = scrutinees.typereps;
+  clauses.scrutineesIn = scrutinees.scrutineeRefs;
   
-  local localErrors::[Message] = clauses.errors ++ scrutinee.errors;
+  local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
   local fwrd::Expr =
     ableC_Expr {
       ({$directTypeExpr{clauses.typerep} _result;
-        $directTypeExpr{scrutinee.typerep} _match_scrutinee_val = $Expr{scrutinee};
+        $Stmt{scrutinees.transform}
         $Stmt{clauses.transform}
         _result;})
     };

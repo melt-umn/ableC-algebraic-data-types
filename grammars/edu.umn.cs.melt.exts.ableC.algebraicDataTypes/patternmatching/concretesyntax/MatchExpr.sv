@@ -10,9 +10,9 @@ top::PrimaryExpr_c ::= 'match' m::Match
 nonterminal Match with ast<Expr>, location;
 
 concrete production matchExpr_c
-top::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses ')'
+top::Match ::= '(' scrutinees::ArgumentExprList_c ')' '(' cs::ExprClauses ')'
 {
-  top.ast = abs:matchExpr(scrutinee.ast, cs.ast, location=top.location);
+  top.ast = abs:matchExpr(foldExpr(scrutinees.ast), cs.ast, location=top.location);
 }
 
 nonterminal ExprClauses with location, ast<abs:ExprClauses>;
@@ -27,5 +27,5 @@ nonterminal ExprClause with location, ast<abs:ExprClause> ;
 terminal Where_t 'where';
 
 concrete productions top::ExprClause
-| p::Pattern_c '->' e::Expr_c ';'
+| p::PatternList_c '->' e::Expr_c ';'
   { top.ast = abs:exprClause(p.ast, e.ast, location=top.location); }

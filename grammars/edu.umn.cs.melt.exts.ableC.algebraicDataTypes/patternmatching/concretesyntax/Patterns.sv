@@ -1,7 +1,18 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
+import edu:umn:cs:melt:ableC:concretesyntax:lexerHack as lh;
+
 terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier}; 
    -- Same as Identifier_t
+
+disambiguate PatternName_t, TypeName_t
+{
+  pluck
+    case lookupBy(stringEq, lexeme, head(context)) of
+    | just(lh:typenameType_c()) -> TypeName_t
+    | _ -> PatternName_t
+    end;
+}
 
 terminal NamedPatternOp_t '@' precedence = 0, association = left, lexer classes {Csymbol};
 terminal AntipatternOp_t  '!' precedence = 1, lexer classes {Csymbol};
@@ -27,6 +38,12 @@ nonterminal ConstPattern_c with location, ast<abs:Pattern>;
 concrete productions top::Pattern_c
 | c::Constant_c
   { top.ast = abs:patternConst(c.ast, location=top.location); }
+| '(' tn::TypeName_c ')' c::Constant_c
+  { top.ast =
+      abs:patternConst(
+        explicitCastExpr(tn.ast, c.ast, location=top.location),
+        location=top.location);
+  }
 | sl::StringConstant_c
   { top.ast = abs:patternStringLiteral(sl.ast, location=top.location); }
 | p1::NonConstPattern_c '@' p2::Pattern_c

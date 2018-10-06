@@ -14,11 +14,18 @@ int main () {
 
   int b = 1;
   int y = 0;
-  // a match expression
-  y = match(&b) (&(1) -> 3;
-                 v    -> *v;);
 
-  if (x == 3 && y == 3) 
+  // a match expression
+  y = match (&b) (&1 -> 3;
+                  v    -> *v;);
+
+  // multiple patterns
+  int *c = &a;
+  int z = match (b, c) (4, _            -> 5;
+                        _, (!NULL) @ &v -> 42;
+                        _, NULL         -> 35;);
+  
+  if (x == 3 && y == 3 && z == 42) 
     return 0;
   else 
     return 1;
