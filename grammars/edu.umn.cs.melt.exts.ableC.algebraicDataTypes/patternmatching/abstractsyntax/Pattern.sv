@@ -28,24 +28,24 @@ attribute transformIn<Expr> occurs on Pattern;
 attribute transform<Expr> occurs on Pattern;
 
 abstract production patternVariable
-top::Pattern ::= id::String
+top::Pattern ::= n::Name
 {
-  top.pp = text(id);
+  top.pp = n.pp;
   top.decls = [declStmt(d)];
   top.defs := d.defs;
   top.errors := []; --ToDo: - check for non-linearity
+  top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   local d :: Decl =
-    variableDecls([], nilAttribute(), directTypeExpr(top.expectedType), 
+    variableDecls([], nilAttribute(), directTypeExpr(top.expectedType),
       consDeclarator(
-        declarator(
-          name(id, location=builtin), baseTypeExpr(), nilAttribute(), nothingInitializer()),
-        nilDeclarator()) );
-  d.env = top.env; 
+        declarator(n, baseTypeExpr(), nilAttribute(), nothingInitializer()),
+        nilDeclarator()));
+  d.env = top.env;
   d.returnType = top.returnType;
   d.isTopLevel = false;
-
-  top.transform = ableC_Expr { ($name{id} = $Expr{top.transformIn}, 1) };
+  
+  top.transform = ableC_Expr { ($Name{n} = $Expr{top.transformIn}, 1) };
 }
 
 abstract production patternWildcard

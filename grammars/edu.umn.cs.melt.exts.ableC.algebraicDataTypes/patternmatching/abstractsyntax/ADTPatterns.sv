@@ -3,9 +3,9 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 -- ADT Patterns --
 -------------------
 abstract production constructorPattern
-top::Pattern ::= id::String ps::PatternList
+top::Pattern ::= n::Name ps::PatternList
 {
-  top.pp = cat( text(id), parens( ppImplode(text(","), ps.pps) ) );
+  top.pp = cat( n.pp, parens( ppImplode(text(","), ps.pps) ) );
   ps.env = top.env;
   top.decls = ps.decls;
   top.defs := ps.defs;
@@ -33,7 +33,7 @@ top::Pattern ::= id::String ps::PatternList
     | [] -> []
     end;
   
-  local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, id, constructors);
+  local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, n.name, constructors);
   
   top.errors :=
     case top.expectedType, adtName, constructorParamLookup of
@@ -46,7 +46,7 @@ top::Pattern ::= id::String ps::PatternList
       if ps.count != params.count
       then [err(top.location, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
       else []
-    | _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${id}.")]
+    | _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${n.name}.")]
     end;
   
   ps.expectedTypes =
@@ -58,9 +58,9 @@ top::Pattern ::= id::String ps::PatternList
   top.transform =
     case adtName of
     | just(adtName) ->
-      -- adtName ++ "_" ++ id is the tag name to match against
+      -- adtName ++ "_" ++ n.name is the tag name to match against
       ableC_Expr {
-        $Expr{top.transformIn}.tag == $name{adtName ++ "_" ++ id} && $Expr{ps.transform}
+        $Expr{top.transformIn}.tag == $name{adtName ++ "_" ++ n.name} && $Expr{ps.transform}
       }
     -- An error has occured, don't generate the tag check to avoid creating additional errors
     | nothing() -> ps.transform
@@ -68,6 +68,6 @@ top::Pattern ::= id::String ps::PatternList
   ps.transformIn =
     do (bindList, returnList) {
       fieldName::String <- constructorParamLookup.fromJust.fieldNames;
-      return ableC_Expr { $Expr{top.transformIn}.contents.$name{id}.$name{fieldName} };
+      return ableC_Expr { $Expr{top.transformIn}.contents.$Name{n}.$name{fieldName} };
     };
 }

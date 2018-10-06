@@ -71,18 +71,18 @@ nonterminal BasicPattern_c with location, ast<abs:Pattern>;
 
 concrete productions top::BasicPattern_c
 | id::PatternName_t '(' ps::PatternList_c ')'
-  { top.ast = abs:constructorPattern(id.lexeme, ps.ast, location=top.location); }
+  { top.ast = abs:constructorPattern(fromPatternName(id), ps.ast, location=top.location); }
 | id::PatternName_t '(' ')'
   { top.ast = 
       abs:constructorPattern(
-        id.lexeme, abs:nilPattern(location=top.location),
+        fromPatternName(id), abs:nilPattern(location=top.location),
         location=top.location);
   }
 | id::PatternName_t
   { top.ast =
       if id.lexeme == "_"
       then abs:patternWildcard(location=top.location)
-      else abs:patternVariable(id.lexeme, location=top.location);
+      else abs:patternVariable(fromPatternName(id), location=top.location);
   }
 | 'when' '(' e::Expr_c ')'
   { top.ast = abs:patternWhen(e.ast, location=top.location); }
@@ -101,3 +101,9 @@ concrete productions top::PatternList_c
   { top.ast = 
       abs:consPattern(p.ast, abs:nilPattern(location=top.location), location=p.location);
   }
+
+function fromPatternName
+Name ::= id::PatternName_t
+{
+  return name(id.lexeme, location=id.location);
+}
