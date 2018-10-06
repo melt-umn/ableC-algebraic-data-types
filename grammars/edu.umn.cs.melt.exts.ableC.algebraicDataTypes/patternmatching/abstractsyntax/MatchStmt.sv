@@ -8,6 +8,7 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   top.functionDefs := [];
   
   scrutinees.argumentPosition = 0;
+  clauses.matchLocation = clauses.location; -- Whatever.
   clauses.expectedTypes = scrutinees.typereps;
   clauses.scrutineesIn = scrutinees.scrutineeRefs;
   

@@ -33,8 +33,9 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 synthesized attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
 autocopy attribute scrutineesIn::[Expr];
+autocopy attribute matchLocation::Location;
 
-nonterminal StmtClauses with location, pp, errors, env, returnType,
+nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
   expectedTypes, scrutineesIn, transform<Stmt>; 
 
 abstract production consStmtClause
@@ -60,7 +61,7 @@ top::StmtClauses ::=
 }
   
 
-nonterminal StmtClause with location, pp, errors, env, 
+nonterminal StmtClause with location, matchLocation, pp, errors, env, 
   expectedTypes, returnType, scrutineesIn,
   transform<Stmt>, transformIn<Stmt>;
 

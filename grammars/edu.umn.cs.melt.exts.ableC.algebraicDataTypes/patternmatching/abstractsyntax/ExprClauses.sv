@@ -34,7 +34,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     used to pass these types down the clause and pattern ASTs.
  -}
 
-nonterminal ExprClauses with location, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep;
+nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -68,27 +68,27 @@ top::ExprClauses ::= c::ExprClause
   top.errors := c.errors;
   top.errors <-
     if null(lookupValue("exit", top.env))
-    then [err(builtin, "Pattern match requires definition of exit (include <stdlib.h>?)")]
+    then [err(top.matchLocation, "Pattern match requires definition of exit (include <stdlib.h>?)")]
     else [];
   top.errors <-
     if null(lookupValue("fprintf", top.env))
-    then [err(builtin, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
+    then [err(top.matchLocation, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
     else [];
   top.errors <-
     if null(lookupValue("stderr", top.env))
-    then [err(builtin, "Pattern match requires definition of stderr (include <stdio.h>?)")]
+    then [err(top.matchLocation, "Pattern match requires definition of stderr (include <stdio.h>?)")]
     else [];
 
   top.transform = c.transform;
   c.transformIn =
     ableC_Stmt {
-      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${c.location.unparse}\n"});
+      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.matchLocation.unparse}\n"});
       exit(1);
     };
   top.typerep = c.typerep;
 }
 
-nonterminal ExprClause with location, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep;
+nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep;
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr

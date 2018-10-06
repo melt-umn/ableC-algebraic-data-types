@@ -2,15 +2,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesy
 
 -- Match expression --
 concrete production matchMatch_c
-top::PrimaryExpr_c ::= 'match' m::Match
-{
-  top.ast = m.ast;
-}
-
-nonterminal Match with ast<Expr>, location;
-
-concrete production matchExpr_c
-top::Match ::= '(' scrutinees::ArgumentExprList_c ')' '(' cs::ExprClauses ')'
+top::PrimaryExpr_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '(' cs::ExprClauses ')'
 {
   top.ast = abs:matchExpr(foldExpr(scrutinees.ast), cs.ast, location=top.location);
 }

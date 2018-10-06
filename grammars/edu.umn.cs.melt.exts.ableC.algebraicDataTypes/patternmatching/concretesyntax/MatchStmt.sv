@@ -13,15 +13,7 @@ marking terminal Match_t 'match' lexer classes {Ckeyword};
 
 -- Match statement --
 concrete production match_c
-top::SelectionStmt_c ::= 'match' m::MatchStmt
-{ 
-  top.ast = m.ast;
-}
-
-nonterminal MatchStmt with ast<Stmt>, location;
-
-concrete production matchStmt_c
-top::MatchStmt ::= '(' scrutinees::ArgumentExprList_c ')' '{' cs::StmtClauses '}'
+top::SelectionStmt_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '{' cs::StmtClauses '}'
 {
   top.ast = abs:matchStmt(foldExpr(scrutinees.ast), cs.ast);
 }

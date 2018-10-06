@@ -5,8 +5,9 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
 {
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     parens(nestlines(2, clauses.pp)) ]);
-
+  
   scrutinees.argumentPosition = 0;
+  clauses.matchLocation = top.location;
   clauses.expectedTypes = scrutinees.typereps;
   clauses.scrutineesIn = scrutinees.scrutineeRefs;
   
