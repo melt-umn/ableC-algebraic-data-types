@@ -198,29 +198,27 @@ nonterminal Constructor
        location;
 
 abstract production constructor
-top::Constructor ::= n::String ps::Parameters
+top::Constructor ::= n::Name ps::Parameters
 {
   {- This attribute is for extensions to use to initialize additional members added
      to the generated ADT struct. -}
   production attribute initStmts::[Stmt] with ++;
   initStmts := [];
-
-  top.pp = ppConcat( [ text(n ++ " ( "), ppImplode (text(", "), ps.pps),
-                     text(" );") ] );
-  top.errors :=
-    if !null(lookupValue(n, top.env))
-    then [err(top.location, n ++ " is already defined as a constructor or value")]
-    else [];
+  
+  top.pp = ppConcat([n.pp, parens(ppImplode(text(", "), ps.pps)), semi()]);
+  top.errors := ps.errors;
+  top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   top.defs := ps.typeDefs;
   
   ps.position = 0;  
-  ps.constructorName = n;
-
-  top.constructors = [pair(n, ps)];
-
-  top.enumItem = enumItem(name(top.topTypeName ++ "_" ++ n, location=builtin), nothingExpr());
-
+  ps.constructorName = n.name;
+  
+  top.constructors = [pair(n.name, ps)];
+  
+  top.enumItem =
+    enumItem(name(top.topTypeName ++ "_" ++ n.name, location=builtin), nothingExpr());
+  
   top.structItem =
     structItem(
       nilAttribute(),
@@ -228,21 +226,19 @@ top::Constructor ::= n::String ps::Parameters
         nilQualifier(),
         structDecl(
           nilAttribute(),
-          justName(name(top.topTypeName ++ "_" ++ n ++ "_s", location=builtin)),
+          justName(name(top.topTypeName ++ "_" ++ n.name ++ "_s", location=builtin)),
           ps.asStructItemList, location=builtin)),
       consStructDeclarator(
-        structField(
-          name(n, location=builtin),
-          baseTypeExpr(), nilAttribute()),
+        structField(n, baseTypeExpr(), nilAttribute()),
         nilStructDeclarator()));
   
-  local resultTypeExpr::BaseTypeExpr =
+  production resultTypeExpr::BaseTypeExpr =
     adtTagReferenceTypeExpr(nilQualifier(), name(top.topTypeName, location=builtin));
   top.funDecl =
     ableC_Decl {
-      static inline $BaseTypeExpr{resultTypeExpr} $name{n}($Parameters{ps.asConstructorParameters}) {
+      static inline $BaseTypeExpr{resultTypeExpr} $Name{n}($Parameters{ps.asConstructorParameters}) {
         $BaseTypeExpr{resultTypeExpr} result;
-        result.tag = $name{top.topTypeName ++ "_" ++ n};
+        result.tag = $name{top.topTypeName ++ "_" ++ n.name};
         $Stmt{ps.asAssignments}
         $Stmt{foldStmt(initStmts)}
         return result;

@@ -34,8 +34,8 @@ concrete productions top::Declaration_c
 nonterminal ADTDecl_c with ast<Decl>, location ;
 
 concrete productions top::ADTDecl_c 
-| n::Identifier_t '{' c::ConstructorList_c '}'
-    { top.ast = datatypeDecl( adtDecl(fromId(n), c.ast, location=builtin) ); }
+| n::Identifier_c '{' c::ConstructorList_c '}'
+    { top.ast = datatypeDecl(adtDecl(n.ast, c.ast, location=builtin)); }
 
 
 nonterminal ConstructorList_c with ast<ConstructorList>;
@@ -48,7 +48,7 @@ concrete productions top::ConstructorList_c
 
 nonterminal Constructor_c with ast<Constructor>, location;
 concrete productions top::Constructor_c
-| n::Identifier_t '(' ad::ParameterTypeList_c ')' ';'
-     { top.ast = constructor(n.lexeme, foldParameterDecl(ad.ast), location=top.location); }
-| n::Identifier_t '(' ')' ';'
-     { top.ast = constructor(n.lexeme, nilParameters(), location=top.location); }
+| n::Identifier_c '(' ad::ParameterTypeList_c ')' ';'
+     { top.ast = constructor(n.ast, foldParameterDecl(ad.ast), location=top.location); }
+| n::Identifier_c '(' ')' ';'
+     { top.ast = constructor(n.ast, nilParameters(), location=top.location); }

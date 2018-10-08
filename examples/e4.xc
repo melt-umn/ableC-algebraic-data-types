@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 typedef  datatype Tree  Tree;
 datatype Tree {
   Fork (Tree*, Tree*, const char*);
   Leaf (const char*);
 };
+
+allocate datatype Tree with malloc;
 
 int count_matches (Tree *t) {
   match (t) {
@@ -22,7 +23,7 @@ int count_matches (Tree *t) {
 }
 
 int main (int argc, char **argv) {
-  Tree *tree = &#Fork(&#Fork(&#Leaf("b"), &#Leaf("c"), "x"), &#Leaf("a"),"y");
+  Tree *tree = malloc_Fork(malloc_Fork(malloc_Leaf("b"), malloc_Leaf("c"), "x"), malloc_Leaf("a"), "y");
 
   int result = count_matches(tree);
 

@@ -9,6 +9,8 @@ datatype Expr {
   Const (int);
 };
 
+allocate datatype Expr with malloc;
+
 int funny_value(Expr *e) {
   int result = 999;
   match (e) {
@@ -35,24 +37,24 @@ int funny_value(Expr *e) {
 int main () {
     int result;
 
-    Expr *t0 = &#Add(&#Mul(&#Const(3), &#Const(2), &#Const(999)), // Type error in tree construction
-                     &#Mul(&#Const(2), &#Const(4)));
+    Expr *t0 = malloc_Add(malloc_Mul(malloc_Const(3), malloc_Const(2), malloc_Const(999)), // Type error in tree construction
+                          malloc_Mul(malloc_Const(2), malloc_Const(4)));
     result = funny_value(t0);
     if (result != 34) return 1;
   
-    Expr *t1 = &#Mul(&#Const(3), &#Mul(&#Const(2), &#Const(4)));
+    Expr *t1 = malloc_Mul(malloc_Const(3), malloc_Mul(malloc_Const(2), malloc_Const(4)));
     result = funny_value(t1);
     if (result != 192) return 2;
   
-    Expr *t2 = &#Mul(&#Const(2), &#Const(4));
+    Expr *t2 = malloc_Mul(malloc_Const(2), malloc_Const(4));
     result = funny_value(t2);
     if (result != 32) return 3;
 
-    Expr *t3 = &#Const(2); 
+    Expr *t3 = malloc_Const(2); 
     result = funny_value(t3);
     if (result != 2 + 2) return 4;
   
-    Expr *t4 = &#Add(&#Const(2), &#Const(4));
+    Expr *t4 = malloc_Add(malloc_Const(2), malloc_Const(4));
     result = funny_value(t4);
     if (result != 1000) return 5;
   

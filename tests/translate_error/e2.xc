@@ -11,6 +11,8 @@ datatype Expr {
   Const (int);
 };
 
+allocate datatype Expr with malloc;
+
 int valueE(Expr *e) {
   return
     match (e) (&Add(e1,e2,e3) -> valueE(e1) + valueE(e2); // Wrong number of items in pattern
@@ -44,7 +46,7 @@ int free_Expr(Expr *e) {
 }
 
 int main () {
-  Expr *t = &#Add(&#Const(4), &#Mul(&#Const(2), &#Const(4)));
+  Expr *t = malloc_Add(malloc_Const(4), malloc_Mul(malloc_Const(2), malloc_Const(4)));
  
   int result1 = valueE(t);
   int result2 = valueS(t);
