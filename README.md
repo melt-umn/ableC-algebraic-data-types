@@ -39,7 +39,7 @@ Expr *e5 = malloc(sizeof(Expr));
 Expr *e6 = malloc(sizeof(Expr));
 *e6 = Mul(e4, e5);
 Expr *e7 = malloc(sizeof(Expr));
-*e7 = Add(e3, 6);
+*e7 = Add(e3, e6);
 ```
 
 This requirement of allocating each sub-expression as a seperate statement
