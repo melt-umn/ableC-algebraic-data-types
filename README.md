@@ -12,7 +12,7 @@ C programs.
 
 For example, the following declares an ``Expr`` data type for
 representing simple arithmetic expressions.
-```
+```c
 typedef  datatype Expr  Expr;
 
 datatype Expr {
@@ -25,49 +25,63 @@ datatype Expr {
 This declaration also creates the constructor functions to build data
 values of this type.  For example, one can create an expression as
 follows:
+```c
+Expr *e1 = malloc(sizeof(Expr));
+*e1 = Const(3);
+Expr *e2 = malloc(sizeof(Expr));
+*e2 = Const(2);
+Expr *e3 = malloc(sizeof(Expr));
+*e3 = Mul(e1, e2);
+Expr *e4 = malloc(sizeof(Expr));
+*e4 = Const(2);
+Expr *e5 = malloc(sizeof(Expr));
+*e5 = Const(4);
+Expr *e6 = malloc(sizeof(Expr));
+*e6 = Mul(e4, e5);
+Expr *e7 = malloc(sizeof(Expr));
+*e7 = Add(e3, 6);
 ```
-Expr *tree = Add( Mul( Const(3), Const(2) ), 
-                  Mul( Const(2), Const(4) ) ) ;
+
+This requirement of allocating each sub-expression as a seperate statement
+is cumbersome, and so special syntax is provided to auto-generate allocating
+constructors:
+```c
+allocate datatype Expr with malloc;
+
+Expr *tree = malloc_Add(malloc_Mul(malloc_Const(3), malloc_Const(2)), 
+                        malloc_Mul(malloc_Const(2), malloc_Const(4)));
 ```
 
 Furthermore, one can also use pattern matching to inspect and
 deconstruct the data.  Here is a function to compute the value of an
 expression: 
-```
+```c
 int value (Expr *e) {
     int result = 0;
     match (e) {
-        Add(e1,e2) -> { result = value(e1) + value(e2) ; }
-        Mul(e1,e2) -> { result = value(e1) * value(e2) ; }
-        Const(v) -> { result = v ;  }
+        Add(e1,e2) -> { result = value(e1) + value(e2); }
+        Mul(e1,e2) -> { result = value(e1) * value(e2); }
+        Const(v) -> { result = v;  }
     }
     return result;
 }
 ```
 
+This can also be written using a "match expression" instead of a "match
+statement":
+```c
+int value (Expr *e) {
+    return
+        match (e) (
+            Add(e1,e2) -> value(e1) + value(e2);
+            Mul(e1,e2) -> value(e1) * value(e2);
+            Const(v) -> v;
+        );
+}
+```
+
 More examples can be found in the ``examples`` and ``artifact``
 directories.
-
-Additional documentation can be found in the ``docs`` directory.
-
-
-## Status:
-
-### Modular composition analyses
-* passes modular determinism analysis
-* DOES NOT pass modular well-definedness
-* * mostly (presumebly) because the attribution isn't complete yet.
-
-### Semantic Analysis
-* Currently, almost no error checking is done.  We need
-* * check for type errors
-    defs doesn't even decorate PatternList - so lots to do here
-* * check that patterns are linear
-* * others?
-
-### Enhancement
-* match expressions do not evaluate to a defined value if none of the
-  patterns match.  The unitialized variable _result is simply used.
 
 
 
