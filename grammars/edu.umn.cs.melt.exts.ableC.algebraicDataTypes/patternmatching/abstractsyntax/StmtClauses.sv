@@ -36,11 +36,13 @@ autocopy attribute scrutineesIn::[Expr];
 autocopy attribute matchLocation::Location;
 
 nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
-  expectedTypes, scrutineesIn, transform<Stmt>; 
+  expectedTypes, scrutineesIn, transform<Stmt>,
+  substituted<StmtClauses>, substitutions;
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
-{ 
+{
+  propagate substituted;
   top.pp = cat( c.pp, rest.pp );
   top.errors := c.errors ++ rest.errors;
 
@@ -54,6 +56,7 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
 abstract production failureStmtClause
 top::StmtClauses ::= 
 {
+  propagate substituted;
   top.pp = text("");
   top.errors := [];
 
@@ -63,7 +66,8 @@ top::StmtClauses ::=
 
 nonterminal StmtClause with location, matchLocation, pp, errors, env, 
   expectedTypes, returnType, scrutineesIn,
-  transform<Stmt>, transformIn<Stmt>;
+  transform<Stmt>, transformIn<Stmt>,
+  substituted<StmtClause>, substitutions;
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -80,6 +84,7 @@ nonterminal StmtClause with location, matchLocation, pp, errors, env,
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
+  propagate substituted;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, s.pp) ]);
   top.errors := ps.errors ++ s.errors;
   top.errors <-

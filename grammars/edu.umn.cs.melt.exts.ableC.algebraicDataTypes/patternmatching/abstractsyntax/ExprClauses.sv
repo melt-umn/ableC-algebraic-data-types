@@ -34,11 +34,12 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     used to pass these types down the clause and pattern ASTs.
  -}
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep;
+nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep, substituted<ExprClauses>, substitutions;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
-{ 
+{
+  propagate substituted;
   top.pp = cat( c.pp, rest.pp );
 
   c.expectedTypes = top.expectedTypes;
@@ -63,6 +64,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
 abstract production oneExprClause
 top::ExprClauses ::= c::ExprClause
 {
+  propagate substituted;
   top.pp = c.pp;
   c.expectedTypes = top.expectedTypes;
   top.errors := c.errors;
@@ -88,11 +90,12 @@ top::ExprClauses ::= c::ExprClause
   top.typerep = c.typerep;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep;
+nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep, substituted<ExprClause>, substitutions;
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
 {
+  propagate substituted;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, e.pp), text(";")]);
   top.errors := ps.errors ++ e.errors;
   top.errors <-

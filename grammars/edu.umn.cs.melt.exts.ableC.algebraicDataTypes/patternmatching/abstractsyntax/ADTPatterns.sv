@@ -5,6 +5,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 abstract production constructorPattern
 top::Pattern ::= n::Name ps::PatternList
 {
+  propagate substituted;
   top.pp = cat( n.pp, parens( ppImplode(text(","), ps.pps) ) );
   ps.env = top.env;
   top.decls = ps.decls;

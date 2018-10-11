@@ -86,6 +86,7 @@ top::RefIdItem ::= adt::Decorated ADTDecl
 abstract production adtTagReferenceTypeExpr 
 top::BaseTypeExpr ::= q::Qualifiers n::Name
 {
+  propagate substituted;
   top.pp = ppConcat([terminate(space(), q.pps), pp"datatype", space(), n.pp]);
 
   local tags :: [TagItem] = lookupTag(n.name, top.env);
@@ -125,8 +126,9 @@ top::ExtType ::=
 abstract production adtExtType
 top::ExtType ::= n::String refId::String
 {
+  propagate substituted;
   top.host = extType(top.givenQualifiers, refIdExtType(structSEU(), n ++ "_s", refId ++ "_s"));
-  top.baseTypeExpr = adtTagReferenceTypeExpr(top.givenQualifiers, name(n, location=builtin));
+  --top.baseTypeExpr = adtTagReferenceTypeExpr(top.givenQualifiers, name(n, location=builtin));
   top.pp = ppConcat([pp"datatype", space(), text(n)]);
   top.mangledName =
     s"datatype_${if n == "<anon>" then "anon" else n}_${substitute(":", "_", refId)}";

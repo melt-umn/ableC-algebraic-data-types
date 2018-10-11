@@ -3,6 +3,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 abstract production matchStmt
 top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
 {
+  propagate substituted;
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
   top.functionDefs := [];

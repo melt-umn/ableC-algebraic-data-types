@@ -31,11 +31,11 @@ concrete productions top::Declaration_c
 | 'datatype' a::ADTDecl_c
   { top.ast = a.ast; }
 
-nonterminal ADTDecl_c with ast<Decl>, location ;
+nonterminal ADTDecl_c with ast<Decl>, location;
 
 concrete productions top::ADTDecl_c 
-| n::Identifier_c '{' c::ConstructorList_c '}'
-    { top.ast = datatypeDecl(adtDecl(n.ast, c.ast, location=builtin)); }
+| n::Identifier_c '{' cs::ConstructorList_c '}'
+    { top.ast = datatypeDecl(adtDecl(n.ast, cs.ast, location=top.location)); }
 
 
 nonterminal ConstructorList_c with ast<ConstructorList>;

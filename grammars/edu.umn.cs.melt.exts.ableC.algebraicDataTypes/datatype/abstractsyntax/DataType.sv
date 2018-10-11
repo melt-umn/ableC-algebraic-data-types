@@ -27,6 +27,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 abstract production datatypeDecl
 top::Decl ::= adt::ADTDecl
 {
+  propagate substituted;
   top.pp = ppConcat([ text("datatype"), space(), adt.pp ]);
   
   forwards to
@@ -38,11 +39,13 @@ top::Decl ::= adt::ADTDecl
 
 synthesized attribute transform<a> :: a;
 
-nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, name, refId, constructors, tagEnv, transform<Decl>;
+nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, name, refId, constructors, tagEnv, transform<Decl>, substituted<ADTDecl>, substitutions;
+flowtype ADTDecl = decorate {isTopLevel, env, returnType};
 
 abstract production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
 {
+  propagate substituted;
   top.pp = ppConcat([ n.pp, space(), braces(cs.pp) ]);
   top.errors := cs.errors; -- TODO: check for redeclaration
 
@@ -77,11 +80,11 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   top.refId = name_tagRefId_workaround;
   top.constructors = cs.constructors;
   
-  local structName::String = n.name ++ "_s";
-  local structRefId::String = name_tagRefId_workaround ++ "_s";
-  local enumName::String = n.name ++ "_tag";
-  local unionName::String = "_" ++ n.name ++ "_contents";
-  local unionRefId::String = name_tagRefId_workaround ++ "_contents";
+  production structName::String = n.name ++ "_s";
+  production structRefId::String = name_tagRefId_workaround ++ "_s";
+  production enumName::String = n.name ++ "_tag";
+  production unionName::String = "_" ++ n.name ++ "_contents";
+  production unionRefId::String = name_tagRefId_workaround ++ "_contents";
   
   local transStructDecl::Decl =
     ableC_Decl {
@@ -150,11 +153,13 @@ autocopy attribute topTypeName :: String;
 synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 
 nonterminal ConstructorList
-  with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, topTypeName, constructors;
+  with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, topTypeName, constructors,
+       substituted<ConstructorList>, substitutions;
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
 {
+  propagate substituted;
   local sep::Document =
     case cl of
     | consConstructor(_,_) -> line()
@@ -174,6 +179,7 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
 abstract production nilConstructor
 top::ConstructorList ::=
 {
+  propagate substituted;
   top.pp = notext();
   top.errors := [];
   top.defs := [];
@@ -195,11 +201,14 @@ synthesized attribute funDecl :: Decl;
 nonterminal Constructor
   with pp, env, defs, errors, enumItem, structItem, funDecl, topTypeName, constructors,
        returnType, -- because Types may contain Exprs
+       substituted<Constructor>, substitutions,
        location;
 
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
+  propagate substituted;
+  
   {- This attribute is for extensions to use to initialize additional members added
      to the generated ADT struct. -}
   production attribute initStmts::[Stmt] with ++;
