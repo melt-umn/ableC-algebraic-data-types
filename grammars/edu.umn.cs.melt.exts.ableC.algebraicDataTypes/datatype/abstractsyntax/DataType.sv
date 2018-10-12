@@ -9,8 +9,9 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
  - 
  - becomes 
  - 
+ - enum Type_tag { Type_Unit, Type_Arrow, Type_Var };
  - struct Type {
- -   enum { Type_Unit, Type_Arrow, Type_Var } tag;
+ -   enum Type_tag tag;
  -   struct Contents_s {
  -     struct Type_Unit_s { } Unit ;
  -     struct Type_Arrow_s { struct Type *p1; struct Type *p2; } Arrow;
@@ -30,17 +31,25 @@ top::Decl ::= adt::ADTDecl
   propagate substituted;
   top.pp = ppConcat([ text("datatype"), space(), adt.pp ]);
   
+  adt.adtGivenName = adt.name;
+  
   forwards to
     decls(
       foldDecl([
-        defsDecl(adt.defs), warnDecl(adt.errors)] ++
-        if null(adt.errors) then [adt.transform] else []));
+        defsDecl(adt.defs),
+        if null(adt.errors) then adt.transform else warnDecl(adt.errors)]));
 }
 
 synthesized attribute transform<a> :: a;
 
-nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, name, refId, constructors, tagEnv, transform<Decl>, substituted<ADTDecl>, substitutions;
-flowtype ADTDecl = decorate {isTopLevel, env, returnType};
+-- Used to specify a name to use for translation naming convensions.
+-- Usually the same as adtDeclName, but but extensions building on ADTs can
+-- specify a different one.  This can be the same for multiple adtDecls with
+-- the same constructors.
+autocopy attribute adtGivenName :: String;
+
+nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, refId, constructors, tagEnv, transform<Decl>, substituted<ADTDecl>, substitutions;
+flowtype ADTDecl = decorate {isTopLevel, env, returnType, adtGivenName};
 
 abstract production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
@@ -66,7 +75,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
     [adtRefIdDef(name_tagRefId_workaround, adtRefIdItem(top))];
   
   top.defs := preDefs ++ cs.defs ++ postDefs;
-
+  
   local name_refIdIfOld_workaround :: Maybe<String> =
     case n.tagLocalLookup of
     | adtRefIdTagItem(thisRefId) :: _ -> just(thisRefId)
@@ -76,32 +85,37 @@ top::ADTDecl ::= n::Name cs::ConstructorList
     fromMaybe(toString(genInt()), name_refIdIfOld_workaround);
   local name_tagHasForwardDcl_workaround :: Boolean =
     name_refIdIfOld_workaround.isJust;
-
+  
   top.refId = name_tagRefId_workaround;
   top.constructors = cs.constructors;
   
   production structName::String = n.name ++ "_s";
   production structRefId::String = name_tagRefId_workaround ++ "_s";
-  production enumName::String = n.name ++ "_tag";
+  production enumName::String = top.adtGivenName ++ "_tag";
   production unionName::String = "_" ++ n.name ++ "_contents";
   production unionRefId::String = name_tagRefId_workaround ++ "_contents";
   
-  local transStructDecl::Decl =
+  production adtEnumDecl::Decl =
+    ableC_Decl {
+      enum $name{enumName} {
+        $EnumItemList{
+          -- Ensure we don't generate an empty enum if there are no constructors
+          case cs.enumItems of
+            nilEnumItem() ->
+              consEnumItem(
+                enumItem(
+                  name("_dummy_" ++ top.adtGivenName ++ "_enum_item", location=builtin),
+                  nothingExpr()),
+                nilEnumItem())
+          | _ -> cs.enumItems
+          end}
+        };
+    };
+  
+  production adtStructDecl::Decl =
     ableC_Decl {
       struct __attribute__((refId($stringLiteralExpr{structRefId}))) $name{structName} {
-        enum $name{enumName} {
-          $EnumItemList{
-            -- Ensure we don't generate an empty enum if there are no constructors
-            case cs.enumItems of
-              nilEnumItem() ->
-                consEnumItem(
-                  enumItem(
-                    name("_dummy_" ++ n.name ++ "_enum_item", location=builtin),
-                    nothingExpr()),
-                  nilEnumItem())
-            | _ -> cs.enumItems
-            end}
-        } tag;
+        enum $name{enumName} tag;
         union __attribute__((refId($stringLiteralExpr{unionRefId}))) $name{unionName} {
           $StructItemList{cs.structItems}
         } contents;
@@ -109,12 +123,15 @@ top::ADTDecl ::= n::Name cs::ConstructorList
       };
     };
   
-  -- Decorate struct declaration here to compute tagEnv
-  transStructDecl.env = top.env;
-  transStructDecl.returnType = top.returnType;
-  transStructDecl.isTopLevel = top.isTopLevel;
+  -- Decorate struct and enum declarations here to compute tagEnv
+  adtEnumDecl.env = top.env;
+  adtEnumDecl.returnType = top.returnType;
+  adtEnumDecl.isTopLevel = top.isTopLevel;
+  adtStructDecl.env = addEnv(adtEnumDecl.defs, top.env);
+  adtStructDecl.returnType = top.returnType;
+  adtStructDecl.isTopLevel = top.isTopLevel;
   
-  top.tagEnv = case transStructDecl of typeExprDecl(_, structTypeExpr(_, d)) -> d.tagEnv end;
+  top.tagEnv = case adtStructDecl of typeExprDecl(_, structTypeExpr(_, d)) -> d.tagEnv end;
   
   {- This attribute is for extensions to use to add additional auto-generated functions
      for ADT, for example an auto-generated recursive freeing function. -}
@@ -131,11 +148,17 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   structItems := nilStructItem();
 
   top.transform =
-    decls(consDecl(transStructDecl, foldr1(appendDecls, [adtProtos, cs.funDecls, adtDecls])));
+    decls(
+      foldr1(
+        appendDecls,
+        [foldDecl([adtEnumDecl, adtStructDecl]), adtProtos, cs.funDecls, adtDecls]));
   
   cs.env = addEnv(preDefs, top.env);
-  cs.topTypeName = n.name;
+  cs.adtDeclName = n.name;
 }
+
+-- Used to pass down the datatype's actual declared name for naming conventions.
+autocopy attribute adtDeclName :: String;
 
 -- Constructs the enum item for each constructor
 synthesized attribute enumItems :: EnumItemList;
@@ -146,14 +169,11 @@ synthesized attribute structItems :: StructItemList;
 -- Constructs the initialization function for each constructor
 synthesized attribute funDecls :: Decls;
 
--- Used to pass down the datatype's name for naming conventions
-autocopy attribute topTypeName :: String;
-
 -- Constructor list used, e.g., when type checking patterns
 synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 
 nonterminal ConstructorList
-  with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, topTypeName, constructors,
+  with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, adtGivenName, adtDeclName, constructors,
        substituted<ConstructorList>, substitutions;
 
 abstract production consConstructor
@@ -199,7 +219,7 @@ synthesized attribute structItem :: StructItem;
 synthesized attribute funDecl :: Decl;
 
 nonterminal Constructor
-  with pp, env, defs, errors, enumItem, structItem, funDecl, topTypeName, constructors,
+  with pp, env, defs, errors, enumItem, structItem, funDecl, adtGivenName, adtDeclName, constructors,
        returnType, -- because Types may contain Exprs
        substituted<Constructor>, substitutions,
        location;
@@ -226,7 +246,7 @@ top::Constructor ::= n::Name ps::Parameters
   top.constructors = [pair(n.name, ps)];
   
   top.enumItem =
-    enumItem(name(top.topTypeName ++ "_" ++ n.name, location=builtin), nothingExpr());
+    enumItem(name(top.adtGivenName ++ "_" ++ n.name, location=builtin), nothingExpr());
   
   top.structItem =
     structItem(
@@ -235,19 +255,19 @@ top::Constructor ::= n::Name ps::Parameters
         nilQualifier(),
         structDecl(
           nilAttribute(),
-          justName(name(top.topTypeName ++ "_" ++ n.name ++ "_s", location=builtin)),
+          justName(name(top.adtDeclName ++ "_" ++ n.name ++ "_s", location=builtin)),
           ps.asStructItemList, location=builtin)),
       consStructDeclarator(
         structField(n, baseTypeExpr(), nilAttribute()),
         nilStructDeclarator()));
   
   production resultTypeExpr::BaseTypeExpr =
-    adtTagReferenceTypeExpr(nilQualifier(), name(top.topTypeName, location=builtin));
+    adtTagReferenceTypeExpr(nilQualifier(), name(top.adtDeclName, location=builtin));
   top.funDecl =
     ableC_Decl {
       static inline $BaseTypeExpr{resultTypeExpr} $Name{n}($Parameters{ps.asConstructorParameters}) {
         $BaseTypeExpr{resultTypeExpr} result;
-        result.tag = $name{top.topTypeName ++ "_" ++ n.name};
+        result.tag = $name{top.adtGivenName ++ "_" ++ n.name};
         $Stmt{ps.asAssignments}
         $Stmt{foldStmt(initStmts)}
         return result;

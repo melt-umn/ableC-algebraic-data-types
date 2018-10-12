@@ -36,6 +36,7 @@ top::Decl ::= id::Name  allocator::Name
     end;
   d.env = top.env;
   d.returnType = top.returnType;
+  d.adtGivenName = d.name;
   d.allocatorName = allocator;
   
   forwards to
@@ -79,7 +80,7 @@ top::Constructor ::= n::Name ps::Parameters
     [valueDef(
        allocateConstructorName,
        allocateConstructorValueItem(
-         name(top.topTypeName, location=builtin),
+         name(top.adtGivenName, location=builtin),
          top.allocatorName, n, ps.typereps))];
   top.allocatorErrorDefs = [valueDef(allocateConstructorName, errorValueItem())];
 }

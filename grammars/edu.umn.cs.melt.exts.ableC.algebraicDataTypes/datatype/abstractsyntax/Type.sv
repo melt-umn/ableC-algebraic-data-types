@@ -103,9 +103,9 @@ top::BaseTypeExpr ::= q::Qualifiers n::Name
   local fwrd::BaseTypeExpr =
     case tags of
     -- We don't see the declaration, so we're adding it.
-    | [] -> extTypeExpr(q, adtExtType(n.name, refId))
+    | [] -> extTypeExpr(q, adtExtType(n.name, n.name, refId))
     -- It's a datatype and the tag type agrees.
-    | adtRefIdTagItem(r) :: _ -> extTypeExpr(q, adtExtType(n.name, r))
+    | adtRefIdTagItem(r) :: _ -> extTypeExpr(q, adtExtType(n.name, n.name, r))
     -- It's a datatype and the tag type doesn't agree.
     | _ -> errorTypeExpr([err(n.location, "Tag " ++ n.name ++ " is not a datatype")])
     end;
@@ -124,20 +124,20 @@ top::ExtType ::=
 }
 
 abstract production adtExtType
-top::ExtType ::= n::String refId::String
+top::ExtType ::= adtName::String adtDeclName::String refId::String
 {
   propagate substituted;
-  top.host = extType(top.givenQualifiers, refIdExtType(structSEU(), n ++ "_s", refId ++ "_s"));
-  --top.baseTypeExpr = adtTagReferenceTypeExpr(top.givenQualifiers, name(n, location=builtin));
-  top.pp = ppConcat([pp"datatype", space(), text(n)]);
+  top.host =
+    extType(top.givenQualifiers, refIdExtType(structSEU(), adtDeclName ++ "_s", refId ++ "_s"));
+  top.pp = ppConcat([pp"datatype", space(), text(adtDeclName)]);
   top.mangledName =
-    s"datatype_${if n == "<anon>" then "anon" else n}_${substitute(":", "_", refId)}";
+    s"datatype_${if adtDeclName == "<anon>" then "anon" else adtDeclName}_${substitute(":", "_", refId)}";
   top.isEqualTo =
     \ other::ExtType ->
       case other of
-      | adtExtType(_, otherRefId) -> refId == otherRefId
+      | adtExtType(_, _, otherRefId) -> refId == otherRefId
       | _ -> false
       end;
   top.maybeRefId = just(refId);
-  top.adtName = just(n);
+  top.adtName = just(adtName);
 }
