@@ -75,7 +75,7 @@ top::ConstructorList ::=
 aspect production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
-  local allocateConstructorName::String = top.allocatorName.name ++ "_" ++ n.name;
+  production allocateConstructorName::String = top.allocatorName.name ++ "_" ++ n.name;
   top.allocatorDefs =
     [valueDef(
        allocateConstructorName,

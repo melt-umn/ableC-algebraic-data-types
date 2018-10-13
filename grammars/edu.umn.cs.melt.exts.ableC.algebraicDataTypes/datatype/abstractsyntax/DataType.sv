@@ -240,7 +240,7 @@ top::Constructor ::= n::Name ps::Parameters
   
   top.defs := ps.typeDefs;
   
-  ps.position = 0;  
+  ps.position = 0;
   ps.constructorName = n.name;
   
   top.constructors = [pair(n.name, ps)];

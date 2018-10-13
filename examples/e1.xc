@@ -11,7 +11,7 @@ datatype Expr {
 
 allocate datatype Expr with malloc;
 
-int value (Expr *e) {
+int value(Expr *e) {
   int result = 99;
     
   match (e) {
@@ -22,7 +22,7 @@ int value (Expr *e) {
   return result;
 }
 
-int main () {
+int main() {
   Expr *t0 = malloc_Mul(malloc_Const(2), malloc_Const(4));
 
   if (value(t0) != 8) return 1;
