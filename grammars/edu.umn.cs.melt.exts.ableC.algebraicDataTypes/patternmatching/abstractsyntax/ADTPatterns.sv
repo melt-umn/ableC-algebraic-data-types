@@ -36,7 +36,7 @@ top::Pattern ::= n::Name ps::PatternList
   
   local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, n.name, constructors);
   
-  top.errors :=
+  local localErrors::[Message] =
     case top.expectedType, adtName, adtLookup, constructorParamLookup of
     | errorType(), _, _, _ -> []
     -- Check that expected type for this pattern is an ADT of some sort
@@ -51,6 +51,7 @@ top::Pattern ::= n::Name ps::PatternList
       then [err(top.location, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
       else []
     end;
+  top.errors := localErrors ++ ps.errors;
   
   ps.expectedTypes =
     case constructorParamLookup of
@@ -59,15 +60,14 @@ top::Pattern ::= n::Name ps::PatternList
     end;
   
   top.transform =
-    case adtName of
-    | just(adtName) ->
+    if adtName.isJust && constructorParamLookup.isJust
+    then
       -- adtName ++ "_" ++ n.name is the tag name to match against
       ableC_Expr {
-        $Expr{top.transformIn}.tag == $name{adtName ++ "_" ++ n.name} && $Expr{ps.transform}
+        $Expr{top.transformIn}.tag == $name{adtName.fromJust ++ "_" ++ n.name} && $Expr{ps.transform}
       }
     -- An error has occured, don't generate the tag check to avoid creating additional errors
-    | nothing() -> ps.transform
-    end;
+    else errorExpr(top.errors, location=builtin);
   ps.transformIn =
     do (bindList, returnList) {
       fieldName::String <- constructorParamLookup.fromJust.fieldNames;

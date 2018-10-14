@@ -104,7 +104,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
             nilEnumItem() ->
               consEnumItem(
                 enumItem(
-                  name("_dummy_" ++ top.adtGivenName ++ "_enum_item", location=builtin),
+                  name(s"_dummy_${top.adtGivenName}_enum_item_${toString(genInt())}", location=builtin),
                   nothingExpr()),
                 nilEnumItem())
           | _ -> cs.enumItems
@@ -246,7 +246,7 @@ top::Constructor ::= n::Name ps::Parameters
   top.constructors = [pair(n.name, ps)];
   
   top.enumItem =
-    enumItem(name(top.adtGivenName ++ "_" ++ n.name, location=builtin), nothingExpr());
+    enumItem(name(top.adtGivenName ++ "_" ++ n.name, location=top.location), nothingExpr());
   
   top.structItem =
     structItem(

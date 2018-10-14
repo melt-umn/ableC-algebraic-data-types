@@ -62,7 +62,7 @@ top::StmtClauses ::=
 
   top.transform = exprStmt(comment("no match, do nothing.", location=builtin));
 }
-  
+
 
 nonterminal StmtClause with location, matchLocation, pp, errors, env, 
   expectedTypes, returnType, scrutineesIn,
