@@ -104,15 +104,15 @@ top::Pattern ::= s::String
         consQualifier(constQualifier(location=builtin), nilQualifier()),
         signedType(charType())));
   top.errors <-
-    if !compatibleTypes(top.expectedType, stringType, false, false)
-    then [err(builtin, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
+    if !compatibleTypes(stringType, top.expectedType, true, true)
+    then [err(top.location, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
     else [];
   top.errors <-
     if null(lookupValue("strcmp", top.env))
-    then [err(builtin, "Pattern string literals require definition of strcmp (include <string.h>?)")]
+    then [err(top.location, "Pattern string literals require definition of strcmp (include <string.h>?)")]
     else [];
 
-  top.transform = ableC_Expr { !strcmp(*_curr_scrutinee_ptr, $stringLiteralExpr{s}) };
+  top.transform = ableC_Expr { !strcmp($Expr{top.transformIn}, $Expr{stringLiteral(s, location=builtin)}) };
 }
 
 abstract production patternPointer
@@ -214,7 +214,7 @@ top::Pattern ::= p::Pattern
 
 -- PatternList --
 -----------------
-nonterminal PatternList with location, pps, errors, env, returnType, defs, decls, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, substituted<PatternList>, substitutions;
+nonterminal PatternList with pps, errors, env, returnType, defs, decls, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, substituted<PatternList>, substitutions;
 
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
@@ -228,7 +228,7 @@ top::PatternList ::= p::Pattern rest::PatternList
   
   p.env = top.env;
   rest.env = addEnv(p.defs, top.env);
-
+  
   local splitTypes :: Pair<Type [Type]> =
     case top.expectedTypes of
     | t::ts -> pair(t, ts)

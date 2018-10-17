@@ -75,9 +75,13 @@ concrete productions top::BasicPattern_c
 | id::PatternName_t '(' ')'
   { top.ast = 
       abs:constructorPattern(
-        fromPatternName(id), abs:nilPattern(location=top.location),
+        fromPatternName(id), abs:nilPattern(),
         location=top.location);
   }
+| '{' ps::StructPatternList_c '}'
+  { top.ast = abs:structPattern(ps.ast, location=top.location); }
+| '{' '}'
+  { top.ast = abs:structPattern(abs:nilStructPattern(), location=top.location); }
 | id::PatternName_t
   { top.ast =
       if id.lexeme == "_"
@@ -96,11 +100,31 @@ nonterminal PatternList_c with location, ast<abs:PatternList>;
 
 concrete productions top::PatternList_c
 | p::Pattern_c ',' rest::PatternList_c
-  { top.ast = abs:consPattern(p.ast, rest.ast, location=top.location); }
+  { top.ast = abs:consPattern(p.ast, rest.ast); }
 | p::Pattern_c
-  { top.ast = 
-      abs:consPattern(p.ast, abs:nilPattern(location=top.location), location=p.location);
-  }
+  { top.ast = abs:consPattern(p.ast, abs:nilPattern()); }
+
+
+-- StructPatternList_c --
+-----------------
+nonterminal StructPatternList_c with location, ast<abs:StructPatternList>;
+
+concrete productions top::StructPatternList_c
+| p::StructPattern_c ',' rest::StructPatternList_c
+  { top.ast = abs:consStructPattern(p.ast, rest.ast); }
+| p::StructPattern_c
+  { top.ast = abs:consStructPattern(p.ast, abs:nilStructPattern()); }
+
+
+-- StructPattern_c --
+-----------------
+nonterminal StructPattern_c with location, ast<abs:StructPattern>;
+
+concrete productions top::StructPattern_c
+| p::Pattern_c
+  { top.ast = abs:positionalStructPattern(p.ast, location=top.location); }
+| '.' id::Identifier_c '=' p::Pattern_c
+  { top.ast = abs:namedStructPattern(id.ast, p.ast, location=top.location); }
 
 function fromPatternName
 Name ::= id::PatternName_t

@@ -44,7 +44,7 @@ top::Pattern ::= n::Name ps::PatternList
     -- Check that this ADT has a definition
     | _, just(id), [], _ -> [err(top.location, s"datatype ${id} does not have a definition.")]
     -- Check that this pattern is a constructor for the expected ADT type.
-    | _, _, _, nothing() -> [err(top.location, s"${showType(top.expectedType)} does not have constructor ${n.name}.")]
+    | t, _, _, nothing() -> [err(top.location, s"${showType(t)} does not have constructor ${n.name}.")]
     | _, _, _, just(params) ->
       -- Check that the number of patterns matches number of arguments for this constructor.
       if ps.count != params.count

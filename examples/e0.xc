@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
 int main () {
   int a = 3;
@@ -31,7 +33,13 @@ int main () {
   
   printf("z is %d\n", z);
 
-  if (x == 3 && y == 3 && z == 42) 
+  bool w = false;
+  match ("a", true) {
+    "a", true -> { printf("yes\n"); w = true; }
+    _, _ -> { printf("no\n"); }
+  }
+
+  if (x == 3 && y == 3 && z == 42 && w)
     return 0;
   else 
     return 1;

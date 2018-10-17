@@ -14,7 +14,7 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   clauses.scrutineesIn = scrutinees.scrutineeRefs;
   
   local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
-  local fwrd::Stmt = seqStmt(scrutinees.transform, clauses.transform);
+  local fwrd::Stmt = compoundStmt(seqStmt(scrutinees.transform, clauses.transform));
   
   forwards to if !null(localErrors) then warnStmt(localErrors) else fwrd;
 }
