@@ -110,11 +110,12 @@ top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes
   args.callVariadic = false;
   
   local resultTypeExpr::BaseTypeExpr = adtTagReferenceTypeExpr(nilQualifier(), adtName);
+  local resultName::String = "result_" ++ toString(genInt());
   local fwrd::Expr =
     ableC_Expr {
-      ({$BaseTypeExpr{resultTypeExpr} *result = $Name{allocatorName}(sizeof($BaseTypeExpr{resultTypeExpr}));
-        *result = $Name{constructorName}($Exprs{args});
-        result;})
+      ({$BaseTypeExpr{resultTypeExpr} *$name{resultName} = $Name{allocatorName}(sizeof($BaseTypeExpr{resultTypeExpr}));
+        *$name{resultName} = $Name{constructorName}($Exprs{args});
+        $name{resultName};})
     };
   forwards to mkErrorCheck(localErrors, fwrd);
 }
