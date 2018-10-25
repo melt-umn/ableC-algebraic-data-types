@@ -3,6 +3,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:abstractsyntax;
 abstract production allocateDecl
 top::Decl ::= id::Name  allocator::Name
 {
+  propagate substituted;
   top.pp = pp"allocate datatype ${id.pp} with ${allocator.pp});";
   
   local expectedAllocatorType::Type =
@@ -27,16 +28,19 @@ top::Decl ::= id::Name  allocator::Name
      then [err(allocator.location, s"Allocator must have type void *(unsigned long) (got ${showType(allocator.valueItem.typerep)})")]
      else []);
   
-  local d::ADTDecl =
+  local adtLookup::Decorated ADTDecl =
     case id.tagItem of
     | adtRefIdTagItem(refId) ->
       case lookupRefId(refId, top.env) of
       | adtRefIdItem(d) :: _ -> d
       end
     end;
-  d.env = top.env;
-  d.returnType = top.returnType;
-  d.adtGivenName = d.name;
+  -- Re-decorate the found ADT decl, also supplying the allocator name
+  local d::ADTDecl = new(adtLookup);
+  d.env = adtLookup.env;
+  d.returnType = adtLookup.returnType;
+  d.isTopLevel = adtLookup.isTopLevel;
+  d.adtGivenName = adtLookup.adtGivenName;
   d.allocatorName = allocator;
   
   forwards to
@@ -50,6 +54,9 @@ top::Decl ::= id::Name  allocator::Name
 autocopy attribute allocatorName::Name occurs on ADTDecl, ConstructorList, Constructor;
 synthesized attribute allocatorDefs::[Def] occurs on ADTDecl, ConstructorList, Constructor;
 synthesized attribute allocatorErrorDefs::[Def] occurs on ADTDecl, ConstructorList, Constructor;
+
+flowtype allocatorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
+flowtype allocatorErrorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
 
 aspect production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
@@ -101,6 +108,7 @@ top::ValueItem ::= adtName::Name allocatorName::Name constructorName::Name param
 abstract production allocateConstructorCallExpr
 top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes::[Type] n::Name args::Exprs
 {
+  propagate substituted;
   top.pp = parens(ppConcat([n.pp, parens(ppImplode(cat(comma(), space()), args.pps))]));
   local localErrors::[Message] = args.errors ++ args.argumentErrors;
   
