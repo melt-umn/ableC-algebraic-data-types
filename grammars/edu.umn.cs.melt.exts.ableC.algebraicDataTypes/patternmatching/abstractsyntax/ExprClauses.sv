@@ -35,6 +35,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
  -}
 
 nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep, substituted<ExprClauses>, substitutions;
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, typerep {decorate}, substituted {substitutions};
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -91,6 +92,7 @@ top::ExprClauses ::= c::ExprClause
 }
 
 nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep, substituted<ExprClause>, substitutions;
+flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn, transformIn}, typerep {decorate}, substituted {substitutions};
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr

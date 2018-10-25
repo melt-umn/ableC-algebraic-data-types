@@ -49,7 +49,7 @@ synthesized attribute transform<a> :: a;
 autocopy attribute adtGivenName :: String;
 
 nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, refId, constructors, tagEnv, transform<Decl>, substituted<ADTDecl>, substitutions;
-flowtype ADTDecl = decorate {isTopLevel, env, returnType, adtGivenName};
+flowtype ADTDecl = decorate {isTopLevel, env, returnType, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, transform {decorate}, substituted {substitutions};
 
 abstract production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
@@ -175,6 +175,7 @@ synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 nonterminal ConstructorList
   with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, adtGivenName, adtDeclName, constructors,
        substituted<ConstructorList>, substitutions;
+flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {decorate}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, substituted {substitutions};
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
@@ -223,6 +224,7 @@ nonterminal Constructor
        returnType, -- because Types may contain Exprs
        substituted<Constructor>, substitutions,
        location;
+flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItem {decorate}, structItem {decorate}, funDecl {decorate}, constructors {decorate}, substituted {substitutions};
 
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters

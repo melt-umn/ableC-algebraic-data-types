@@ -58,6 +58,7 @@ inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
 nonterminal StructPatternList with pps, errors, env, returnType, defs, decls, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>, substituted<StructPatternList>, substitutions;
+flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames, returnType}, pps {}, decls {decorate}, errors {decorate}, defs {decorate}, substituted {substitutions};
 
 abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
@@ -91,6 +92,7 @@ top::StructPatternList ::= {-empty-}
 }
 
 nonterminal StructPattern with location, pp, errors, defs, decls, givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>, env, returnType, substituted<StructPattern>, substitutions;
+flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, substituted {substitutions};
 
 abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern

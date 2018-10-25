@@ -11,6 +11,9 @@ autocopy attribute constructorName::String;
 attribute typeDefs, fieldNames, asStructItemList<StructItemList>, asConstructorParameters<Parameters>, asAssignments, constructorName occurs on Parameters;
 attribute typeDefs, fieldName, asStructItemList<StructItem>, asConstructorParameters<ParameterDecl>, asAssignments, constructorName occurs on ParameterDecl;
 
+flowtype Parameters = typeDefs {decorate}, fieldNames {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName}; 
+flowtype ParameterDecl = typeDefs {decorate}, fieldName {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName}; 
+
 aspect production consParameters
 top::Parameters ::= h::ParameterDecl t::Parameters
 {

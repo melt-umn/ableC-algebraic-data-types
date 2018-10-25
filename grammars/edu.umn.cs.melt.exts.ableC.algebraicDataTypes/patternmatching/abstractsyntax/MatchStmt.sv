@@ -22,6 +22,7 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
 synthesized attribute scrutineeRefs::[Expr];
 
 attribute transform<Stmt>, scrutineeRefs occurs on Exprs;
+flowtype Exprs = transform {decorate, argumentPosition}, scrutineeRefs {decorate, argumentPosition};
 
 aspect production consExpr
 top::Exprs ::= h::Expr  t::Exprs

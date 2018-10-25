@@ -5,6 +5,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     this is generally expected to be more useful.
 -}
 closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs, env, returnType, substituted<Pattern>, substitutions;
+flowtype Pattern = decorate {expectedType, env, returnType}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, substituted {substitutions};
 
 {-- This attribute collects declarations for pattern variables.
     During pattern matching, values are stored in these variables
@@ -26,6 +27,7 @@ inherited attribute expectedTypes :: [Type];
     be used more than once in transform.  -}
 attribute transformIn<Expr> occurs on Pattern; 
 attribute transform<Expr> occurs on Pattern;
+flowtype transform {decorate, transformIn} on Pattern;
 
 abstract production patternName
 top::Pattern ::= n::Name
@@ -215,6 +217,7 @@ top::Pattern ::= p::Pattern
 -- PatternList --
 -----------------
 nonterminal PatternList with pps, errors, env, returnType, defs, decls, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, substituted<PatternList>, substitutions;
+flowtype PatternList = decorate {expectedTypes, env, returnType}, pps {}, decls {decorate}, errors {decorate}, defs {decorate}, count {}, substituted {substitutions};
 
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList

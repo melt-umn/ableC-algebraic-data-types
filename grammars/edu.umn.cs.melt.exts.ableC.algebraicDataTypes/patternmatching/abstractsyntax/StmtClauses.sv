@@ -38,6 +38,7 @@ autocopy attribute matchLocation::Location;
 nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
   expectedTypes, scrutineesIn, transform<Stmt>,
   substituted<StmtClauses>, substitutions;
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, substituted {substitutions};
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -68,6 +69,7 @@ nonterminal StmtClause with location, matchLocation, pp, errors, env,
   expectedTypes, returnType, scrutineesIn,
   transform<Stmt>, transformIn<Stmt>,
   substituted<StmtClause>, substitutions;
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn, transformIn}, substituted {substitutions};
 
 {- A statement clause becomes a Stmt, in the form:
 
