@@ -76,6 +76,7 @@ t::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl
 abstract production adtTagReferenceTypeExpr 
 b::BaseTypeExpr ::= q::Qualifiers n::Name
 {
+  propagate substituted;
   b.pp = ppConcat([ 
           terminate( space(), q.pps ),
           text("datatype"), space(), 

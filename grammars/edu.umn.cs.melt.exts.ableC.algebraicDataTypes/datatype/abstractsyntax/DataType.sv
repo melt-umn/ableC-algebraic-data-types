@@ -27,6 +27,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 abstract production datatypeDecl
 top::Decl ::= adt::ADTDecl
 { 
+  propagate substituted;
   top.pp = ppConcat([ text("datatype"), space(), adt.pp ]);
   
   -- TODO: Do local error checking before reporting forward errors once error checking for datatypeDecl is finished
