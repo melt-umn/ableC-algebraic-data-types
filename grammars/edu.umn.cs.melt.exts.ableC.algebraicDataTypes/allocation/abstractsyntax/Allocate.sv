@@ -37,7 +37,7 @@ top::Decl ::= id::Name  allocator::Name
     end;
   -- Re-decorate the found ADT decl, also supplying the allocator name
   local d::ADTDecl = new(adtLookup);
-  d.env = adtLookup.env;
+  d.env = top.env; -- TODO: Not exactly correct, but the decl needs to see the tag to avoid re-generating the refId
   d.returnType = adtLookup.returnType;
   d.isTopLevel = adtLookup.isTopLevel;
   d.adtGivenName = adtLookup.adtGivenName;
