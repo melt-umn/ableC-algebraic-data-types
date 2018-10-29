@@ -1,43 +1,25 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
 abstract production matchExpr
-e::Expr ::= scrutinee::Expr  clauses::ExprClauses
+top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
 {
   propagate substituted;
-  e.globalDecls := [];
-  e.pp = ppConcat([ text("match"), space(), parens(scrutinee.pp), line(), 
+  top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     parens(nestlines(2, clauses.pp)) ]);
-
-  clauses.expectedType = scrutinee.typerep;
-
+  
+  scrutinees.argumentPosition = 0;
+  clauses.matchLocation = top.location;
+  clauses.expectedTypes = scrutinees.typereps;
+  clauses.scrutineesIn = scrutinees.scrutineeRefs;
+  
+  local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
   local fwrd::Expr =
-    stmtExpr (
-      foldStmt( [
-        exprStmt(comment("match (" ++ show(100,scrutinee.pp) ++ ") ...", location=e.location)),
-
-        declStmt(
-          variableDecls( [], nilAttribute(), directTypeExpr(clauses.typerep),
-             consDeclarator(
-               declarator( name("__result", location=e.location), 
-                 baseTypeExpr(), nilAttribute(), 
-                 nothingInitializer () ),
-               nilDeclarator() ) ) ),
-
-        mkDecl( "_match_scrutinee_val", scrutinee.typerep, scrutinee, 
-                scrutinee.location),
-
-        mkDecl( "_match_scrutinee_ptr", pointerType( nilQualifier(), scrutinee.typerep), 
-                addressOfExpr( declRefExpr(name("_match_scrutinee_val", location=scrutinee.location),
-                                           location=scrutinee.location),
-                               location=scrutinee.location),
-                scrutinee.location),
-
-        clauses.transform 
-      ] ),
-
-      declRefExpr(name("__result", location=e.location), location=e.location),
-
-      location = e.location 
-    ) ;
-  forwards to mkErrorCheck(clauses.errors ++ scrutinee.errors, fwrd);
+    ableC_Expr {
+      ({$directTypeExpr{clauses.typerep} _result;
+        $Stmt{scrutinees.transform}
+        $Stmt{clauses.transform}
+        _result;})
+    };
+  
+  forwards to mkErrorCheck(localErrors, fwrd);
 }

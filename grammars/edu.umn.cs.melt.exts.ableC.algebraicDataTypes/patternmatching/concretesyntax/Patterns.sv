@@ -1,85 +1,30 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
+import edu:umn:cs:melt:ableC:concretesyntax:lexerHack as lh;
+
 terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier}; 
    -- Same as Identifier_t
 
-terminal NamedPatternOp_t '@' precedence = 0, lexer classes {Csymbol};
-terminal AntipatternOp_t '!'  precedence = 1, lexer classes {Csymbol};
+disambiguate PatternName_t, TypeName_t
+{
+  pluck
+    case lookupBy(stringEq, lexeme, head(context)) of
+    | just(lh:typenameType_c()) -> TypeName_t
+    | _ -> PatternName_t
+    end;
+}
+
+terminal NamedPatternOp_t '@' precedence = 0, association = left, lexer classes {Csymbol};
+terminal AntipatternOp_t  '!' precedence = 1, lexer classes {Csymbol};
+terminal PointerOp_t      '&' precedence = 1, lexer classes {Csymbol};
 
 terminal When_t 'when' lexer classes {Ckeyword};
 
-nonterminal Pattern with location, ast<abs:Pattern> ;
-
-{- We need to have algebraic datatype patterns here.  They can't be in
-   an extension to algebraicDataTypes since they don't begin with a
-   marking terminal.  -}
-
-concrete productions p::Pattern
-| id::PatternName_t '(' ps::PatternList ')'
-  { p.ast = abs:constructorPattern( id.lexeme, ps.ast, location=p.location );
-  }
-
-| id::PatternName_t '(' ')'
-  { p.ast = 
-      abs:constructorPattern( id.lexeme, abs:nilPattern(location=p.location),
-        location=p.location );
-  }
-
--- | id::Identifier_t
-| id::PatternName_t   -- why use this?
-  { p.ast = if id.lexeme == "_"
-            then abs:patternWildcard( location=p.location )
-            else abs:patternVariable( id.lexeme, location=p.location );
-  }
-
-|  p1::Pattern '@' p2::Pattern
-  { p.ast = 
-      abs:patternBoth( p1.ast, p2.ast,
-        location=p.location );
-  }
-
-| op::AntipatternOp_t p1::Pattern
-  { p.ast = 
-      abs:patternNot( p1.ast,
-        location=p.location );
-  }
-
-| 'when' '(' e::Expr_c ')'
-  { p.ast = abs:patternWhen( e.ast, location=p.location );
-  }
-
-
--- PatternList --
------------------
-nonterminal PatternList with location, ast<abs:PatternList> ;
-
-concrete productions ps::PatternList
-| p::Pattern ',' rest::PatternList
-  { ps.ast = abs:consPattern( p.ast, rest.ast, location=ps.location ); }
-
-| p::Pattern
-  { ps.ast = 
-      abs:consPattern( p.ast, abs:nilPattern(location=ps.location),
-        location=p.location ); 
-  }
-
-
--- TODO: This is only allowing constPattern as the last element in PatternList?  
-| p::ConstPattern ',' rest::PatternList
-  { ps.ast = abs:consPattern( p.ast, rest.ast, location=ps.location ); }
-
-| p::ConstPattern
-  { ps.ast = 
-      abs:consPattern( p.ast, abs:nilPattern(location=ps.location),
-        location=p.location ); 
-  }
-
-
--- ConstPattern --
-------------------
+nonterminal Pattern_c with location, ast<abs:Pattern>;
+nonterminal ConstPattern_c with location, ast<abs:Pattern>;
 
 {- Constants, when used as patterns, cannot be followed by the '@'
-   sybmol introduced by the 'patternBoth' pattern production above
+   symbol introduced by the 'patternBoth' pattern production
    because the adds that symbol to their follow sets.  Adding them
    causes the modular determinism analysis to fail.
 
@@ -90,11 +35,99 @@ concrete productions ps::PatternList
    in the host language.  We've opted against that here.
 -}
 
-nonterminal ConstPattern with location, ast<abs:Pattern> ;
-
-concrete productions p::ConstPattern
-| c::Constant_c 
-    { p.ast = abs:patternConst(c.ast, location=p.location); }
-
+concrete productions top::Pattern_c
+| c::Constant_c
+  { top.ast = abs:patternConst(c.ast, location=top.location); }
+| '(' tn::TypeName_c ')' c::Constant_c
+  { top.ast =
+      abs:patternConst(
+        explicitCastExpr(tn.ast, c.ast, location=top.location),
+        location=top.location);
+  }
 | sl::StringConstant_c
-    { p.ast = abs:patternStringLiteral(sl.ast, location=p.location); }
+  { top.ast = abs:patternStringLiteral(sl.ast, location=top.location); }
+| p1::NonConstPattern_c '@' p2::Pattern_c
+  { top.ast = abs:patternBoth(p1.ast, p2.ast, location=top.location); }
+| AntipatternOp_t p1::Pattern_c
+  { top.ast = abs:patternNot(p1.ast, location=top.location); }
+| PointerOp_t p1::Pattern_c
+  { top.ast = abs:patternPointer(p1.ast, location=top.location); }
+| p1::BasicPattern_c
+  { top.ast = p1.ast; }
+
+nonterminal NonConstPattern_c with location, ast<abs:Pattern>;
+
+concrete productions top::NonConstPattern_c
+| p1::NonConstPattern_c '@' p2::NonConstPattern_c
+  { top.ast = abs:patternBoth(p1.ast, p2.ast, location=top.location); }
+| AntipatternOp_t p1::NonConstPattern_c
+  { top.ast = abs:patternNot(p1.ast, location=top.location); }
+| PointerOp_t p1::NonConstPattern_c
+  { top.ast = abs:patternPointer(p1.ast, location=top.location); }
+| p1::BasicPattern_c
+  { top.ast = p1.ast; }
+
+nonterminal BasicPattern_c with location, ast<abs:Pattern>;
+
+concrete productions top::BasicPattern_c
+| id::PatternName_t '(' ps::PatternList_c ')'
+  { top.ast = abs:constructorPattern(fromPatternName(id), ps.ast, location=top.location); }
+| id::PatternName_t '(' ')'
+  { top.ast = 
+      abs:constructorPattern(
+        fromPatternName(id), abs:nilPattern(),
+        location=top.location);
+  }
+| '{' ps::StructPatternList_c '}'
+  { top.ast = abs:structPattern(ps.ast, location=top.location); }
+| '{' '}'
+  { top.ast = abs:structPattern(abs:nilStructPattern(), location=top.location); }
+| id::PatternName_t
+  { top.ast =
+      if id.lexeme == "_"
+      then abs:patternWildcard(location=top.location)
+      else abs:patternName(fromPatternName(id), location=top.location);
+  }
+| 'when' '(' e::Expr_c ')'
+  { top.ast = abs:patternWhen(e.ast, location=top.location); }
+| '(' p1::Pattern_c ')'
+  { top.ast = abs:patternParens(p1.ast, location=top.location); }
+
+
+-- PatternList_c --
+-----------------
+nonterminal PatternList_c with location, ast<abs:PatternList>;
+
+concrete productions top::PatternList_c
+| p::Pattern_c ',' rest::PatternList_c
+  { top.ast = abs:consPattern(p.ast, rest.ast); }
+| p::Pattern_c
+  { top.ast = abs:consPattern(p.ast, abs:nilPattern()); }
+
+
+-- StructPatternList_c --
+-----------------
+nonterminal StructPatternList_c with location, ast<abs:StructPatternList>;
+
+concrete productions top::StructPatternList_c
+| p::StructPattern_c ',' rest::StructPatternList_c
+  { top.ast = abs:consStructPattern(p.ast, rest.ast); }
+| p::StructPattern_c
+  { top.ast = abs:consStructPattern(p.ast, abs:nilStructPattern()); }
+
+
+-- StructPattern_c --
+-----------------
+nonterminal StructPattern_c with location, ast<abs:StructPattern>;
+
+concrete productions top::StructPattern_c
+| p::Pattern_c
+  { top.ast = abs:positionalStructPattern(p.ast, location=top.location); }
+| '.' id::Identifier_c '=' p::Pattern_c
+  { top.ast = abs:namedStructPattern(id.ast, p.ast, location=top.location); }
+
+function fromPatternName
+Name ::= id::PatternName_t
+{
+  return name(id.lexeme, location=id.location);
+}

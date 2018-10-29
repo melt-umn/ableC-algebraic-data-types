@@ -1,36 +1,45 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
 abstract production matchStmt
-e::Stmt ::= scrutinee::Expr  clauses::StmtClauses
+top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
 {
   propagate substituted;
-  --e.globalDecls := [];
-  e.pp = ppConcat([ text("match"), space(), parens(scrutinee.pp), line(), 
+  top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
-
-  clauses.expectedType = scrutinee.typerep;
-
-  production attribute lerrors :: [Message] with ++;
-  lerrors := clauses.errors ++ scrutinee.errors;
+  top.functionDefs := [];
   
-  e.functionDefs := [];
+  scrutinees.argumentPosition = 0;
+  clauses.matchLocation = clauses.location; -- Whatever.
+  clauses.expectedTypes = scrutinees.typereps;
+  clauses.scrutineesIn = scrutinees.scrutineeRefs;
   
-  forwards to
-    if !null(lerrors)
-    then warnStmt(lerrors)
-    else
-      compoundStmt(foldStmt( [
-        exprStmt(comment("match (" ++ show(100,scrutinee.pp) ++ ") ...", location=scrutinee.location)),
-
-        mkDecl( "_match_scrutinee_val", scrutinee.typerep, scrutinee, 
-                scrutinee.location),
-        mkDecl( "_match_scrutinee_ptr", pointerType( nilQualifier(), scrutinee.typerep), 
-                  addressOfExpr( declRefExpr(name("_match_scrutinee_val", location=scrutinee.location),
-                                             location=scrutinee.location),
-                                 location=scrutinee.location),
-                  scrutinee.location),
-
-        clauses.transform 
-      ] )) ;
+  local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
+  local fwrd::Stmt = compoundStmt(seqStmt(scrutinees.transform, clauses.transform));
+  
+  forwards to if !null(localErrors) then warnStmt(localErrors) else fwrd;
 }
 
+synthesized attribute scrutineeRefs::[Expr];
+
+attribute transform<Stmt>, scrutineeRefs occurs on Exprs;
+flowtype Exprs = transform {decorate, argumentPosition}, scrutineeRefs {decorate, argumentPosition};
+
+aspect production consExpr
+top::Exprs ::= h::Expr  t::Exprs
+{
+  top.transform =
+    ableC_Stmt {
+      $directTypeExpr{h.typerep} $name{"_match_scrutinee_val_" ++ toString(top.argumentPosition)} = $Expr{h};
+      $Stmt{t.transform}
+    };
+  top.scrutineeRefs =
+    ableC_Expr { $name{"_match_scrutinee_val_" ++ toString(top.argumentPosition)} } ::
+    t.scrutineeRefs;
+}
+
+aspect production nilExpr
+top::Exprs ::=
+{
+  top.transform = nullStmt();
+  top.scrutineeRefs = [];
+}

@@ -1,102 +1,23 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
--- trigger the test
---import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:mda_test;
-
 -- Match expression --
 concrete production matchMatch_c
-e::PrimaryExpr_c ::= 'match' m::Match
+top::PrimaryExpr_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '(' cs::ExprClauses ')'
 {
-  e.ast = m.ast ;
+  top.ast = abs:matchExpr(foldExpr(scrutinees.ast), cs.ast, location=top.location);
 }
 
-nonterminal Match with ast<Expr>, location;
+nonterminal ExprClauses with location, ast<abs:ExprClauses>;
 
-concrete production matchExpr_c
-m::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses ')'
-{
-  m.ast = abs:matchExpr( scrutinee.ast, cs.ast, location=m.location );
---  cs.defaultClauseAST = 
---    abs:defaultClause(
---      stmtExpr( parseStmt("printf(\"BOOM!\\n\"); exit(1);"), scrutinee.ast, location=m.location), 
---      location=m.location
---     );
-}
-
-
-nonterminal ExprClauses with location, ast<abs:ExprClauses>; --, defaultClauseAST ;
-
--- inherited attribute defaultClauseAST :: abs:ExprClause ;
-
-concrete productions cs::ExprClauses
+concrete productions top::ExprClauses
 | c::ExprClause rest::ExprClauses
-  {
-    cs.ast = abs:consExprClause( c.ast, rest.ast, location=cs.location ); 
---    rest.defaultClauseAST = cs.defaultClauseAST;
-  }
+  { top.ast = abs:consExprClause(c.ast, rest.ast, location=top.location); }
 | c::ExprClause 
-  {
-    cs.ast = abs:oneExprClause (c.ast, location=cs.location);
-  }
-
-{-
-| -- empty --
-  {
-    cs.ast = abs:failureClause (location=cs.location);
-  }
--}
+  { top.ast = abs:oneExprClause (c.ast, location=top.location); }
 
 nonterminal ExprClause with location, ast<abs:ExprClause> ;
-terminal Where_t 'where' ; -- lexer classes {Ckeyword};
+terminal Where_t 'where';
 
-concrete productions c::ExprClause
-| p::Pattern '->' e::Expr_c ';'
-  { c.ast = 
-      abs:exprClause( p.ast, e.ast, location=c.location ); 
-  }
-| p::ConstPattern '->' e::Expr_c ';'
-  { c.ast = 
-      abs:exprClause( p.ast, e.ast, location=c.location ); 
-  }
-
-{-
-
-Following causes a shift/reduce error since PostfixExpr_c in host is
-followed by '->'.
-
-| p::Pattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { c.ast = 
-      abs:guardedExprClause( p.ast, guard.ast, e.ast, location=c.location ); 
-  }
-| p::ConstPattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { c.ast = 
-      abs:guardedExprClause( p.ast, guard.ast, e.ast, location=c.location ); 
-  }
-
--}
-
-
-
-{-
-
-We don't really need a "default" clause.  One can just use the
-wildcard pattern "_" to match anything.
-
-concrete production matchExprWithDefault_c
-m::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses def::DefaultClause ')'
-{
-  m.ast = abs:matchExpr( scrutinee.ast, cs.ast, location=m.location );
-  cs.defaultClauseAST = def.ast;
-}
-
-nonterminal DefaultClause with location, ast<abs:ExprClause> ;
-
-terminal Defualt_t 'default' lexer classes {Ckeyword};
-
-concrete productions c::DefaultClause
-| 'default' ':' e::Expr_c ';'
-  { c.ast = 
-      abs:defaultClause( e.ast, location=c.location ); 
-  }
--}
-
+concrete productions top::ExprClause
+| p::PatternList_c '->' e::Expr_c ';'
+  { top.ast = abs:exprClause(p.ast, e.ast, location=top.location); }

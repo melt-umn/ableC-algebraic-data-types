@@ -32,138 +32,79 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 
 synthesized attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
+autocopy attribute scrutineesIn::[Expr];
+autocopy attribute matchLocation::Location;
 
-nonterminal StmtClauses with location, pp, errors, env, returnType,
-  expectedType, transform<Stmt>; 
+nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
+  expectedTypes, scrutineesIn, transform<Stmt>,
+  substituted<StmtClauses>, substitutions;
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, substituted {substitutions};
 
 abstract production consStmtClause
-cs::StmtClauses ::= c::StmtClause rest::StmtClauses
-{ 
-  cs.pp = cat( c.pp, rest.pp );
+top::StmtClauses ::= c::StmtClause rest::StmtClauses
+{
+  propagate substituted;
+  top.pp = cat( c.pp, rest.pp );
+  top.errors := c.errors ++ rest.errors;
 
-  c.expectedType = cs.expectedType;
-  rest.expectedType = cs.expectedType;
-
-  cs.errors := c.errors ++ rest.errors;
-
-  cs.transform = c.transform;
+  top.transform = c.transform;
   c.transformIn = rest.transform;
+
+  c.expectedTypes = top.expectedTypes;
+  rest.expectedTypes = top.expectedTypes;
 }
 
 abstract production failureStmtClause
-cs::StmtClauses ::= 
+top::StmtClauses ::= 
 {
-  cs.pp = text("");
-  cs.errors := [];
+  propagate substituted;
+  top.pp = text("");
+  top.errors := [];
 
-  cs.transform = exprStmt(comment("no match, do nothing.", location=cs.location));
+  top.transform = exprStmt(comment("no match, do nothing.", location=builtin));
 }
-  
 
-nonterminal StmtClause with location, pp, errors, env, 
-  expectedType, returnType,
-  transform<Stmt>, transformIn<Stmt>;
+
+nonterminal StmtClause with location, matchLocation, pp, errors, env, 
+  expectedTypes, returnType, scrutineesIn,
+  transform<Stmt>, transformIn<Stmt>,
+  substituted<StmtClause>, substitutions;
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn, transformIn}, substituted {substitutions};
 
 {- A statement clause becomes a Stmt, in the form:
 
    ... declarations of pattern variables
 
-   ... declare _curr_scrutinee_ptr with expectedType
-       set it to _match_scrutinee_ptr
-
-   if ( ({ int _match = 1;
-           ... check if pattern matches, set _match to 0 some part doesn't
-           ... also assign values to pattern variables 
-           _match; 
-         }) )  
-     {
-       s   ... statement in clause
-     }
-   else {
+   if ( ... check if pattern matches, also assign values to pattern variables ){
+     s   ... statement in clause
+   } else {
      ... translation of remaining clauses, from transformIn
    }
 
  -}
 
 abstract production stmtClause
-c::StmtClause ::= p::Pattern s::Stmt
+top::StmtClause ::= ps::PatternList s::Stmt
 {
-  c.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, s.pp) ]);
-  c.errors := p.errors ++ s.errors;
-
-  s.env = addEnv(p.defs,c.env);
-  local l :: Location = c.location;
-
-  c.transform = 
-    foldStmt( [
-        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=c.location)),
-        exprStmt(comment("... declarations of pattern variables", location=c.location)),
-        
-        foldStmt( p.decls ),
-
-        mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), c.expectedType), 
-                -- unaryOpExpr( dereferenceOp(location=c.location), 
-                             declRefExpr( name("_match_scrutinee_ptr", 
-                                               location=c.location),
-                                          location=c.location ),
-                --             location=c.location),
-                  -- TODO: don't change line number as workaround for Cilk extension
-                  loc(l.filename, l.line + 150000, l.column, l.endLine,
-                      l.endColumn, l.index, l.endIndex)),
---                c.location),
-
-        ifStmt (
-            -- condition: code to match the pattern
-            stmtExpr( 
-              foldStmt ([
-                mkIntDeclInit ("_match", "1", p.location),
-                p.transform
-              ]),
-              -- The stmtExpr result is the value of _match, which would be set
-              -- by the translation of the pattern p, above.
-              declRefExpr (name("_match", location=p.location), location=p.location),
-              location=p.location
-            ), 
-            -- then part 
-            s,
-            -- else part 
-            c.transformIn
-        )
-      ] );
-
-  p.expectedType = c.expectedType;
-
-{-
-
-  p.transformIn = mkIntAssign( "_match", "1", p.location );
-  p.position = 0;
-  p.depth = 0;
-  p.parentTag = "NoParent";  
+  propagate substituted;
+  top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, s.pp) ]);
+  top.errors := ps.errors ++ s.errors;
+  top.errors <-
+    if ps.count != length(top.expectedTypes)
+    then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
+    else [];
   
-  p.parent_id = "NoParent";
-  p.parent_idType = "NoParent";
-  p.parent_idTypeIndicator = scrutineeTypeInfo.fst;
-
-  local scrutineeTypeInfo :: Pair<String [ Pair<String [Type]> ]> 
-    = getExpectedADTTypeInfo ( c.expectedType, c.env );
--}
+  top.transform =
+    ableC_Stmt {
+      $Stmt{foldStmt(ps.decls)}
+      if ($Expr{ps.transform}) {
+        $Stmt{s}
+      } else {
+        $Stmt{top.transformIn}
+      }
+    };
+  
+  ps.expectedTypes = top.expectedTypes;
+  ps.transformIn = top.scrutineesIn;
+  s.env = addEnv(ps.defs, top.env);
 }
-
-{-
-abstract production guardedStmtClause
-c::StmtClause ::= p::Pattern g::Stmt s::Stmt
-{
-  c.pp = ppConcat([ p.pp, space(), text("where"), space(), g.pp,
-                  text("->"), space(), nestlines(2, s.pp) ]);
-  c.errors := p.errors ++ s.errors;
-}
-
-abstract production defaultStmtClause
-c::StmtClause ::= e::Stmt
-{
-  c.pp = e.pp;
-  c.errors := e.errors;
---  c.transform = e;
-}
-
--}

@@ -1,123 +1,37 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
-imports silver:langutil only ast; --, pp, errors; --, err, wrn;
---imports silver:langutil:pp with implode as ppImplode ;
+imports silver:langutil only ast;
 
 imports edu:umn:cs:melt:ableC:concretesyntax;
 imports edu:umn:cs:melt:ableC:abstractsyntax:host;
-imports edu:umn:cs:melt:ableC:abstractsyntax:construction only foldStmt;
+imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 --imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
-imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax as abs ;
-
---import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax:patterns;
-
--- trigger the test
---import edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:mda_test;
+imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax as abs;
 
 marking terminal Match_t 'match' lexer classes {Ckeyword};
 
 -- Match statement --
 concrete production match_c
-s::SelectionStmt_c ::= mm::'match' m::MatchStmt
-{ 
-  s.ast = m.ast ;
-}
-
-nonterminal MatchStmt with ast<Stmt>, location;
-
-concrete production matchStmt_c
-m::MatchStmt ::= '(' scrutinee::Expr_c ')' '{' cs::StmtClauses '}'
+top::SelectionStmt_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '{' cs::StmtClauses '}'
 {
-  m.ast = abs:matchStmt( scrutinee.ast, cs.ast ); --, location=m.location );
-
-
---  cs.defaultClauseAST = 
---    abs:defaultClause(
---      stmtExpr( parseStmt("printf(\"BOOM!\\n\"); exit(1);"), scrutinee.ast, location=m.location), 
---      location=m.location
---     );
+  top.ast = abs:matchStmt(foldExpr(scrutinees.ast), cs.ast);
 }
 
 
-nonterminal StmtClauses with location, ast<abs:StmtClauses>; --, defaultClauseAST ;
+nonterminal StmtClauses with location, ast<abs:StmtClauses>;
 
--- inherited attribute defaultClauseAST :: abs:ExprClause ;
-
-concrete productions cs::StmtClauses
+concrete productions top::StmtClauses
 | c::StmtClause rest::StmtClauses
-  {
-    cs.ast = abs:consStmtClause( c.ast, rest.ast, location=cs.location ); 
---    rest.defaultClauseAST = cs.defaultClauseAST;
-  }
+  { top.ast = abs:consStmtClause(c.ast, rest.ast, location=top.location); }
 | {- empty -}
-  {
-    cs.ast = abs:failureStmtClause (location=cs.location);
-  }
+  { top.ast = abs:failureStmtClause(location=top.location); }
 
 
-nonterminalStmtClause with location, ast<abs:StmtClause> ;
---terminal Where_t 'where' ; -- lexer classes {Ckeyword};
+nonterminal StmtClause with location, ast<abs:StmtClause>;
 
-concrete productions c::StmtClause
-| p::Pattern '->' '{' l::BlockItemList_c '}'
-  { c.ast = 
-      abs:stmtClause( p.ast, foldStmt(l.ast), location=c.location ); 
-  }
-
-| p::Pattern '->' '{' '}'
-  { c.ast = 
-      abs:stmtClause( p.ast, nullStmt(), location=c.location ); 
-  }
-  
-| p::ConstPattern '->' '{' l::BlockItemList_c '}'
-  { c.ast = 
-      abs:stmtClause( p.ast, foldStmt(l.ast), location=c.location ); 
-  }
-
-| p::ConstPattern '->' '{' '}'
-  { c.ast = 
-      abs:stmtClause( p.ast, nullStmt(), location=c.location ); 
-  }
-
-{-
-
-Following causes a shift/reduce error since PostfixExpr_c in host is
-followed by '->'.
-
-| p::Pattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { c.ast = 
-      abs:guardedExprClause( p.ast, guard.ast, e.ast, location=c.location ); 
-  }
-| p::ConstPattern 'where' guard::Expr_c '->' e::Expr_c ';'
-  { c.ast = 
-      abs:guardedExprClause( p.ast, guard.ast, e.ast, location=c.location ); 
-  }
-
--}
-
-
-
-{-
-
-We don't really need a "default" clause.  One can just use the
-wildcard pattern "_" to match anything.
-
-concrete production matchExprWithDefault_c
-m::Match ::= '(' scrutinee::Expr_c ')' '(' cs::ExprClauses def::DefaultClause ')'
-{
-  m.ast = abs:matchExpr( scrutinee.ast, cs.ast, location=m.location );
-  cs.defaultClauseAST = def.ast;
-}
-
-nonterminal DefaultClause with location, ast<abs:ExprClause> ;
-
-terminal Defualt_t 'default' lexer classes {Ckeyword};
-
-concrete productions c::DefaultClause
-| 'default' ':' e::Expr_c ';'
-  { c.ast = 
-      abs:defaultClause( e.ast, location=c.location ); 
-  }
--}
-
+concrete productions top::StmtClause
+| p::PatternList_c '->' '{' l::BlockItemList_c '}'
+  { top.ast = abs:stmtClause(p.ast, foldStmt(l.ast), location=top.location); }
+| p::PatternList_c '->' '{' '}'
+  { top.ast = abs:stmtClause(p.ast, nullStmt(), location=top.location); }

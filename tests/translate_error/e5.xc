@@ -3,17 +3,12 @@
 
 typedef  datatype Expr  Expr;
 
-datatype Expr {
-  Add (Expr *e1, Expr *e2);
-  Mul (Expr *e1, Expr *e2);
-  Const (int val);
-};
+// Datatype lacks a definition
 
 allocate datatype Expr with malloc;
 
-int value(Expr *e) {
+int value (Expr *e) {
   int result = 99;
-    
   match (e) {
     &Add(e1,e2) -> { result = value(e1) + value(e2); }
     &Mul(e1,e2) -> { result = value(e1) * value(e2); }
@@ -22,13 +17,12 @@ int value(Expr *e) {
   return result;
 }
 
-int main() {
+int main () {
   Expr *t0 = malloc_Mul(malloc_Const(2), malloc_Const(4));
 
   if (value(t0) != 8) return 1;
   
-  Expr *t1 = malloc_Mul(malloc_Const(3), 
-                        malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t1 = malloc_Mul(malloc_Const(3), malloc_Mul(malloc_Const(2), malloc_Const(4)));
 
   if (value(t1) != 24) return 2;
 

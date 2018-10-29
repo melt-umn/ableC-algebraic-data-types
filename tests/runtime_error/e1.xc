@@ -17,7 +17,7 @@ int valueE(Expr *e) {
   return
     match (e) (&Add(e1,e2) -> valueE(e1) + valueE(e2);
                &Sub(e1,e2) -> valueE(e1) - valueE(e2);
-               &Mul(e1,e2) -> valueE(e1) * valueE(e2);
+               // &Mul(e1,e2) -> valueE(e1) * valueE(e2); // Pattern match failure
                &Div(e1,e2) -> valueE(e1) / valueE(e2); 
                &Const(v) -> v;);
 }

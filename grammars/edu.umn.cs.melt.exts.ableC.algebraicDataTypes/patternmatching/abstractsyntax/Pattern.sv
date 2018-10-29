@@ -1,17 +1,18 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
-nonterminal Pattern with location, pp, decls, expectedType, errors, 
-  defs, env,
-  returnType;
---Remove: position, depth, parentTag, decls, parent_id, parent_idType, , parent_idTypeIndicator;
-
+{-- Pattern is a closed nonterminal, allowing other extensions to add arbitrary new
+    productions, instead of arbitrary new attributes with regular nonterminals, since
+    this is generally expected to be more useful.
+-}
+closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs, env, returnType, substituted<Pattern>, substitutions;
+flowtype Pattern = decorate {expectedType, env, returnType}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, substituted {substitutions};
 
 {-- This attribute collects declarations for pattern variables.
     During pattern matching, values are stored in these variables
     and then used when evaluating or executing the right hand side
     of clauses in a match expression or match statement.
 -}
-synthesized attribute decls :: [ Stmt ];
+synthesized attribute decls :: [Stmt];
 
 
 {-- [Pattern] constructs are checked against an expected type, which
@@ -21,111 +22,238 @@ synthesized attribute decls :: [ Stmt ];
 inherited attribute expectedType :: Type;
 inherited attribute expectedTypes :: [Type];
 
+{-- [Pattern] constructs transform into expressions that evaluate to non-zero
+    if there is a match.  Note that transformIn, the value to match against, may
+    be used more than once in transform.  -}
+attribute transformIn<Expr> occurs on Pattern; 
+attribute transform<Expr> occurs on Pattern;
+flowtype transform {decorate, transformIn} on Pattern;
 
-{-- [Pattern] constructs transform into statements that set the
-    ``_match`` to 1 if the pattern matches.
-
-    The invariant that must be maintained is that this code assumes
-    that the data it is to match is pointed to by
-    ``_curr_scrutinee_ptr`` and that ``_curr_scrutinee_ptr`` is
-    declared to have the appropriate type.  -}
-attribute transform<Stmt> occurs on Pattern; 
-
-
--- * e
-function mkDereferenceOf
-Expr ::= e::Expr l::Location
-{ return dereferenceExpr( e, location=l );
+abstract production patternName
+top::Pattern ::= n::Name
+{
+  propagate substituted;
+  top.pp = n.pp;
+  forwards to
+    case n.valueItem of
+    | enumValueItem(_) -> patternConst(declRefExpr(n, location=builtin), location=top.location)
+    | _ -> patternVariable(n, location=top.location)
+    end;
 }
 
-
 abstract production patternVariable
-p::Pattern ::= id::String
+top::Pattern ::= n::Name
 {
-  p.pp = text(id);
-
-  p.decls = [declStmt(d)];
-  local d :: Decl
-    = variableDecls( [], nilAttribute(), directTypeExpr(p.expectedType), 
-        consDeclarator(
-          declarator( name(id, location=p.location), baseTypeExpr(), nilAttribute(), 
-            nothingInitializer() ),
-          nilDeclarator()) );
-
-  {- This is actually OK, due to the modular well-definedness analysis.
-     We know that extensions cannot add new dependencies of inherited 
-     attributes on host language synthesized attributes.  So we know 
-     that 'defs' depends on 'env' and nothing else.   -}
-  d.env = emptyEnv(); 
-  d.returnType = p.returnType;
+  propagate substituted;
+  top.pp = n.pp;
+  top.decls = [declStmt(d)];
+  top.defs := d.defs;
+  top.errors := []; --ToDo: - check for non-linearity
+  top.errors <- n.valueRedeclarationCheckNoCompatible;
+  
+  local d :: Decl =
+    variableDecls([], nilAttribute(), directTypeExpr(top.expectedType),
+      consDeclarator(
+        declarator(n, baseTypeExpr(), nilAttribute(), nothingInitializer()),
+        nilDeclarator()));
+  d.env = top.env;
+  d.returnType = top.returnType;
   d.isTopLevel = false;
-  p.defs := d.defs;
-
-  p.errors := []; --ToDo: - check for non-linearity
-
-  p.transform =
-    mkAssign(
-      id,
-      mkDereferenceOf (
-        declRefExpr (name("_curr_scrutinee_ptr",location=p.location), location=p.location),
-	p.location),
-      p.location);
-    -- parseStmt(id ++ " = * _curr_scrutinee_ptr;") ;
+  
+  top.transform = ableC_Expr { ($Name{n} = $Expr{top.transformIn}, 1) };
 }
 
 abstract production patternWildcard
-p::Pattern ::=
+top::Pattern ::=
 {
-  p.pp = text("_");
-  p.decls = [];
-  p.defs := [];
-  p.errors := [];
-  p.transform = nullStmt();
+  propagate substituted;
+  top.pp = text("_");
+  top.decls = [];
+  top.defs := [];
+  top.errors := [];
+  top.transform = mkIntConst(1, builtin);
 }
 
 abstract production patternConst
-p::Pattern ::= constExpr::Expr
+top::Pattern ::= constExpr::Expr
 {
-  p.pp = constExpr.pp;
-  p.decls = [];
-  p.defs := [];
-  p.errors := (if compatibleTypes(p.expectedType, constExpr.typerep, false, false) then [] else
-                  [err(p.location, "Unexpected constant in pattern")]);
-
-  p.transform 
-    = ifStmt(
-        parseExpr("( *_curr_scrutinee_ptr != " ++ show(10, constExpr.pp) ++ ")"),
-        -- then clause
-        parseStmt("_match = 0;"),
-        -- else clause
-        nullStmt()
-      );
+  propagate substituted;
+  top.pp = constExpr.pp;
+  top.decls = [];
+  top.defs := [];
+  top.errors := [];
+  top.errors <-
+    if !typeAssignableTo(constExpr.typerep, top.expectedType) -- TODO: Proper handling for equality type checking
+    then [err(constExpr.location, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
+    else [];
+  
+  top.transform = equalsExpr(top.transformIn, constExpr, location=builtin);
 }
 
 abstract production patternStringLiteral
-p::Pattern ::= s::String
+top::Pattern ::= s::String
 {
-  p.pp = text(s);
-  p.decls = [];
-  p.defs := [];
-  p.errors := (if compatibleTypes(
-                    p.expectedType,
-                    pointerType(
-                      nilQualifier(),
-                      builtinType(
-                        consQualifier(constQualifier(location=p.location),nilQualifier()),
-                        signedType(charType()))),
-                    false, false) then [] else
-                  [err(p.location, "Unexpected string constant in pattern")]) ++
-              (if !null(lookupValue("strcmp", p.env)) then [] else
-                  [err(p.location, "Pattern string literals require <string.h> to be included")]);
+  propagate substituted;
+  top.pp = text(s);
+  top.decls = [];
+  top.defs := [];
+  top.errors := [];
+  
+  local stringType::Type =
+    pointerType(
+      nilQualifier(),
+      builtinType(
+        consQualifier(constQualifier(location=builtin), nilQualifier()),
+        signedType(charType())));
+  top.errors <-
+    if !compatibleTypes(stringType, top.expectedType, true, true)
+    then [err(top.location, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
+    else [];
+  top.errors <-
+    if null(lookupValue("strcmp", top.env))
+    then [err(top.location, "Pattern string literals require definition of strcmp (include <string.h>?)")]
+    else [];
 
-  p.transform =
-    ifStmt(
-      parseExpr("strcmp( *_curr_scrutinee_ptr,(" ++ s ++ "))"),
-        -- then clause
-        parseStmt("_match = 0;"),
-        -- else clause
-        nullStmt()
-      );
+  top.transform = ableC_Expr { !strcmp($Expr{top.transformIn}, $Expr{stringLiteral(s, location=builtin)}) };
 }
+
+abstract production patternPointer
+top::Pattern ::= p::Pattern
+{
+  propagate substituted;
+  top.pp = cat(pp"&", p.pp);
+  top.decls = p.decls;
+  top.defs := p.defs;
+  top.errors := p.errors;
+  top.errors <-
+    case top.expectedType.withoutAttributes of
+    | pointerType(_, _) -> []
+    | errorType() -> []
+    | _ -> [err(builtin, s"Pointer pattern expected to match pointer type (got ${showType(top.expectedType)})")]
+    end;
+  
+  p.expectedType =
+    case top.expectedType.withoutAttributes of
+    | pointerType(_, sub) -> sub
+    | _ -> errorType()
+    end;
+  
+  -- Store the result of the dereference in a temporary variable
+  -- since p.transformIn may be used more than once.
+  local tempName::String = "_match_pointer_" ++ toString(genInt());
+  p.transformIn = declRefExpr(name(tempName, location=builtin), location=builtin);
+  top.transform =
+    ableC_Expr {
+      ({$directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};
+        $Expr{p.transform};})
+    };
+}
+
+abstract production patternBoth
+top::Pattern ::= p1::Pattern p2::Pattern
+{
+  propagate substituted;
+  top.pp = ppConcat([p1.pp, space(), text("@"), space(), p2.pp ]);
+  top.decls = p1.decls ++ p2.decls;
+  top.defs := p1.defs ++ p2.defs;
+  top.errors := p1.errors ++ p2.errors;
+  
+  p1.env = top.env;
+  p2.env = addEnv(p1.defs, top.env);
+  p1.expectedType = top.expectedType;
+  p2.expectedType = top.expectedType;
+  p1.transformIn = top.transformIn;
+  p2.transformIn = top.transformIn;
+
+  top.transform = andExpr(p1.transform, p2.transform, location=builtin);
+}
+
+abstract production patternNot
+top::Pattern ::= p::Pattern 
+{
+  propagate substituted;
+  top.pp = cat(text("! "), p.pp);
+  top.decls = p.decls;
+  top.defs := p.defs;
+  top.errors := p.errors; -- TODO: Exclude variable patterns
+  
+  p.env = top.env;
+  p.expectedType = top.expectedType;
+
+  p.transformIn = top.transformIn;
+  top.transform = notExpr(p.transform, location=builtin);
+}
+
+abstract production patternWhen
+top::Pattern ::= e::Expr
+{
+  propagate substituted;
+  top.pp = cat( text("when"), parens(e.pp));
+  top.decls = [];
+  top.defs := [];
+  top.errors := e.errors;
+  top.errors <-
+    if !e.typerep.defaultFunctionArrayLvalueConversion.isScalarType
+    then [err(e.location, "when condition must be scalar type, instead it is " ++ showType(e.typerep))]
+    else [];
+  
+  top.transform = e;
+}
+
+abstract production patternParens
+top::Pattern ::= p::Pattern
+{
+  propagate substituted;
+  top.pp = parens(p.pp);
+  top.decls = p.decls;
+  top.defs := p.defs;
+  top.errors := p.errors;
+  top.transform = p.transform;
+  
+  p.expectedType = top.expectedType;
+  p.transformIn = top.transformIn;
+}
+
+-- PatternList --
+-----------------
+nonterminal PatternList with pps, errors, env, returnType, defs, decls, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, substituted<PatternList>, substitutions;
+flowtype PatternList = decorate {expectedTypes, env, returnType}, pps {}, decls {decorate}, errors {decorate}, defs {decorate}, count {}, substituted {substitutions};
+
+abstract production consPattern
+top::PatternList ::= p::Pattern rest::PatternList
+{
+  propagate substituted;
+  top.pps = p.pp :: rest.pps;
+  top.errors := p.errors ++ rest.errors;
+  top.defs := p.defs ++ rest.defs;
+  top.decls = p.decls ++ rest.decls;
+  top.count = 1 + rest.count;
+  
+  p.env = top.env;
+  rest.env = addEnv(p.defs, top.env);
+  
+  local splitTypes :: Pair<Type [Type]> =
+    case top.expectedTypes of
+    | t::ts -> pair(t, ts)
+    | [] -> pair(errorType(), [])
+    end;
+  p.expectedType = splitTypes.fst;
+  rest.expectedTypes = splitTypes.snd;
+  
+  top.transform = andExpr(p.transform, rest.transform, location=builtin);
+  p.transformIn = head(top.transformIn);
+  rest.transformIn = tail(top.transformIn);
+}
+
+abstract production nilPattern
+top::PatternList ::= {-empty-}
+{
+  propagate substituted;
+  top.pps = [];
+  top.errors := [];
+  top.count = 0;
+  top.defs := [];
+  top.decls = [];
+  top.transform = mkIntConst(1, builtin);
+}
+

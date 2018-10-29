@@ -7,9 +7,9 @@ int main () {
 
   // a match statment
   match (a) {
-    1      { x = 1; }   // Syntax error - missing "->"
-    2   -> { x = 2; }
-    v   -> { x = v; }
+    1     -> { x = 1; }
+    2     -> { x = 2; }
+    v @ v -> { x = v; } // Redeclaration of v
   }
 
 }
