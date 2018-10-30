@@ -89,6 +89,8 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   top.refId = name_tagRefId_workaround;
   top.constructors = cs.constructors;
   
+  production adtTypeExpr::BaseTypeExpr = adtTagReferenceTypeExpr(nilQualifier(), n);
+  
   production structName::String = n.name ++ "_s";
   production structRefId::String = name_tagRefId_workaround ++ "_s";
   production enumName::String = top.adtGivenName ++ "_tag";
@@ -137,10 +139,14 @@ top::ADTDecl ::= n::Name cs::ConstructorList
      for ADT, for example an auto-generated recursive freeing function. -}
   production attribute adtDecls::Decls with appendDecls;
   adtDecls := nilDecl();
+  -- Seed the flowtype
+  adtDecls <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ top.adtGivenName) else nilDecl();
   
   {- Used to generate prototypes for adtDecls which are inserted before the constructors -}
   production attribute adtProtos::Decls with appendDecls;
   adtProtos := nilDecl();
+  -- Seed the flowtype
+  adtProtos <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ top.adtGivenName) else nilDecl();
   
   {- This attribute is for extensions to use to add additional members to the generated
      ADT struct. -}
@@ -247,6 +253,7 @@ top::Constructor ::= n::Name ps::Parameters
   
   top.constructors = [pair(n.name, ps)];
   
+  production enumItemName::String = top.adtGivenName ++ "_" ++ n.name;
   top.enumItem =
     enumItem(name(top.adtGivenName ++ "_" ++ n.name, location=top.location), nothingExpr());
   

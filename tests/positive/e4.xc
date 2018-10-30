@@ -11,12 +11,12 @@ allocate datatype Tree with malloc;
 
 int count_matches (Tree *t) {
   match (t) {
-    &Fork(t1,t2,str) -> {
-      int res_t1, res_t2, res_str;
+    &Fork(t1,t2,s) -> {
+      int res_t1, res_t2, res_s;
       res_t1 = count_matches(t1);
       res_t2 = count_matches(t2);
-      res_str = 1;
-      return res_t1 + res_t2 + res_str;
+      res_s = 1;
+      return res_t1 + res_t2 + res_s;
     }
     &Leaf(s) -> { return 1; }
   }
