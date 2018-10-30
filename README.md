@@ -82,10 +82,3 @@ int value (Expr *e) {
 
 More examples can be found in the ``examples`` and ``artifact``
 directories.
-
-
-
-
-      
-     
-      
