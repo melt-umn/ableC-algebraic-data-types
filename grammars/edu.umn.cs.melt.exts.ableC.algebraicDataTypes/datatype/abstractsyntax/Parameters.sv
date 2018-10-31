@@ -1,6 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 
-synthesized attribute typeDefs::[Def]; -- Defs from type expressions in parameters
 synthesized attribute fieldNames::[String];
 synthesized attribute fieldName::String;
 synthesized attribute asStructItemList<a>::a;
@@ -8,16 +7,15 @@ synthesized attribute asConstructorParameters<a>::a;
 synthesized attribute asAssignments::Stmt;
 autocopy attribute constructorName::String;
 
-attribute typeDefs, fieldNames, asStructItemList<StructItemList>, asConstructorParameters<Parameters>, asAssignments, constructorName occurs on Parameters;
-attribute typeDefs, fieldName, asStructItemList<StructItem>, asConstructorParameters<ParameterDecl>, asAssignments, constructorName occurs on ParameterDecl;
+attribute fieldNames, asStructItemList<StructItemList>, asConstructorParameters<Parameters>, asAssignments, constructorName occurs on Parameters;
+attribute fieldName, asStructItemList<StructItem>, asConstructorParameters<ParameterDecl>, asAssignments, constructorName occurs on ParameterDecl;
 
-flowtype Parameters = typeDefs {decorate}, fieldNames {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName}; 
-flowtype ParameterDecl = typeDefs {decorate}, fieldName {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName}; 
+flowtype Parameters = fieldNames {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
+flowtype ParameterDecl = fieldName {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
 
 aspect production consParameters
 top::Parameters ::= h::ParameterDecl t::Parameters
 {
-  top.typeDefs = h.typeDefs ++ t.typeDefs;
   top.fieldNames = h.fieldName :: t.fieldNames;
   top.asStructItemList = consStructItem(h.asStructItemList, t.asStructItemList);
   top.asConstructorParameters = consParameters(h.asConstructorParameters, t.asConstructorParameters);
@@ -27,7 +25,6 @@ top::Parameters ::= h::ParameterDecl t::Parameters
 aspect production nilParameters
 top::Parameters ::= 
 { 
-  top.typeDefs = [];
   top.fieldNames = [];
   top.asStructItemList = nilStructItem();
   top.asConstructorParameters = nilParameters();
@@ -37,8 +34,6 @@ top::Parameters ::=
 aspect production parameterDecl
 top::ParameterDecl ::= storage::[StorageClass]  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
-  top.typeDefs = bty.defs;
-  
   production fieldName::Name =
     case n of
     | justName(n) -> n

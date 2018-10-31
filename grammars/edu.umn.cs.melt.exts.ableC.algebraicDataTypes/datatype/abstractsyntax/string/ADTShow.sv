@@ -18,9 +18,9 @@ top::Expr ::= e::Expr
   propagate substituted;
   top.pp = pp"show(${e.pp})";
   
-  local adtName::Maybe<String> =
+  local adtDeclName::Maybe<String> =
     case e.typerep of
-    | extType( _, e) -> e.adtName
+    | extType( _, adtExtType(_, n, _)) -> just(n)
     | _ -> nothing()
     end;
   
@@ -35,7 +35,7 @@ top::Expr ::= e::Expr
     end;
   
   local localErrors::[Message] =
-    case e.typerep, adtName, adtLookup of
+    case e.typerep, adtDeclName, adtLookup of
     | errorType(), _, _ -> []
     -- Check that parameter type is an ADT of some sort
     | t, nothing(), _ -> [err(top.location, s"show expected a datatype (got ${showType(t)}).")]
@@ -46,7 +46,7 @@ top::Expr ::= e::Expr
     checkStringHeaderDef("str_char_pointer", top.location, top.env);
   local fwrd::Expr =
     directCallExpr(
-      name("show_" ++ adtName.fromJust, location=builtin),
+      name("show_" ++ adtDeclName.fromJust, location=builtin),
       consExpr(e, nilExpr()),
       location=builtin);
   forwards to mkErrorCheck(localErrors, fwrd);

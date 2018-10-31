@@ -40,6 +40,7 @@ top::Decl ::= id::Name  allocator::Name
   d.env = top.env; -- TODO: Not exactly correct, but the decl needs to see the tag to avoid re-generating the refId
   d.returnType = adtLookup.returnType;
   d.isTopLevel = adtLookup.isTopLevel;
+  d.givenRefId = adtLookup.givenRefId;
   d.adtGivenName = adtLookup.adtGivenName;
   d.allocatorName = allocator;
   

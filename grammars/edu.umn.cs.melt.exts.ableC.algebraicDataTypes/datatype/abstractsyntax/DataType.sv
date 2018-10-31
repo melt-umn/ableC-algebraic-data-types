@@ -31,6 +31,7 @@ top::Decl ::= adt::ADTDecl
   propagate substituted;
   top.pp = ppConcat([ text("datatype"), space(), adt.pp ]);
   
+  adt.givenRefId = nothing();
   adt.adtGivenName = adt.name;
   
   forwards to
@@ -48,8 +49,8 @@ synthesized attribute transform<a> :: a;
 -- the same constructors.
 autocopy attribute adtGivenName :: String;
 
-nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, refId, constructors, tagEnv, transform<Decl>, substituted<ADTDecl>, substitutions;
-flowtype ADTDecl = decorate {isTopLevel, env, returnType, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, transform {decorate}, substituted {substitutions};
+nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, givenRefId, refId, constructors, tagEnv, transform<Decl>, substituted<ADTDecl>, substitutions;
+flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, transform {decorate}, substituted {substitutions};
 
 abstract production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
@@ -67,12 +68,12 @@ top::ADTDecl ::= n::Name cs::ConstructorList
    -} 
   top.name = n.name;
   
-  local preDefs :: [Def] = 
+  production preDefs :: [Def] =
     if name_tagHasForwardDcl_workaround
     then []
-    else [adtTagDef(n.name, adtRefIdTagItem(name_tagRefId_workaround))];
-  local postDefs :: [Def] =
-    [adtRefIdDef(name_tagRefId_workaround, adtRefIdItem(top))];
+    else [adtTagDef(n.name, adtRefIdTagItem(top.refId))];
+  production postDefs :: [Def] =
+    [adtRefIdDef(top.refId, adtRefIdItem(top))];
   
   top.defs := preDefs ++ cs.defs ++ postDefs;
   
@@ -86,16 +87,17 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   local name_tagHasForwardDcl_workaround :: Boolean =
     name_refIdIfOld_workaround.isJust;
   
-  top.refId = name_tagRefId_workaround;
+  top.refId = fromMaybe(name_tagRefId_workaround, top.givenRefId);
   top.constructors = cs.constructors;
   
-  production adtTypeExpr::BaseTypeExpr = adtTagReferenceTypeExpr(nilQualifier(), n);
+  production adtTypeExpr::BaseTypeExpr =
+    extTypeExpr(nilQualifier(), adtExtType(top.adtGivenName, n.name, top.refId));
   
   production structName::String = n.name ++ "_s";
-  production structRefId::String = name_tagRefId_workaround ++ "_s";
+  production structRefId::String = top.refId ++ "_s";
   production enumName::String = top.adtGivenName ++ "_tag";
   production unionName::String = "_" ++ n.name ++ "_contents";
-  production unionRefId::String = name_tagRefId_workaround ++ "_contents";
+  production unionRefId::String = top.refId ++ "_contents";
   
   production adtEnumDecl::Decl =
     ableC_Decl {
@@ -140,13 +142,13 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   production attribute adtDecls::Decls with appendDecls;
   adtDecls := nilDecl();
   -- Seed the flowtype
-  adtDecls <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ top.adtGivenName) else nilDecl();
+  adtDecls <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
   
   {- Used to generate prototypes for adtDecls which are inserted before the constructors -}
   production attribute adtProtos::Decls with appendDecls;
   adtProtos := nilDecl();
   -- Seed the flowtype
-  adtProtos <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ top.adtGivenName) else nilDecl();
+  adtProtos <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
   
   {- This attribute is for extensions to use to add additional members to the generated
      ADT struct. -}
@@ -181,7 +183,7 @@ synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 nonterminal ConstructorList
   with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, adtGivenName, adtDeclName, constructors,
        substituted<ConstructorList>, substitutions;
-flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {decorate}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, substituted {substitutions};
+flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, substituted {substitutions};
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
@@ -230,7 +232,7 @@ nonterminal Constructor
        returnType, -- because Types may contain Exprs
        substituted<Constructor>, substitutions,
        location;
-flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItem {decorate}, structItem {decorate}, funDecl {decorate}, constructors {decorate}, substituted {substitutions};
+flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName}, structItem {decorate}, funDecl {decorate}, constructors {decorate}, substituted {substitutions};
 
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
@@ -246,7 +248,7 @@ top::Constructor ::= n::Name ps::Parameters
   top.errors := ps.errors;
   top.errors <- n.valueRedeclarationCheckNoCompatible;
   
-  top.defs := ps.typeDefs;
+  top.defs := ps.defs;
   
   ps.position = 0;
   ps.constructorName = n.name;
