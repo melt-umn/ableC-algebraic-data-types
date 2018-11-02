@@ -1,5 +1,7 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax:string;
 
+imports core:monad;
+
 imports silver:langutil; 
 imports silver:langutil:pp;
 
@@ -18,6 +20,12 @@ top::Expr ::= e::Expr
   propagate substituted;
   top.pp = pp"show(${e.pp})";
   
+  local adtName::Maybe<String> =
+    case e.typerep of
+    | extType( _, adtExtType(n, _, _)) -> just(n)
+    | _ -> nothing()
+    end;
+  
   local adtDeclName::Maybe<String> =
     case e.typerep of
     | extType( _, adtExtType(_, n, _)) -> just(n)
@@ -34,14 +42,27 @@ top::Expr ::= e::Expr
     | _ -> []
     end;
   
+  local constructors::[Pair<String Decorated Parameters>] =
+    case adtLookup of
+    | item :: _ -> item.constructors
+    | [] -> []
+    end;
+  
   local localErrors::[Message] =
-    case e.typerep, adtDeclName, adtLookup of
+    case e.typerep, adtName, adtLookup of
     | errorType(), _, _ -> []
     -- Check that parameter type is an ADT of some sort
     | t, nothing(), _ -> [err(top.location, s"show expected a datatype (got ${showType(t)}).")]
     -- Check that this ADT has a definition
     | _, just(id), [] -> [err(top.location, s"datatype ${id} does not have a definition.")]
-    | _, _, _ -> []
+    | _, just(id), _ ->
+      do (bindList, returnList) {
+        constructor::Pair<String Decorated Parameters> <- constructors;
+        field::Pair<String Type> <- zipWith(pair, constructor.snd.fieldNames, constructor.snd.typereps);
+        if field.snd.showProd.isJust
+        then []
+        else [err(e.location, s"Cannot show datatype ${id} because show of type ${showType(field.snd)} (constructor ${constructor.fst}, field ${field.fst}) is not defined.")];
+      }
     end ++
     checkStringHeaderDef("str_char_pointer", top.location, top.env);
   local fwrd::Expr =
@@ -126,7 +147,10 @@ aspect production parameterDecl
 top::ParameterDecl ::= storage::[StorageClass]  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
   top.showTransform =
-    if top.position == 0
-    then ableC_Stmt { result += show(adt.contents.$name{top.constructorName}.$Name{fieldName}); }
-    else ableC_Stmt { result += ", " + show(adt.contents.$name{top.constructorName}.$Name{fieldName}); };
+    if mty.typerep.showProd.isJust
+    then
+      if top.position == 0
+      then ableC_Stmt { result += show(adt.contents.$name{top.constructorName}.$Name{fieldName}); }
+      else ableC_Stmt { result += ", " + show(adt.contents.$name{top.constructorName}.$Name{fieldName}); }
+    else nullStmt(); -- Avoid errors in implicitly-generated code
 }
