@@ -129,7 +129,7 @@ top::Pattern ::= p::Pattern
     case top.expectedType.withoutAttributes of
     | pointerType(_, _) -> []
     | errorType() -> []
-    | _ -> [err(builtin, s"Pointer pattern expected to match pointer type (got ${showType(top.expectedType)})")]
+    | _ -> [err(p.location, s"Pointer pattern expected to match pointer type (got ${showType(top.expectedType)})")]
     end;
   
   p.expectedType =
