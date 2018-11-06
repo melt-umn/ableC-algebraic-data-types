@@ -52,7 +52,7 @@ top::Pattern ::= n::Name
   top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   local d :: Decl =
-    variableDecls([], nilAttribute(), directTypeExpr(top.expectedType),
+    variableDecls(nilStorageClass(), nilAttribute(), directTypeExpr(top.expectedType),
       consDeclarator(
         declarator(n, baseTypeExpr(), nilAttribute(), nothingInitializer()),
         nilDeclarator()));

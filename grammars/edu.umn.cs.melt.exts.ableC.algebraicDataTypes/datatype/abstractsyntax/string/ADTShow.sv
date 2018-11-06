@@ -144,7 +144,7 @@ top::Parameters ::=
 }
 
 aspect production parameterDecl
-top::ParameterDecl ::= storage::[StorageClass]  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
+top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
   top.showTransform =
     if mty.typerep.showProd.isJust
