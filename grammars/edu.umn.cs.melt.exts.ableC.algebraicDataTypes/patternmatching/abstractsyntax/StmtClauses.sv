@@ -35,10 +35,14 @@ inherited attribute transformIn<a> :: a;
 autocopy attribute scrutineesIn::[Expr];
 autocopy attribute matchLocation::Location;
 
+autocopy attribute appendedStmtClauses :: StmtClauses;
+synthesized attribute appendedStmtClausesRes :: StmtClauses;
+
 nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
   expectedTypes, scrutineesIn, transform<Stmt>,
-  substituted<StmtClauses>, substitutions;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, substituted {substitutions};
+  substituted<StmtClauses>, substitutions,
+  appendedStmtClauses, appendedStmtClausesRes;
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -46,6 +50,7 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
   propagate substituted;
   top.pp = cat( c.pp, rest.pp );
   top.errors := c.errors ++ rest.errors;
+  top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
 
   top.transform = c.transform;
   c.transformIn = rest.transform;
@@ -60,8 +65,16 @@ top::StmtClauses ::=
   propagate substituted;
   top.pp = text("");
   top.errors := [];
+  top.appendedStmtClausesRes = top.appendedStmtClauses;
 
   top.transform = exprStmt(comment("no match, do nothing.", location=builtin));
+}
+
+function appendStmtClauses
+StmtClauses ::= p1::StmtClauses p2::StmtClauses
+{
+  p1.appendedStmtClauses = p2;
+  return p1.appendedStmtClausesRes;
 }
 
 

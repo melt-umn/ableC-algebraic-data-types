@@ -34,8 +34,11 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     used to pass these types down the clause and pattern ASTs.
  -}
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep, substituted<ExprClauses>, substitutions;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, typerep {decorate}, substituted {substitutions};
+autocopy attribute appendedExprClauses :: ExprClauses;
+synthesized attribute appendedExprClausesRes :: ExprClauses;
+
+nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep, substituted<ExprClauses>, substitutions, appendedExprClauses, appendedExprClausesRes;
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -60,15 +63,15 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     if typeAssignableTo(c.typerep, rest.typerep)
     then c.typerep
     else errorType();
+  top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
 }
 
-abstract production oneExprClause
-top::ExprClauses ::= c::ExprClause
+abstract production failureExprClause
+top::ExprClauses ::= 
 {
   propagate substituted;
-  top.pp = c.pp;
-  c.expectedTypes = top.expectedTypes;
-  top.errors := c.errors;
+  top.pp = text("");
+  top.errors := [];
   top.errors <-
     if null(lookupValue("exit", top.env))
     then [err(top.matchLocation, "Pattern match requires definition of exit (include <stdlib.h>?)")]
@@ -81,14 +84,21 @@ top::ExprClauses ::= c::ExprClause
     if null(lookupValue("stderr", top.env))
     then [err(top.matchLocation, "Pattern match requires definition of stderr (include <stdio.h>?)")]
     else [];
+  top.typerep = errorType();
+  top.appendedExprClausesRes = top.appendedExprClauses;
 
-  top.transform = c.transform;
-  c.transformIn =
+  top.transform =
     ableC_Stmt {
       fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.matchLocation.unparse}\n"});
       exit(1);
     };
-  top.typerep = c.typerep;
+}
+
+function appendExprClauses
+ExprClauses ::= p1::ExprClauses p2::ExprClauses
+{
+  p1.appendedExprClauses = p2;
+  return p1.appendedExprClausesRes;
 }
 
 nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep, substituted<ExprClause>, substitutions;

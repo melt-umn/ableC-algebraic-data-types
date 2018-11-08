@@ -180,10 +180,14 @@ synthesized attribute funDecls :: Decls;
 -- Constructor list used, e.g., when type checking patterns
 synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 
+autocopy attribute appendedConstructors :: ConstructorList;
+synthesized attribute appendedConstructorsRes :: ConstructorList;
+
 nonterminal ConstructorList
   with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, adtGivenName, adtDeclName, constructors,
-       substituted<ConstructorList>, substitutions;
-flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, substituted {substitutions};
+       substituted<ConstructorList>, substitutions,
+       appendedConstructors, appendedConstructorsRes;
+flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, substituted {substitutions}, appendedConstructorsRes {appendedConstructors};
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
@@ -201,6 +205,7 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
   top.structItems = consStructItem(c.structItem, cl.structItems);
   top.funDecls = consDecl(c.funDecl, cl.funDecls);
   top.constructors = c.constructors ++ cl.constructors;
+  top.appendedConstructorsRes = consConstructor(c, cl.appendedConstructorsRes);
 
   cl.env = addEnv(c.defs, c.env);
 }
@@ -216,6 +221,14 @@ top::ConstructorList ::=
   top.structItems = nilStructItem();
   top.funDecls = nilDecl();
   top.constructors = [];
+  top.appendedConstructorsRes = top.appendedConstructors;
+}
+
+function appendConstructorList
+ConstructorList ::= p1::ConstructorList p2::ConstructorList
+{
+  p1.appendedConstructors = p2;
+  return p1.appendedConstructorsRes;
 }
 
 -- Constructs the enum item for each constructor

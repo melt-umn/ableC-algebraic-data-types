@@ -216,8 +216,11 @@ top::Pattern ::= p::Pattern
 
 -- PatternList --
 -----------------
-nonterminal PatternList with pps, errors, env, returnType, defs, decls, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, substituted<PatternList>, substitutions;
-flowtype PatternList = decorate {expectedTypes, env, returnType}, pps {}, decls {decorate}, errors {decorate}, defs {decorate}, count {}, substituted {substitutions};
+autocopy attribute appendedPatterns :: PatternList;
+synthesized attribute appendedPatternsRes :: PatternList;
+
+nonterminal PatternList with pps, errors, env, returnType, defs, decls, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, substituted<PatternList>, substitutions, appendedPatterns, appendedPatternsRes;
+flowtype PatternList = decorate {expectedTypes, env, returnType}, pps {}, decls {decorate}, errors {decorate}, defs {decorate}, count {}, substituted {substitutions}, appendedPatternsRes {appendedPatterns};
 
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
@@ -228,6 +231,7 @@ top::PatternList ::= p::Pattern rest::PatternList
   top.defs := p.defs ++ rest.defs;
   top.decls = p.decls ++ rest.decls;
   top.count = 1 + rest.count;
+  top.appendedPatternsRes = consPattern(p, rest.appendedPatternsRes);
   
   p.env = top.env;
   rest.env = addEnv(p.defs, top.env);
@@ -255,5 +259,12 @@ top::PatternList ::= {-empty-}
   top.defs := [];
   top.decls = [];
   top.transform = mkIntConst(1, builtin);
+  top.appendedPatternsRes = top.appendedPatterns;
 }
 
+function appendPatternList
+PatternList ::= p1::PatternList p2::PatternList
+{
+  p1.appendedPatterns = p2;
+  return p1.appendedPatternsRes;
+}

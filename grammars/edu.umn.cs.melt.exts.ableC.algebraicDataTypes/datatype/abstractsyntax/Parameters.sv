@@ -24,7 +24,7 @@ top::Parameters ::= h::ParameterDecl t::Parameters
 
 aspect production nilParameters
 top::Parameters ::= 
-{ 
+{
   top.fieldNames = [];
   top.asStructItemList = nilStructItem();
   top.asConstructorParameters = nilParameters();
