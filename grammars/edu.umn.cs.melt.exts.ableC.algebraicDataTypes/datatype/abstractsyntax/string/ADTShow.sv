@@ -66,10 +66,17 @@ top::Expr ::= e::Expr
     end ++
     checkStringHeaderDef("str_char_pointer", top.location, top.env);
   local fwrd::Expr =
-    directCallExpr(
-      name("show_" ++ adtDeclName.fromJust, location=builtin),
-      consExpr(e, nilExpr()),
-      location=builtin);
+    case adtLookup of
+    | adtRefIdItem(adt) :: _ ->
+      if !null(adt.errors)
+      -- Don't cause internal errors by forwarding to an undefined function
+      then errorExpr([], location=builtin)
+      else
+        directCallExpr(
+          name("show_" ++ adtDeclName.fromJust, location=builtin),
+          consExpr(e, nilExpr()),
+          location=builtin)
+    end;
   forwards to mkErrorCheck(localErrors, fwrd);
 }
 
@@ -83,7 +90,7 @@ aspect production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
 {
   adtDecls <-
-    if null(lookupTag("_string_s", top.env)) then nilDecl() else
+    if null(lookupTag("_string_s", top.env)) || !null(top.errors) then nilDecl() else
       ableC_Decls {
         static string $name{"show_" ++ n.name}($BaseTypeExpr{adtTypeExpr} adt);
         static string $name{"show_" ++ n.name}($BaseTypeExpr{adtTypeExpr} adt) {
