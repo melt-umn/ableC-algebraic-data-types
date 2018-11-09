@@ -1,7 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax:string;
 
-imports core:monad;
-
 imports silver:langutil; 
 imports silver:langutil:pp;
 
@@ -13,6 +11,12 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 imports edu:umn:cs:melt:exts:ableC:string:abstractsyntax;
+
+aspect production adtExtType
+top::ExtType ::= adtName::String adtDeclName::String refId::String
+{
+  top.showProd = just(showADT(_, location=_));
+}
 
 abstract production showADT
 top::Expr ::= e::Expr
@@ -42,11 +46,15 @@ top::Expr ::= e::Expr
     | _ -> []
     end;
   
-  local constructors::[Pair<String Decorated Parameters>] =
+  local adt::Decorated ADTDecl =
     case adtLookup of
-    | item :: _ -> item.constructors
-    | [] -> []
+    | adtRefIdItem(adt) :: _ -> adt
     end;
+  
+  local decl::Decl = showADTDecl(adt);
+  decl.env = globalEnv(top.env);
+  decl.returnType = nothing();
+  decl.isTopLevel = false;
   
   local localErrors::[Message] =
     case e.typerep, adtName, adtLookup of
@@ -56,47 +64,49 @@ top::Expr ::= e::Expr
     -- Check that this ADT has a definition
     | _, just(id), [] -> [err(top.location, s"datatype ${id} does not have a definition.")]
     | _, just(id), _ ->
-      do (bindList, returnList) {
-        constructor::Pair<String Decorated Parameters> <- constructors;
-        field::Pair<String Type> <- zipWith(pair, constructor.snd.fieldNames, constructor.snd.typereps);
-        if field.snd.showProd.isJust
-        then []
-        else [err(e.location, s"Cannot show datatype ${id} because show of type ${showType(field.snd)} (constructor ${constructor.fst}, field ${field.fst}) is not defined.")];
-      }
+      if !null(decl.errors)
+      then [nested(e.location, s"In showing datatype ${id}", decl.errors)]
+      else []
     end ++
     checkStringHeaderDef("str_char_pointer", top.location, top.env);
   local fwrd::Expr =
-    case adtLookup of
-    | adtRefIdItem(adt) :: _ ->
-      if !null(adt.errors)
-      -- Don't cause internal errors by forwarding to an undefined function
-      then errorExpr([], location=builtin)
-      else
-        directCallExpr(
-          name("show_" ++ adtDeclName.fromJust, location=builtin),
-          consExpr(e, nilExpr()),
-          location=builtin)
-    end;
+    injectGlobalDeclsExpr(
+      consDecl(decDecl(decl), nilDecl()),
+      directCallExpr(
+        name(adt.showFnName, location=builtin),
+        consExpr(e, nilExpr()),
+        location=builtin),
+      location=builtin);
   forwards to mkErrorCheck(localErrors, fwrd);
 }
 
-aspect production adtExtType
-top::ExtType ::= adtName::String adtDeclName::String refId::String
+abstract production showADTDecl
+top::Decl ::= adt::Decorated ADTDecl
 {
-  top.showProd = just(showADT(_, location=_));
+  propagate substituted;
+  top.pp = pp"showADTDecl ${adt.pp}";
+  forwards to
+    if !null(lookupValue(adt.showFnName, top.env))
+    then decls(nilDecl())
+    else adt.showTransform;
 }
+
+synthesized attribute showFnName::String occurs on ADTDecl;
+synthesized attribute showTransform<a>::a;
+attribute showTransform<Decl> occurs on ADTDecl;
 
 aspect production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
 {
-  adtDecls <-
-    if null(lookupTag("_string_s", top.env)) || !null(top.errors) then nilDecl() else
+  top.showFnName = "_show_" ++ n.name;
+  top.showTransform =
+    decls(
       ableC_Decls {
-        static string $name{"show_" ++ n.name}($BaseTypeExpr{adtTypeExpr} adt);
-        static string $name{"show_" ++ n.name}($BaseTypeExpr{adtTypeExpr} adt) {
+        static string $name{top.showFnName}($BaseTypeExpr{adtTypeExpr} adt);
+        static string $name{top.showFnName}($BaseTypeExpr{adtTypeExpr} adt) {
           $Stmt{cs.showTransform}
         }
-      };
+      });
   
   cs.showTransformIn =
     ableC_Stmt {
@@ -106,7 +116,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
     };
 }
 
-synthesized attribute showTransform::Stmt occurs on ConstructorList, Constructor, Parameters, ParameterDecl;
+attribute showTransform<Stmt> occurs on ConstructorList, Constructor, Parameters, ParameterDecl;
 inherited attribute showTransformIn::Stmt occurs on ConstructorList, Constructor;
 
 aspect production consConstructor
@@ -153,11 +163,12 @@ top::Parameters ::=
 aspect production parameterDecl
 top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
+  local fieldAccess::Expr =
+    parenExpr(
+      ableC_Expr { adt.contents.$name{top.constructorName}.$Name{fieldName} },
+      location=top.sourceLocation);
   top.showTransform =
-    if mty.typerep.showProd.isJust
-    then
-      if top.position == 0
-      then ableC_Stmt { result += show(adt.contents.$name{top.constructorName}.$Name{fieldName}); }
-      else ableC_Stmt { result += ", " + show(adt.contents.$name{top.constructorName}.$Name{fieldName}); }
-    else nullStmt(); -- Avoid errors in implicitly-generated code
+    if top.position == 0
+    then ableC_Stmt { result += show($Expr{fieldAccess}); }
+    else ableC_Stmt { result += ", " + show($Expr{fieldAccess}); };
 }

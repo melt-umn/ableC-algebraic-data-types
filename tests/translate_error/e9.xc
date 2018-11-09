@@ -8,8 +8,14 @@ datatype Bar {
   A(struct Foo foo);
 };
 
+allocate datatype Bar with malloc;
+
+datatype Baz {
+  B(datatype Bar *bar);
+};
+
 int main () {
-  datatype Bar b = A((struct Foo){42, 3.14});
+  datatype Baz b = B(malloc_A((struct Foo){42, 3.14}));
   
   string s = show(b); // Showing datatype with non-showable field
 }
