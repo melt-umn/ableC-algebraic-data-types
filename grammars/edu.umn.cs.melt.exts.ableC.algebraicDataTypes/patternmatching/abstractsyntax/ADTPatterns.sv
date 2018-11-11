@@ -12,20 +12,12 @@ top::Pattern ::= n::Name ps::PatternList
   top.defs := ps.defs;
   
   -- Type checking
-  local adtName::Maybe<String> =
-    case top.expectedType of
-    | extType( _, e) -> e.adtName
-    | _ -> nothing()
-    end;
+  local adtName::Maybe<String> = top.expectedType.adtName;
   
   local adtLookup::[RefIdItem] =
-    case top.expectedType of
-    | extType( _, e) ->
-      case e.maybeRefId of
-      | just(rid) -> lookupRefId(rid, top.env)
-      | nothing() -> []
-      end
-    | _ -> []
+    case top.expectedType.maybeRefId of
+    | just(rid) -> lookupRefId(rid, top.env)
+    | nothing() -> []
     end;
   
   local constructors::[Pair<String Decorated Parameters>] =

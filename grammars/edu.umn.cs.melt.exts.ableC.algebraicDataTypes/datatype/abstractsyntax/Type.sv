@@ -115,7 +115,19 @@ top::BaseTypeExpr ::= q::Qualifiers n::Name
 
 -- Type --
 ----------
-synthesized attribute adtName::Maybe<String> occurs on ExtType;
+synthesized attribute adtName::Maybe<String> occurs on Type, ExtType;
+
+aspect default production
+top::Type ::=
+{
+  top.adtName = nothing();
+}
+
+aspect production extType
+top::Type ::= q::Qualifiers sub::ExtType
+{
+  top.adtName = sub.adtName;
+}
 
 aspect default production
 top::ExtType ::=

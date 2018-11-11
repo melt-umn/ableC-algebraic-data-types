@@ -37,13 +37,9 @@ top::Expr ::= e::Expr
     end;
   
   local adtLookup::[RefIdItem] =
-    case e.typerep of
-    | extType( _, e) ->
-      case e.maybeRefId of
-      | just(rid) -> lookupRefId(rid, top.env)
-      | nothing() -> []
-      end
-    | _ -> []
+    case e.typerep.maybeRefId of
+    | just(rid) -> lookupRefId(rid, top.env)
+    | nothing() -> []
     end;
   
   local adt::Decorated ADTDecl =
