@@ -152,4 +152,6 @@ top::ExtType ::= adtName::String adtDeclName::String refId::String
       end;
   top.maybeRefId = just(refId);
   top.adtName = just(adtName);
+  top.isCompleteType =
+    \ env::Decorated Env -> !null(lookupRefId(refId, env));
 }
