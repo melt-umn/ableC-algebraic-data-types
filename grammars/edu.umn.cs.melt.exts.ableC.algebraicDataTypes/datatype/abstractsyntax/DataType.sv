@@ -35,10 +35,9 @@ top::Decl ::= adt::ADTDecl
   adt.adtGivenName = adt.name;
   
   forwards to
-    decls(
-      foldDecl([
-        defsDecl(adt.defs),
-        if null(adt.errors) then adt.transform else warnDecl(adt.errors)]));
+    if null(adt.errors)
+    then adt.transform
+    else decls(foldDecl([warnDecl(adt.errors), defsDecl(adt.defs)]));
 }
 
 synthesized attribute transform<a> :: a;
@@ -157,9 +156,15 @@ top::ADTDecl ::= n::Name cs::ConstructorList
 
   top.transform =
     decls(
-      foldr1(
-        appendDecls,
-        [foldDecl([adtEnumDecl, adtStructDecl]), adtProtos, cs.funDecls, adtDecls]));
+      ableC_Decls {
+        $Decl{adtEnumDecl}
+        $Decl{defsDecl(preDefs)}
+        $Decl{adtStructDecl}
+        $Decl{defsDecl(postDefs)}
+        $Decls{adtProtos}
+        $Decls{cs.funDecls}
+        $Decls{adtDecls}
+      });
   
   cs.env = addEnv(preDefs, top.env);
   cs.adtDeclName = n.name;
