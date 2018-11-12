@@ -56,7 +56,7 @@ abstract production adtDecl
 top::ADTDecl ::= n::Name cs::ConstructorList
 {
   propagate substituted;
-  top.pp = ppConcat([ n.pp, space(), braces(cs.pp) ]);
+  top.pp = ppConcat([ n.pp, space(), braces(nestlines(2, cs.pp)) ]);
   top.errors := cs.errors; -- TODO: check for redeclaration
 
   {- structs create a tagItem and a refIdItem in the environment
@@ -75,7 +75,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   production postDefs :: [Def] =
     [adtRefIdDef(top.refId, adtRefIdItem(top))];
   
-  top.defs := preDefs ++ cs.defs ++ postDefs;
+  top.defs := preDefs ++ postDefs;
   
   local name_refIdIfOld_workaround :: Maybe<String> =
     case n.tagLocalLookup of
