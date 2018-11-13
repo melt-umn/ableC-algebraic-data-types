@@ -135,6 +135,11 @@ top::ExtType ::=
   top.adtName = nothing();
 }
 
+-- adtName is the name of the datatype, as written, used for field names and enum values.
+-- adtDeclName is the name of the datatype that is actually declared, used for struct/union names.
+-- These are always the same within this extension, but other extensions (such as templated ADTs)
+-- may wish to generate multiple datatypes from a single declaration, but the enum and field names
+-- don't need to be renamed.
 abstract production adtExtType
 top::ExtType ::= adtName::String adtDeclName::String refId::String
 {
