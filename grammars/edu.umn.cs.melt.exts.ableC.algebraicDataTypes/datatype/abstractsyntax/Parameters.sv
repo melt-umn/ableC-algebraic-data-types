@@ -1,14 +1,14 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 
+autocopy attribute constructorName::String;
 synthesized attribute fieldNames::[String];
 synthesized attribute fieldName::String;
 synthesized attribute asStructItemList<a>::a;
 synthesized attribute asConstructorParameters<a>::a;
 synthesized attribute asAssignments::Stmt;
-autocopy attribute constructorName::String;
 
-attribute fieldNames, asStructItemList<StructItemList>, asConstructorParameters<Parameters>, asAssignments, constructorName occurs on Parameters;
-attribute fieldName, asStructItemList<StructItem>, asConstructorParameters<ParameterDecl>, asAssignments, constructorName occurs on ParameterDecl;
+attribute constructorName, fieldNames, asStructItemList<StructItemList>, asConstructorParameters<Parameters>, asAssignments occurs on Parameters;
+attribute constructorName, fieldName, asStructItemList<StructItem>, asConstructorParameters<ParameterDecl>, asAssignments occurs on ParameterDecl;
 
 flowtype Parameters = fieldNames {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
 flowtype ParameterDecl = fieldName {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
@@ -43,7 +43,7 @@ top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModi
   
   top.asStructItemList =
     structItem(
-      nilAttribute(), bty,
+      nilAttribute(), decTypeExpr(bty),
       consStructDeclarator(structField(fieldName, mty, nilAttribute()), nilStructDeclarator()));
   
   top.asConstructorParameters =

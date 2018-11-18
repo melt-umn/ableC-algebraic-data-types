@@ -24,17 +24,7 @@ top::Expr ::= e::Expr
   propagate substituted;
   top.pp = pp"show(${e.pp})";
   
-  local adtName::Maybe<String> =
-    case e.typerep of
-    | extType( _, adtExtType(n, _, _)) -> just(n)
-    | _ -> nothing()
-    end;
-  
-  local adtDeclName::Maybe<String> =
-    case e.typerep of
-    | extType( _, adtExtType(_, n, _)) -> just(n)
-    | _ -> nothing()
-    end;
+  local adtName::Maybe<String> = e.typerep.adtName;
   
   local adtLookup::[RefIdItem] =
     case e.typerep.maybeRefId of

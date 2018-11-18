@@ -170,7 +170,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   cs.adtDeclName = n.name;
 }
 
--- Used to pass down the datatype's actual declared name for naming conventions.
+-- Used to pass down the datatype's actual declared name for naming conventions
 autocopy attribute adtDeclName :: String;
 
 -- Constructs the enum item for each constructor
