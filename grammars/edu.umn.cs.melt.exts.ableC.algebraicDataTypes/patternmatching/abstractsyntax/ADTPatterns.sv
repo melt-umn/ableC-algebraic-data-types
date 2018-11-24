@@ -7,7 +7,6 @@ top::Pattern ::= n::Name ps::PatternList
 {
   propagate substituted;
   top.pp = cat( n.pp, parens( ppImplode(text(","), ps.pps) ) );
-  ps.env = top.env;
   top.decls = ps.decls;
   top.defs := ps.defs;
   
@@ -38,7 +37,7 @@ top::Pattern ::= n::Name ps::PatternList
     -- Check that this pattern is a constructor for the expected ADT type.
     | t, _, _, nothing() -> [err(top.location, s"${showType(t)} does not have constructor ${n.name}.")]
     | _, _, _, just(params) ->
-      -- Check that the number of patterns matches number of arguments for this constructor.
+      -- Check that the number of patterns matches number of parameters for this constructor.
       if ps.count != params.count
       then [err(top.location, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
       else []

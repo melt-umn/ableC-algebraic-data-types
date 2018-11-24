@@ -20,8 +20,7 @@ terminal PointerOp_t      '&' precedence = 1, lexer classes {Csymbol};
 
 terminal When_t 'when' lexer classes {Ckeyword};
 
-nonterminal Pattern_c with location, ast<abs:Pattern>;
-nonterminal ConstPattern_c with location, ast<abs:Pattern>;
+closed nonterminal Pattern_c with location, ast<abs:Pattern>;
 
 {- Constants, when used as patterns, cannot be followed by the '@'
    symbol introduced by the 'patternBoth' pattern production
@@ -55,7 +54,7 @@ concrete productions top::Pattern_c
 | p1::BasicPattern_c
   { top.ast = p1.ast; }
 
-nonterminal NonConstPattern_c with location, ast<abs:Pattern>;
+closed nonterminal NonConstPattern_c with location, ast<abs:Pattern>;
 
 concrete productions top::NonConstPattern_c
 | p1::NonConstPattern_c '@' p2::NonConstPattern_c
@@ -67,7 +66,7 @@ concrete productions top::NonConstPattern_c
 | p1::BasicPattern_c
   { top.ast = p1.ast; }
 
-nonterminal BasicPattern_c with location, ast<abs:Pattern>;
+closed nonterminal BasicPattern_c with location, ast<abs:Pattern>;
 
 concrete productions top::BasicPattern_c
 | id::PatternName_t '(' ps::PatternList_c ')'
@@ -118,7 +117,7 @@ concrete productions top::StructPatternList_c
 
 -- StructPattern_c --
 -----------------
-nonterminal StructPattern_c with location, ast<abs:StructPattern>;
+closed nonterminal StructPattern_c with location, ast<abs:StructPattern>;
 
 concrete productions top::StructPattern_c
 | p::Pattern_c
