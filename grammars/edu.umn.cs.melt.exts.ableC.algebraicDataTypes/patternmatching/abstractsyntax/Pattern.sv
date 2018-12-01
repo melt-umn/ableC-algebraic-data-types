@@ -232,8 +232,7 @@ top::PatternList ::= p::Pattern rest::PatternList
   top.decls = p.decls ++ rest.decls;
   top.count = 1 + rest.count;
   top.appendedPatternsRes = consPattern(p, rest.appendedPatternsRes);
-  
-  p.env = top.env;
+ 
   rest.env = addEnv(p.defs, top.env);
   
   local splitTypes :: Pair<Type [Type]> =
