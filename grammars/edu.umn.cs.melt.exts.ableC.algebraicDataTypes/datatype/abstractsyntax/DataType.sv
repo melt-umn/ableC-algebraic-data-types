@@ -163,7 +163,6 @@ top::ADTDecl ::= n::Name cs::ConstructorList
         $Decl{defsDecl(postDefs)}
         $Decls{adtProtos}
         $Decls{cs.funDecls}
-        $Decls{cs.implFunDecls}
         $Decls{adtDecls}
       });
   
@@ -183,12 +182,6 @@ synthesized attribute structItems :: StructItemList;
 -- Constructs the initialization function for each constructor
 synthesized attribute funDecls :: Decls;
 
--- Constructs the initialization implementation function for each constructor.
--- This is guranteed to have a uniforn name based on adtDeclName, and will always be included
--- in the translation (for use in the translation of other extensions), unlike funDecls which
--- may replaced by an alternate method of construction in extensions to ADTs. 
-synthesized attribute implFunDecls :: Decls;
-
 -- Constructor list used, e.g., when type checking patterns
 synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 
@@ -196,10 +189,10 @@ autocopy attribute appendedConstructors :: ConstructorList;
 synthesized attribute appendedConstructorsRes :: ConstructorList;
 
 nonterminal ConstructorList
-  with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, implFunDecls, adtGivenName, adtDeclName, constructors,
+  with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, adtGivenName, adtDeclName, constructors,
        substituted<ConstructorList>, substitutions,
        appendedConstructors, appendedConstructorsRes;
-flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName}, structItems {decorate}, funDecls {decorate}, implFunDecls {decorate}, constructors {decorate}, substituted {substitutions}, appendedConstructorsRes {appendedConstructors};
+flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, substituted {substitutions}, appendedConstructorsRes {appendedConstructors};
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
@@ -216,7 +209,6 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
   top.enumItems = consEnumItem(c.enumItem, cl.enumItems);
   top.structItems = consStructItem(c.structItem, cl.structItems);
   top.funDecls = consDecl(c.funDecl, cl.funDecls);
-  top.implFunDecls = consDecl(c.implFunDecl, cl.implFunDecls);
   top.constructors = c.constructors ++ cl.constructors;
   top.appendedConstructorsRes = consConstructor(c, cl.appendedConstructorsRes);
 
@@ -233,7 +225,6 @@ top::ConstructorList ::=
   top.enumItems = nilEnumItem();
   top.structItems = nilStructItem();
   top.funDecls = nilDecl();
-  top.implFunDecls = nilDecl();
   top.constructors = [];
   top.appendedConstructorsRes = top.appendedConstructors;
 }
@@ -254,16 +245,13 @@ synthesized attribute structItem :: StructItem;
 -- Constructs the function declaration for each constructor
 synthesized attribute funDecl :: Decl;
 
--- Constructs the implementation function declaration for each constructor
-synthesized attribute implFunDecl :: Decl;
-
 nonterminal Constructor
   with pp, env, defs, errors,
-       enumItem, structItem, funDecl, implFunDecl, adtGivenName, adtDeclName, constructors,
+       enumItem, structItem, funDecl, adtGivenName, adtDeclName, constructors,
        returnType, -- because Types may contain Exprs
        substituted<Constructor>, substitutions,
        location;
-flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName}, structItem {decorate}, funDecl {decorate}, implFunDecl {decorate}, constructors {decorate}, substituted {substitutions};
+flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName}, structItem {decorate}, funDecl {decorate}, constructors {decorate}, substituted {substitutions};
 
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
@@ -308,18 +296,6 @@ top::Constructor ::= n::Name ps::Parameters
   top.funDecl =
     ableC_Decl {
       static inline $BaseTypeExpr{resultTypeExpr} $Name{n}($Parameters{ps.asConstructorParameters}) {
-        $BaseTypeExpr{resultTypeExpr} result;
-        result.tag = $name{top.adtGivenName ++ "_" ++ n.name};
-        $Stmt{ps.asAssignments}
-        $Stmt{foldStmt(initStmts)}
-        return result;
-      }
-    };
-  
-  production implFunName::String = "_construct_" ++ top.adtDeclName ++ "_" ++ n.name;
-  top.implFunDecl =
-    ableC_Decl {
-      static inline $BaseTypeExpr{resultTypeExpr} $name{implFunName}($Parameters{ps.asConstructorParameters}) {
         $BaseTypeExpr{resultTypeExpr} result;
         result.tag = $name{top.adtGivenName ++ "_" ++ n.name};
         $Stmt{ps.asAssignments}

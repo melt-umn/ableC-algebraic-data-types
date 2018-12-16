@@ -143,7 +143,7 @@ top::ExtType ::=
 abstract production adtExtType
 top::ExtType ::= adtName::String adtDeclName::String refId::String
 {
-  propagate substituted;
+  propagate substituted, canonicalType;
   top.host =
     extType(top.givenQualifiers, refIdExtType(structSEU(), adtDeclName ++ "_s", refId ++ "_s"));
   top.pp = ppConcat([pp"datatype", space(), text(adtDeclName)]);
