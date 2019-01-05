@@ -22,7 +22,7 @@ action {
     context =
       addIdentsToScope(
         map(
-          \ c::String -> name(alloc.ast.name ++ "_" ++ id.lexeme, location=id.location),
+          \ c::String -> name(alloc.ast.name ++ "_" ++ c, location=id.location),
           constructors.fromJust),
         Identifier_t,
         context);
