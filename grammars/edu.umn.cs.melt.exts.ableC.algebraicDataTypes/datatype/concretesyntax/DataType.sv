@@ -23,32 +23,53 @@ datatype Type {
 
 -}
 
+-- Record the constructors of every ADT so that allocation declarations can add the
+-- appropriate names to the parser context.
+parser attribute adtConstructors::[Pair<String [String]>]
+  action { adtConstructors = []; };
+
 marking terminal Datatype_t 'datatype' lexer classes {Ckeyword};
 
 -- e.g. "datatype Type { ... };"
 -- ADTs as structurally different from C structs
-concrete productions top::Declaration_c
-| 'datatype' a::ADTDecl_c
-  { top.ast = a.ast; }
+concrete production datatypeDecl_c
+top::Declaration_c ::= 'datatype' n::Identifier_c '{' cs::ConstructorList_c '}'
+{
+  top.ast = datatypeDecl(adtDecl(n.ast, cs.ast, location=top.location));
+}
+action {
+  context = addIdentsToScope(cs.constructorNames, Identifier_t, context);
+  adtConstructors = pair(n.ast.name, map((.name), cs.constructorNames)) :: adtConstructors;
+}
 
-nonterminal ADTDecl_c with ast<Decl>, location;
 
-concrete productions top::ADTDecl_c 
-| n::Identifier_c '{' cs::ConstructorList_c '}'
-    { top.ast = datatypeDecl(adtDecl(n.ast, cs.ast, location=top.location)); }
+synthesized attribute constructorNames::[Name];
 
-
-nonterminal ConstructorList_c with ast<ConstructorList>;
+nonterminal ConstructorList_c with ast<ConstructorList>, constructorNames;
 concrete productions top::ConstructorList_c
 | c::Constructor_c cl::ConstructorList_c
-     { top.ast = consConstructor(c.ast, cl.ast); }
+  {
+    top.ast = consConstructor(c.ast, cl.ast);
+    top.constructorNames = c.constructorName :: cl.constructorNames;
+  }
 |
-     { top.ast = nilConstructor(); }
+  {
+    top.ast = nilConstructor();
+    top.constructorNames = [];
+  }
 
 
-nonterminal Constructor_c with ast<Constructor>, location;
+synthesized attribute constructorName::Name;
+
+nonterminal Constructor_c with ast<Constructor>, constructorName, location;
 concrete productions top::Constructor_c
 | n::Identifier_c '(' ad::ParameterTypeList_c ')' ';'
-     { top.ast = constructor(n.ast, foldParameterDecl(ad.ast), location=top.location); }
+  {
+    top.ast = constructor(n.ast, foldParameterDecl(ad.ast), location=top.location);
+    top.constructorName = n.ast;
+  }
 | n::Identifier_c '(' ')' ';'
-     { top.ast = constructor(n.ast, nilParameters(), location=top.location); }
+  {
+    top.ast = constructor(n.ast, nilParameters(), location=top.location);
+    top.constructorName = n.ast;
+  }

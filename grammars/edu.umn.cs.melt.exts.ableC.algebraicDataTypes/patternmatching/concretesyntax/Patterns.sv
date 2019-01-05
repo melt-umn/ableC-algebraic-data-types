@@ -1,7 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
-import edu:umn:cs:melt:ableC:concretesyntax:lexerHack as lh;
-
 terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier}; 
    -- Same as Identifier_t
 
@@ -9,7 +7,7 @@ disambiguate PatternName_t, TypeName_t
 {
   pluck
     case lookupBy(stringEq, lexeme, head(context)) of
-    | just(lh:typenameType_c()) -> TypeName_t
+    | just(id) -> if id == TypeName_t then TypeName_t else PatternName_t
     | _ -> PatternName_t
     end;
 }
