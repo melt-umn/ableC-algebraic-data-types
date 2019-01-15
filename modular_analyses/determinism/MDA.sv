@@ -7,6 +7,14 @@ grammar determinism;
 
 import edu:umn:cs:melt:ableC:host;
 
-copper_mda testADTs(ablecParser) {
-  edu:umn:cs:melt:exts:ableC:algebraicDataTypes;
+copper_mda testDatatype(ablecParser) {
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax;
+}
+
+copper_mda testPatternMatching(ablecParser) {
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
+}
+
+copper_mda testAllocation(ablecParser) {
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:concretesyntax;
 }
