@@ -6,6 +6,9 @@ terminal PointerOp_t      '&' precedence = 1, lexer classes {Csymbol};
 
 terminal When_t 'when' lexer classes {Ckeyword};
 
+-- Used to seed follow sets for MDA
+terminal PatternNEVER_t 'PatternNEVER_t123456789!!!never';
+
 closed nonterminal Pattern_c with location, ast<abs:Pattern>;
 
 {- Constants, when used as patterns, cannot be followed by the '@'
@@ -27,8 +30,7 @@ concrete productions top::Pattern_c
   { top.ast =
       abs:patternConst(
         explicitCastExpr(tn.ast, c.ast, location=top.location),
-        location=top.location);
-  }
+        location=top.location); }
 | sl::StringConstant_c
   { top.ast = abs:patternStringLiteral(sl.ast, location=top.location); }
 | p1::NonConstPattern_c '@' p2::Pattern_c
@@ -39,6 +41,12 @@ concrete productions top::Pattern_c
   { top.ast = abs:patternPointer(p1.ast, location=top.location); }
 | p1::BasicPattern_c
   { top.ast = p1.ast; }
+-- Seed follow set with some extra terminals useful for extensions,
+-- such as Prolog-style list patterns
+| PatternNEVER_t Pattern_c ']'
+  { top.ast = error("shouldn't occur in parse tree!"); }
+| PatternNEVER_t Pattern_c '|'
+  { top.ast = error("shouldn't occur in parse tree!"); }
 
 closed nonterminal NonConstPattern_c with location, ast<abs:Pattern>;
 
