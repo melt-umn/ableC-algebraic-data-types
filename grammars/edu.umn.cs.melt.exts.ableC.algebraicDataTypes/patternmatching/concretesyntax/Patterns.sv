@@ -1,17 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
-terminal PatternName_t /[A-Za-z_\$][A-Za-z_0-9\$]*/ lexer classes {Cidentifier}; 
-   -- Same as Identifier_t
-
-disambiguate PatternName_t, TypeName_t
-{
-  pluck
-    case lookupBy(stringEq, lexeme, head(context)) of
-    | just(id) -> if id == TypeName_t then TypeName_t else PatternName_t
-    | _ -> PatternName_t
-    end;
-}
-
 terminal NamedPatternOp_t '@' precedence = 0, association = left, lexer classes {Csymbol};
 terminal AntipatternOp_t  '!' precedence = 1, lexer classes {Csymbol};
 terminal PointerOp_t      '&' precedence = 1, lexer classes {Csymbol};
@@ -67,23 +55,19 @@ concrete productions top::NonConstPattern_c
 closed nonterminal BasicPattern_c with location, ast<abs:Pattern>;
 
 concrete productions top::BasicPattern_c
-| id::PatternName_t '(' ps::PatternList_c ')'
-  { top.ast = abs:constructorPattern(fromPatternName(id), ps.ast, location=top.location); }
-| id::PatternName_t '(' ')'
-  { top.ast = 
-      abs:constructorPattern(
-        fromPatternName(id), abs:nilPattern(),
-        location=top.location);
-  }
+| id::Identifier_c '(' ps::PatternList_c ')'
+  { top.ast = abs:constructorPattern(id.ast, ps.ast, location=top.location); }
+| id::Identifier_c '(' ')'
+  { top.ast = abs:constructorPattern(id.ast, abs:nilPattern(), location=top.location); }
 | '{' ps::StructPatternList_c '}'
   { top.ast = abs:structPattern(ps.ast, location=top.location); }
 | '{' '}'
   { top.ast = abs:structPattern(abs:nilStructPattern(), location=top.location); }
-| id::PatternName_t
+| id::Identifier_t
   { top.ast =
       if id.lexeme == "_"
       then abs:patternWildcard(location=top.location)
-      else abs:patternName(fromPatternName(id), location=top.location);
+      else abs:patternName(fromId(id), location=top.location);
   }
 | 'when' '(' e::Expr_c ')'
   { top.ast = abs:patternWhen(e.ast, location=top.location); }
@@ -122,9 +106,3 @@ concrete productions top::StructPattern_c
   { top.ast = abs:positionalStructPattern(p.ast, location=top.location); }
 | '.' id::Identifier_c '=' p::Pattern_c
   { top.ast = abs:namedStructPattern(id.ast, p.ast, location=top.location); }
-
-function fromPatternName
-Name ::= id::PatternName_t
-{
-  return name(id.lexeme, location=id.location);
-}
