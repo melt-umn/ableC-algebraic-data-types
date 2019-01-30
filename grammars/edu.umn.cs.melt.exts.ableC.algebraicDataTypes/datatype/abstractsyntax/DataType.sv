@@ -52,10 +52,10 @@ nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType
 flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, transform {decorate}, substituted {substitutions};
 
 abstract production adtDecl
-top::ADTDecl ::= n::Name cs::ConstructorList
+top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
   propagate substituted;
-  top.pp = ppConcat([ n.pp, space(), braces(nestlines(2, cs.pp)) ]);
+  top.pp = ppConcat([ ppAttributes(attrs), n.pp, space(), braces(nestlines(2, cs.pp)) ]);
   top.errors := cs.errors; -- TODO: check for redeclaration
 
   {- structs create a tagItem and a refIdItem in the environment
@@ -86,7 +86,7 @@ top::ADTDecl ::= n::Name cs::ConstructorList
   local name_tagHasForwardDcl_workaround :: Boolean =
     name_refIdIfOld_workaround.isJust;
   
-  top.refId = fromMaybe(name_tagRefId_workaround, top.givenRefId);
+  top.refId = fromMaybe(name_tagRefId_workaround, orElse(top.givenRefId, attrs.maybeRefId));
   top.constructors = cs.constructors;
   
   production adtTypeExpr::BaseTypeExpr =

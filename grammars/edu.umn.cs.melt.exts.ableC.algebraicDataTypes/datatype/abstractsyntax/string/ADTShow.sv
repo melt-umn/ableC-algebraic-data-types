@@ -82,7 +82,7 @@ synthesized attribute showTransform<a>::a;
 attribute showTransform<Decl> occurs on ADTDecl;
 
 aspect production adtDecl
-top::ADTDecl ::= n::Name cs::ConstructorList
+top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
   top.showFnName = "_show_" ++ n.name;
   top.showTransform =

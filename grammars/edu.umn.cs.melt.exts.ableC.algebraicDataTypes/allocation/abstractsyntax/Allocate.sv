@@ -60,7 +60,7 @@ flowtype allocatorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Co
 flowtype allocatorErrorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
 
 aspect production adtDecl
-top::ADTDecl ::= n::Name cs::ConstructorList
+top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
   top.allocatorDefs = cs.allocatorDefs;
   top.allocatorErrorDefs = cs.allocatorErrorDefs;

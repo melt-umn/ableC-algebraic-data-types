@@ -35,7 +35,17 @@ marking terminal Datatype_t 'datatype' lexer classes {Ckeyword};
 concrete production datatypeDecl_c
 top::Declaration_c ::= 'datatype' n::Identifier_c '{' cs::ConstructorList_c '}'
 {
-  top.ast = datatypeDecl(adtDecl(n.ast, cs.ast, location=top.location));
+  top.ast = datatypeDecl(adtDecl(nilAttribute(), n.ast, cs.ast, location=top.location));
+}
+action {
+  context = addIdentsToScope(cs.constructorNames, Identifier_t, context);
+  adtConstructors = pair(n.ast.name, map((.name), cs.constructorNames)) :: adtConstructors;
+}
+
+concrete production datatypeAttrDecl_c
+top::Declaration_c ::= 'datatype' aa::Attributes_c n::Identifier_c '{' cs::ConstructorList_c '}'
+{
+  top.ast = datatypeDecl(adtDecl(aa.ast, n.ast, cs.ast, location=top.location));
 }
 action {
   context = addIdentsToScope(cs.constructorNames, Identifier_t, context);
