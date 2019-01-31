@@ -10,12 +10,8 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   scrutinees.argumentPosition = 0;
   clauses.matchLocation = top.location;
   clauses.expectedTypes = scrutinees.typereps;
-  clauses.scrutineesIn = scrutinees.scrutineeRefs;
-  clauses.transformIn =
-    ableC_Stmt {
-      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
-      exit(1);
-    };
+  clauses.transformIn = scrutinees.scrutineeRefs;
+  clauses.endLabelName = s"_end_${toString(genInt())}";
   
   local localErrors::[Message] =
     clauses.errors ++ scrutinees.errors ++
@@ -31,6 +27,9 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
       ({$directTypeExpr{clauses.typerep} _match_result;
         $Stmt{scrutinees.transform}
         $Stmt{clauses.transform}
+        fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
+        exit(1);
+        $name{clauses.endLabelName}: ;
         _match_result;})
     };
   

@@ -13,20 +13,37 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     becomes
 
      {(
-       type-of-scrutinee  _match_result; 
-       if ( ... p1 matches ... ) {    
-         _match_result = e1;
-       } else if ( ... p2 matches ... ) {
-         _match_result = e2;
-       } else ... if ( ... pn matches ... ) {
-         _match_result = en;
+       type-of-scrutinee  _match_result;
+       {
+         ... p1 pattern variable declarations ...
+         if ( ... p1 matches ... ) {
+           _match_result = e1;
+           goto _end;
+         }
        }
+       {
+         ... p2 pattern variable declarations ...
+         if ( ... p2 matches ... ) {
+           _match_result = e2;
+           goto _end;
+         }
+       }
+       ...
+       {
+         ... pn pattern variable declarations ...
+         if ( ... pn matches ... ) {
+           _match_result = en;
+           goto _end;
+         }
+       }
+       _end:
        _match_result;
      })
 
-    Thus, the translation of later clauses are children of the
-    translation of earlier clauses.  To achieve this, a pair of
-    (backward) threaded attribute, transform and tranformIn, are used.
+    The use of goto is required because having subsiquent patterns as
+    else clauses would mean that (unused) pattern variables from
+    preceding patterns could potentially shadow other variables with the
+    same name.
  -}
 
 {-  Patterns are checked against an expected type, which is initially
@@ -37,8 +54,8 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, returnType, typerep, substituted<ExprClauses>, substitutions, appendedExprClauses, appendedExprClausesRes;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn, transformIn}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
+nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, substituted<ExprClauses>, substitutions, appendedExprClauses, appendedExprClausesRes;
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -56,8 +73,8 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     else [err(c.location,
               s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
 
-  top.transform = c.transform;
-  c.transformIn = rest.transform;
+  top.transform = seqStmt(c.transform, rest.transform);
+  c.transformIn = top.transformIn;
   rest.transformIn = top.transformIn;
 
   top.typerep =
@@ -76,7 +93,7 @@ top::ExprClauses ::=
   top.typerep = errorType();
   top.appendedExprClausesRes = top.appendedExprClauses;
 
-  top.transform = top.transformIn;
+  top.transform = nullStmt();
 }
 
 function appendExprClauses
@@ -86,8 +103,8 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
   return p1.appendedExprClausesRes;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, typerep, substituted<ExprClause>, substitutions;
-flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn, transformIn}, typerep {decorate}, substituted {substitutions};
+nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep, substituted<ExprClause>, substitutions;
+flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, typerep {decorate}, substituted {substitutions};
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
@@ -107,12 +124,13 @@ top::ExprClause ::= ps::PatternList e::Expr
 
   top.transform =
     ableC_Stmt {
-      $Stmt{foldStmt(ps.decls)}
-      if ($Expr{ps.transform}) {
-        _match_result = $Expr{e};
-      } else {
-        $Stmt{top.transformIn}
+      {
+        $Stmt{foldStmt(ps.decls)}
+        if ($Expr{ps.transform}) {
+          _match_result = $Expr{decExpr(e, location=builtin)};
+          goto $name{top.endLabelName};
+        }
       }
     };
-  ps.transformIn = top.scrutineesIn;
+  ps.transformIn = top.transformIn;
 }

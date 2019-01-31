@@ -12,48 +12,64 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 
     becomes
 
-     if ( ... p1 matches ... ) {
-       s1
-     } else {
-     if ( ... p2 matches ... ) {
-       s2
-     } else {
-     ...
-     } else {
-     if ( ... pn matches ... ) {
-       sn
-     }
+    {
+      {
+        ... p1 pattern variable declarations ...
+        if ( ... p1 matches ... ) {
+          s1
+          goto _end;
+        }
+      }
+      {
+        ... p2 pattern variable declarations ...
+        if ( ... p2 matches ... ) {
+          s2
+          goto _end;
+        }
+      }
+      ...
+      {
+        ... p3 pattern variable declarations ...
+        if ( ... pn matches ... ) {
+          sn
+          goto _end;
+        }
+      }
+      _end: ;
+    }
  
-    The translation of the last clause is the body of the last
-    innermonst else.  The translation of later clauses are children of
-    the translation of earlier clauses.  To achieve this, a pair of
-    (backward) threaded attributes, transform and tranformIn, are used.
-    -}
+    The use of goto is required because having subsiquent patterns as
+    else clauses would mean that (unused) pattern variables from
+    preceding patterns could potentially shadow other variables with the
+    same name.
+-}
 
 synthesized attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
-autocopy attribute scrutineesIn::[Expr];
+autocopy attribute endLabelName::String;
 autocopy attribute matchLocation::Location;
 
 autocopy attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
-nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
-  expectedTypes, scrutineesIn, transform<Stmt>,
+nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs, env, returnType,
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   substituted<StmtClauses>, substitutions,
   appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, functionDefs {}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
   propagate substituted;
   top.pp = cat( c.pp, rest.pp );
+  top.functionDefs := c.functionDefs ++ rest.functionDefs;
   top.errors := c.errors ++ rest.errors;
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
 
-  top.transform = c.transform;
-  c.transformIn = rest.transform;
+  top.transform = seqStmt(c.transform, rest.transform);
+  c.transformIn = top.transformIn;
+  rest.transformIn = top.transformIn;
 
   c.expectedTypes = top.expectedTypes;
   rest.expectedTypes = top.expectedTypes;
@@ -64,6 +80,7 @@ top::StmtClauses ::=
 {
   propagate substituted;
   top.pp = text("");
+  top.functionDefs := [];
   top.errors := [];
   top.appendedStmtClausesRes = top.appendedStmtClauses;
 
@@ -78,11 +95,11 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 }
 
 
-nonterminal StmtClause with location, matchLocation, pp, errors, env, 
-  expectedTypes, returnType, scrutineesIn,
-  transform<Stmt>, transformIn<Stmt>,
+nonterminal StmtClause with location, matchLocation, pp, errors, functionDefs, env, 
+  expectedTypes, returnType,
+  transform<Stmt>, transformIn<[Expr]>, endLabelName,
   substituted<StmtClause>, substitutions;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn, transformIn}, substituted {substitutions};
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, functionDefs {}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -101,6 +118,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
 {
   propagate substituted;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, s.pp) ]);
+  top.functionDefs := s.functionDefs;
   top.errors := ps.errors ++ s.errors;
   top.errors <-
     if ps.count != length(top.expectedTypes)
@@ -109,15 +127,16 @@ top::StmtClause ::= ps::PatternList s::Stmt
   
   top.transform =
     ableC_Stmt {
-      $Stmt{foldStmt(ps.decls)}
-      if ($Expr{ps.transform}) {
-        $Stmt{s}
-      } else {
-        $Stmt{top.transformIn}
+      {
+        $Stmt{foldStmt(ps.decls)}
+        if ($Expr{ps.transform}) {
+          $Stmt{decStmt(s)}
+          goto $name{top.endLabelName};
+        }
       }
     };
   
   ps.expectedTypes = top.expectedTypes;
-  ps.transformIn = top.scrutineesIn;
+  ps.transformIn = top.transformIn;
   s.env = addEnv(ps.defs, top.env);
 }

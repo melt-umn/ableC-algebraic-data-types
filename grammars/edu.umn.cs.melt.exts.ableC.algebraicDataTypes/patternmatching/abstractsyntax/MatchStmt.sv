@@ -6,15 +6,24 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   propagate substituted;
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
-  top.functionDefs := [];
+  top.functionDefs := clauses.functionDefs;
+  top.functionDefs <- [labelDef(clauses.endLabelName, labelItem(builtin))];
   
   scrutinees.argumentPosition = 0;
   clauses.matchLocation = clauses.location; -- Whatever.
   clauses.expectedTypes = scrutinees.typereps;
-  clauses.scrutineesIn = scrutinees.scrutineeRefs;
+  clauses.transformIn = scrutinees.scrutineeRefs;
+  clauses.endLabelName = s"_end_${toString(genInt())}";
   
   local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
-  local fwrd::Stmt = compoundStmt(seqStmt(scrutinees.transform, clauses.transform));
+  local fwrd::Stmt =
+    ableC_Stmt {
+      {
+        $Stmt{scrutinees.transform}
+        $Stmt{clauses.transform}
+        $name{clauses.endLabelName}: ;
+      }
+    };
   
   forwards to if !null(localErrors) then warnStmt(localErrors) else fwrd;
 }
