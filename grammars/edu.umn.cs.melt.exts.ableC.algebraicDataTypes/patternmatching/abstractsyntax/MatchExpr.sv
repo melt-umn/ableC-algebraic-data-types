@@ -11,14 +11,27 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   clauses.matchLocation = top.location;
   clauses.expectedTypes = scrutinees.typereps;
   clauses.scrutineesIn = scrutinees.scrutineeRefs;
+  clauses.transformIn =
+    ableC_Stmt {
+      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
+      exit(1);
+    };
   
-  local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
+  local localErrors::[Message] =
+    clauses.errors ++ scrutinees.errors ++
+    if null(lookupValue("exit", top.env))
+    then [err(top.location, "Pattern match requires definition of exit (include <stdlib.h>?)")]
+    else if null(lookupValue("fprintf", top.env))
+    then [err(top.location, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
+    else if null(lookupValue("stderr", top.env))
+    then [err(top.location, "Pattern match requires definition of stderr (include <stdio.h>?)")]
+    else [];
   local fwrd::Expr =
     ableC_Expr {
-      ({$directTypeExpr{clauses.typerep} _result;
+      ({$directTypeExpr{clauses.typerep} _match_result;
         $Stmt{scrutinees.transform}
         $Stmt{clauses.transform}
-        _result;})
+        _match_result;})
     };
   
   forwards to mkErrorCheck(localErrors, fwrd);

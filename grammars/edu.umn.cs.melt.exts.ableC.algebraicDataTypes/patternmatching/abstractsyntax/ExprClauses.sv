@@ -13,15 +13,15 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     becomes
 
      {(
-       type-of-scrutinee  _result; 
+       type-of-scrutinee  _match_result; 
        if ( ... p1 matches ... ) {    
-         _result = e1;
+         _match_result = e1;
        } else if ( ... p2 matches ... ) {
-         _result = e2;
+         _match_result = e2;
        } else ... if ( ... pn matches ... ) {
-         _result = en;
+         _match_result = en;
        }
-       _result;
+       _match_result;
      })
 
     Thus, the translation of later clauses are children of the
@@ -37,8 +37,8 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, returnType, typerep, substituted<ExprClauses>, substitutions, appendedExprClauses, appendedExprClausesRes;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
+nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, scrutineesIn, transform<Stmt>, transformIn<Stmt>, returnType, typerep, substituted<ExprClauses>, substitutions, appendedExprClauses, appendedExprClausesRes;
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, scrutineesIn, transformIn}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -58,6 +58,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
 
   top.transform = c.transform;
   c.transformIn = rest.transform;
+  rest.transformIn = top.transformIn;
 
   top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
@@ -72,26 +73,10 @@ top::ExprClauses ::=
   propagate substituted;
   top.pp = text("");
   top.errors := [];
-  top.errors <-
-    if null(lookupValue("exit", top.env))
-    then [err(top.matchLocation, "Pattern match requires definition of exit (include <stdlib.h>?)")]
-    else [];
-  top.errors <-
-    if null(lookupValue("fprintf", top.env))
-    then [err(top.matchLocation, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
-    else [];
-  top.errors <-
-    if null(lookupValue("stderr", top.env))
-    then [err(top.matchLocation, "Pattern match requires definition of stderr (include <stdio.h>?)")]
-    else [];
   top.typerep = errorType();
   top.appendedExprClausesRes = top.appendedExprClauses;
 
-  top.transform =
-    ableC_Stmt {
-      fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.matchLocation.unparse}\n"});
-      exit(1);
-    };
+  top.transform = top.transformIn;
 }
 
 function appendExprClauses
@@ -124,7 +109,7 @@ top::ExprClause ::= ps::PatternList e::Expr
     ableC_Stmt {
       $Stmt{foldStmt(ps.decls)}
       if ($Expr{ps.transform}) {
-        _result = $Expr{e};
+        _match_result = $Expr{e};
       } else {
         $Stmt{top.transformIn}
       }
