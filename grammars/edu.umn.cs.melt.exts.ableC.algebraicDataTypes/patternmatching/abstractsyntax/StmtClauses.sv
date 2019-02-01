@@ -70,6 +70,8 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
   top.transform = seqStmt(c.transform, rest.transform);
   c.transformIn = top.transformIn;
   rest.transformIn = top.transformIn;
+  
+  rest.env = addEnv(c.defs, c.env);
 
   c.expectedTypes = top.expectedTypes;
   rest.expectedTypes = top.expectedTypes;
@@ -95,11 +97,11 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 }
 
 
-nonterminal StmtClause with location, matchLocation, pp, errors, functionDefs, env, 
+nonterminal StmtClause with location, matchLocation, pp, errors, functionDefs, defs, env,
   expectedTypes, returnType,
   transform<Stmt>, transformIn<[Expr]>, endLabelName,
   substituted<StmtClause>, substitutions;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, functionDefs {}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions};
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, functionDefs {}, defs {decorate}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -119,6 +121,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
   propagate substituted;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, s.pp) ]);
   top.functionDefs := s.functionDefs;
+  top.defs := globalDeclsDefs(s.globalDecls) ++ foldr(consDefs, nilDefs(), ps.defs).globalDefs;
   top.errors := ps.errors ++ s.errors;
   top.errors <-
     if ps.count != length(top.expectedTypes)
