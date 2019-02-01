@@ -52,18 +52,17 @@ autocopy attribute matchLocation::Location;
 autocopy attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
-nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs, env, returnType,
+nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   substituted<StmtClauses>, substitutions,
   appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, functionDefs {}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
   propagate substituted;
   top.pp = cat( c.pp, rest.pp );
-  top.functionDefs := c.functionDefs ++ rest.functionDefs;
   top.errors := c.errors ++ rest.errors;
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
 
@@ -80,7 +79,6 @@ top::StmtClauses ::=
 {
   propagate substituted;
   top.pp = text("");
-  top.functionDefs := [];
   top.errors := [];
   top.appendedStmtClausesRes = top.appendedStmtClauses;
 
@@ -95,11 +93,11 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 }
 
 
-nonterminal StmtClause with location, matchLocation, pp, errors, functionDefs, env, 
+nonterminal StmtClause with location, matchLocation, pp, errors, env,
   expectedTypes, returnType,
   transform<Stmt>, transformIn<[Expr]>, endLabelName,
   substituted<StmtClause>, substitutions;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, functionDefs {}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions};
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -118,7 +116,6 @@ top::StmtClause ::= ps::PatternList s::Stmt
 {
   propagate substituted;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, s.pp) ]);
-  top.functionDefs := s.functionDefs;
   top.errors := ps.errors ++ s.errors;
   top.errors <-
     if ps.count != length(top.expectedTypes)
@@ -130,7 +127,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
       {
         $Stmt{foldStmt(ps.decls)}
         if ($Expr{ps.transform}) {
-          $Stmt{decStmt(s)}
+          $Stmt{s}
           goto $name{top.endLabelName};
         }
       }

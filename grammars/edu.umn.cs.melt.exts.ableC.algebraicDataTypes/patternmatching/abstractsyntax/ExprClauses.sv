@@ -127,7 +127,7 @@ top::ExprClause ::= ps::PatternList e::Expr
       {
         $Stmt{foldStmt(ps.decls)}
         if ($Expr{ps.transform}) {
-          _match_result = $Expr{decExpr(e, location=builtin)};
+          _match_result = $Expr{e};
           goto $name{top.endLabelName};
         }
       }

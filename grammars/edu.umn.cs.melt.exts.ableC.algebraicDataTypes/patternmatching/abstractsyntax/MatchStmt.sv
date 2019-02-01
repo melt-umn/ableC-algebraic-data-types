@@ -6,8 +6,9 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   propagate substituted;
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
-  top.functionDefs := clauses.functionDefs;
-  top.functionDefs <- [labelDef(clauses.endLabelName, labelItem(builtin))];
+  -- Non-interfering equations required due to flow analysis
+  top.functionDefs := [labelDef(clauses.endLabelName, labelItem(builtin))];
+  forward.env = addEnv(forward.functionDefs, top.env);
   
   scrutinees.argumentPosition = 0;
   clauses.matchLocation = clauses.location; -- Whatever.
