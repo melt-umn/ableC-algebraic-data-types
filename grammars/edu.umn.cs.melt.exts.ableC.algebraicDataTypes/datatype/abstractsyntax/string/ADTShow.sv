@@ -80,6 +80,7 @@ top::Decl ::= adt::Decorated ADTDecl
 synthesized attribute showFnName::String occurs on ADTDecl;
 synthesized attribute showTransform<a>::a;
 attribute showTransform<Decl> occurs on ADTDecl;
+flowtype showTransform {decorate} on ADTDecl;
 
 aspect production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
@@ -104,6 +105,8 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 
 attribute showTransform<Stmt> occurs on ConstructorList, Constructor, Parameters, ParameterDecl;
 inherited attribute showTransformIn::Stmt occurs on ConstructorList, Constructor;
+flowtype showTransform {decorate, showTransformIn} on ConstructorList, Constructor;
+flowtype showTransform {decorate, constructorName} on Parameters, ParameterDecl;
 
 aspect production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
