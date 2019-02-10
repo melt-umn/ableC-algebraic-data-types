@@ -152,12 +152,14 @@ top::Parameters ::=
 aspect production parameterDecl
 top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
-  local fieldAccess::Expr =
-    parenExpr(
-      ableC_Expr { adt.contents.$name{top.constructorName}.$Name{fieldName} },
+  local showField::Expr =
+    showExpr(
+      parenExpr(
+        ableC_Expr { adt.contents.$name{top.constructorName}.$Name{fieldName} },
+        location=top.sourceLocation),
       location=top.sourceLocation);
   top.showTransform =
     if top.position == 0
-    then ableC_Stmt { result += show($Expr{fieldAccess}); }
-    else ableC_Stmt { result += ", " + show($Expr{fieldAccess}); };
+    then ableC_Stmt { result += $Expr{showField}; }
+    else ableC_Stmt { result += ", " + $Expr{showField}; };
 }

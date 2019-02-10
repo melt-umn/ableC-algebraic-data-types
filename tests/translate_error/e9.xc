@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Foo {int a; float b;};
+struct Foo;
 
 datatype Bar {
-  A(struct Foo foo);
+  A(struct Foo *foo);
 };
 
 allocate datatype Bar with malloc;
@@ -15,7 +15,7 @@ datatype Baz {
 };
 
 int main () {
-  datatype Baz b = B(malloc_A((struct Foo){42, 3.14}));
+  datatype Baz b = B(malloc_A(NULL));
   
   string s = show(b); // Showing datatype with non-showable field
 }
