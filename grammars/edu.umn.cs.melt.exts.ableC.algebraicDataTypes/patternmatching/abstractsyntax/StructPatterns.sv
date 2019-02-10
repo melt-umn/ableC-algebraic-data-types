@@ -24,16 +24,15 @@ top::Pattern ::= ps::StructPatternList
     | nothing() -> []
     end;
   
-  local localErrors::[Message] =
+  top.errors :=
     case top.expectedType, refId, refIdLookup of
     | errorType(), _, _ -> []
     -- Check that expected type for this pattern is some sort of type with fields
     | t, nothing(), _ -> [err(top.location, s"Initializer pattern expected to match a struct or union (got ${showType(t)}).")]
     -- Check that this type has a definition
     | t, just(id), [] -> [err(top.location, s"${showType(t)} does not have a definition.")]
-    | _, _, _ -> []
+    | _, _, _ -> ps.errors
     end;
-  top.errors := localErrors ++ ps.errors;
   
   ps.givenTagEnv =
     case refIdLookup of
