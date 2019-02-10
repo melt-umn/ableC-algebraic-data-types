@@ -99,17 +99,33 @@ top::StructPattern ::= p::Pattern
 {
   propagate substituted;
   top.pp = p.pp;
-  -- TODO: Interfering, fix this
+  top.errors := p.errors;
+  top.defs := p.defs;
+  top.decls = p.decls;
   top.remainingFieldNames =
     case top.givenFieldNames of
-    | t :: ts -> ts
+    | n :: ns -> ns
     | [] -> []
     end;
-  top.errors := 
+  
+  production fieldName::String = head(top.givenFieldNames);
+  
+  top.errors <-
     if null(top.givenFieldNames)
     then [err(top.location, "Too many positional field patterns")]
-    else forward.errors;
-  forwards to namedStructPattern(name(head(top.givenFieldNames), location=builtin), p, location=top.location);
+    else [];
+  
+  p.expectedType =
+    if null(top.givenFieldNames)
+    then errorType()
+    else case lookupValue(fieldName, top.givenTagEnv) of
+    | v :: _-> v.typerep
+    | [] -> errorType()
+    end;
+  
+  p.transformIn =
+    memberExpr(top.transformIn, false, name(fieldName, location=builtin), location=builtin);
+  top.transform = p.transform;
 }
 
 abstract production namedStructPattern
@@ -117,7 +133,6 @@ top::StructPattern ::= n::Name p::Pattern
 {
   propagate substituted;
   top.pp = pp".${n.pp} = ${p.pp}";
-  local valueItems :: [ValueItem] = lookupValue(n.name, top.givenTagEnv);
   top.errors := p.errors;
   top.errors <-
     if !null(n.valueLookupCheck)
