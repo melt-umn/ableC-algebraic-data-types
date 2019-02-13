@@ -10,12 +10,19 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:substitution;
 imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
-imports edu:umn:cs:melt:exts:ableC:string:abstractsyntax;
+imports edu:umn:cs:melt:exts:ableC:string:abstractsyntax with showErrors as strShowErrors;
 
 aspect production adtExtType
 top::ExtType ::= adtName::String adtDeclName::String refId::String
 {
-  top.showProd = just(showADT(_, location=_));
+  top.strShowErrors =
+    \ l::Location env::Decorated Env ->
+      checkStringHeaderDef("concat_string", l, env) ++
+      case lookupRefId(refId, globalEnv(env)) of
+      | adtRefIdItem(adt) :: _ -> adt.showErrors(l, env)
+      | _ -> [err(l, s"datatype ${adtName} does not have a (global) definition.")]
+      end;
+  top.showProd = showADT(_, location=builtin);
 }
 
 abstract production showADT
@@ -24,76 +31,55 @@ top::Expr ::= e::Expr
   propagate substituted;
   top.pp = pp"show(${e.pp})";
   
-  local adtName::Maybe<String> = e.typerep.adtName;
-  
   local adtLookup::[RefIdItem] =
     case e.typerep.maybeRefId of
     | just(rid) -> lookupRefId(rid, top.env)
     | nothing() -> []
     end;
   
-  local adt::Decorated ADTDecl =
+  local decl::Decorated ADTDecl =
     case adtLookup of
-    | adtRefIdItem(adt) :: _ -> adt
+    | adtRefIdItem(decl) :: _ -> decl
     end;
   
-  local decl::Decl = showADTDecl(adt);
-  decl.env = globalEnv(top.env);
-  decl.returnType = nothing();
-  decl.isTopLevel = false;
-  
-  local localErrors::[Message] =
-    case e.typerep, adtName, adtLookup of
-    | errorType(), _, _ -> []
-    -- Check that parameter type is an ADT of some sort
-    | t, nothing(), _ -> [err(top.location, s"show expected a datatype (got ${showType(t)}).")]
-    -- Check that this ADT has a definition
-    | _, just(id), [] -> [err(top.location, s"datatype ${id} does not have a definition.")]
-    | _, just(id), _ ->
-      if !null(decl.errors)
-      then [nested(e.location, s"In showing datatype ${id}", decl.errors)]
-      else []
-    end ++
-    checkStringHeaderDef("str_char_pointer", top.location, top.env);
-  local fwrd::Expr =
-    injectGlobalDeclsExpr(
-      consDecl(decDecl(decl), nilDecl()),
-      directCallExpr(
-        name(adt.showFnName, location=builtin),
-        consExpr(e, nilExpr()),
-        location=builtin),
-      location=builtin);
-  forwards to mkErrorCheck(localErrors, fwrd);
-}
-
-abstract production showADTDecl
-top::Decl ::= adt::Decorated ADTDecl
-{
-  propagate substituted;
-  top.pp = pp"showADTDecl ${adt.pp}";
   forwards to
-    if !null(lookupValue(adt.showFnName, top.env))
-    then decls(nilDecl())
-    else adt.showTransform;
+    injectGlobalDeclsExpr(
+      foldDecl([maybeValueDecl(decl.showFnName, decls(decl.showTransform))]),
+      ableC_Expr { $name{decl.showFnName}($Expr{e}) },
+      location=builtin);
 }
 
-synthesized attribute showFnName::String occurs on ADTDecl;
+-- Can't use the attributes from the string extension here to avoid orphaned occurs
+synthesized attribute showErrors::([Message] ::= Location Decorated Env);
 synthesized attribute showTransform<a>::a;
-attribute showTransform<Decl> occurs on ADTDecl;
+
+attribute showFnName occurs on ADTDecl;
+attribute showErrors occurs on ADTDecl;
+attribute showTransform<Decls> occurs on ADTDecl;
+flowtype showFnName {decorate} on ADTDecl;
+flowtype showErrors {decorate} on ADTDecl;
 flowtype showTransform {decorate} on ADTDecl;
 
 aspect production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
   top.showFnName = "_show_" ++ n.name;
+  top.showErrors =
+    \ l::Location env::Decorated Env ->
+      if null(lookupValue(top.showFnName, env))
+      then
+        case cs.showErrors(top.location, addEnv([valueDef(top.showFnName, errorValueItem())], env)) of
+        | [] -> []
+        | m -> [nested(l, s"In showing datatype ${top.adtGivenName}", m)]
+        end
+      else [];
   top.showTransform =
-    decls(
-      ableC_Decls {
-        static string $name{top.showFnName}($BaseTypeExpr{adtTypeExpr} adt);
-        static string $name{top.showFnName}($BaseTypeExpr{adtTypeExpr} adt) {
-          $Stmt{cs.showTransform}
-        }
-      });
+    ableC_Decls {
+      static string $name{top.showFnName}($BaseTypeExpr{adtTypeExpr} adt);
+      static string $name{top.showFnName}($BaseTypeExpr{adtTypeExpr} adt) {
+        $Stmt{cs.showTransform}
+      }
+    };
   
   cs.showTransformIn =
     ableC_Stmt {
@@ -103,6 +89,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
     };
 }
 
+attribute showErrors occurs on ConstructorList, Constructor, Parameters, ParameterDecl;
 attribute showTransform<Stmt> occurs on ConstructorList, Constructor, Parameters, ParameterDecl;
 inherited attribute showTransformIn::Stmt occurs on ConstructorList, Constructor;
 flowtype showTransform {decorate, showTransformIn} on ConstructorList, Constructor;
@@ -111,6 +98,8 @@ flowtype showTransform {decorate, constructorName} on Parameters, ParameterDecl;
 aspect production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
 {
+  top.showErrors =
+    \ l::Location env::Decorated Env -> c.showErrors(l, env) ++ cl.showErrors(l, env);
   top.showTransform = c.showTransform;
   c.showTransformIn = cl.showTransform;
   cl.showTransformIn = top.showTransformIn;
@@ -119,12 +108,14 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
 aspect production nilConstructor
 top::ConstructorList ::=
 {
+  top.showErrors = \ l::Location env::Decorated Env -> [];
   top.showTransform = top.showTransformIn;
 }
 
 aspect production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
+  top.showErrors = ps.showErrors;
   top.showTransform =
     ableC_Stmt {
       if (adt.tag == $name{enumItemName}) {
@@ -140,18 +131,23 @@ top::Constructor ::= n::Name ps::Parameters
 aspect production consParameters
 top::Parameters ::= h::ParameterDecl t::Parameters
 {
+  top.showErrors =
+    \ l::Location env::Decorated Env -> h.showErrors(l, env) ++ t.showErrors(l, env);
   top.showTransform = seqStmt(h.showTransform, t.showTransform);
 }
 
 aspect production nilParameters
 top::Parameters ::= 
 {
+  top.showErrors = \ l::Location env::Decorated Env -> [];
   top.showTransform = nullStmt();
 }
 
 aspect production parameterDecl
 top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
+  top.showErrors =
+    \ Location env::Decorated Env -> top.typerep.strShowErrors(top.sourceLocation, env);
   local showField::Expr =
     showExpr(
       parenExpr(
