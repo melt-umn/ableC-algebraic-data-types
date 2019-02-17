@@ -56,7 +56,7 @@ nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnTyp
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   substituted<StmtClauses>, substitutions,
   appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -65,6 +65,8 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
   top.pp = cat( c.pp, rest.pp );
   top.errors := c.errors ++ rest.errors;
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
+  
+  rest.env = addEnv(c.defs, c.env);
 
   top.transform = seqStmt(c.transform, rest.transform);
   c.transformIn = top.transformIn;
@@ -93,11 +95,11 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 }
 
 
-nonterminal StmtClause with location, matchLocation, pp, errors, env,
+nonterminal StmtClause with location, matchLocation, pp, errors, defs, env,
   expectedTypes, returnType,
   transform<Stmt>, transformIn<[Expr]>, endLabelName,
   substituted<StmtClause>, substitutions;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, substituted {substitutions};
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, substituted {substitutions};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -121,13 +123,14 @@ top::StmtClause ::= ps::PatternList s::Stmt
     if ps.count != length(top.expectedTypes)
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
+  top.defs := ps.defs ++ s.defs;
   
   top.transform =
     ableC_Stmt {
       {
         $Stmt{foldStmt(ps.decls)}
         if ($Expr{ps.transform}) {
-          $Stmt{s}
+          $Stmt{decStmt(s)}
           goto $name{top.endLabelName};
         }
       }
@@ -135,5 +138,5 @@ top::StmtClause ::= ps::PatternList s::Stmt
   
   ps.expectedTypes = top.expectedTypes;
   ps.transformIn = top.transformIn;
-  s.env = addEnv(ps.defs, top.env);
+  s.env = addEnv(ps.defs ++ ps.patternDefs, top.env);
 }

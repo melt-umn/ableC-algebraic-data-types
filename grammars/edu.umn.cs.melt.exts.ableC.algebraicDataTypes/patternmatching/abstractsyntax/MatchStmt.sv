@@ -10,7 +10,13 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   top.functionDefs := [labelDef(clauses.endLabelName, labelItem(builtin))];
   forward.env = addEnv(forward.functionDefs, top.env);
   
+  -- Compute defs for clauses env
+  local initialTransform::Stmt = scrutinees.transform;
+  initialTransform.env = openScopeEnv(top.env);
+  initialTransform.returnType = nothing();
+  
   scrutinees.argumentPosition = 0;
+  clauses.env = addEnv(initialTransform.defs, initialTransform.env);
   clauses.matchLocation = clauses.location; -- Whatever.
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
@@ -20,7 +26,7 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   local fwrd::Stmt =
     ableC_Stmt {
       {
-        $Stmt{scrutinees.transform}
+        $Stmt{decStmt(initialTransform)}
         $Stmt{clauses.transform}
         $name{clauses.endLabelName}: ;
       }

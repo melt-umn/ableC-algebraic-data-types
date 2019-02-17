@@ -7,7 +7,13 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     parens(nestlines(2, clauses.pp)) ]);
   
+  -- Compute defs for clauses env
+  local initialTransform::Stmt = scrutinees.transform;
+  initialTransform.env = openScopeEnv(top.env);
+  initialTransform.returnType = nothing();
+  
   scrutinees.argumentPosition = 0;
+  clauses.env = addEnv(initialTransform.defs, initialTransform.env);
   clauses.matchLocation = top.location;
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
@@ -25,7 +31,7 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   local fwrd::Expr =
     ableC_Expr {
       ({$directTypeExpr{clauses.typerep} _match_result;
-        $Stmt{scrutinees.transform}
+        $Stmt{decStmt(initialTransform)}
         $Stmt{clauses.transform}
         fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
         exit(1);

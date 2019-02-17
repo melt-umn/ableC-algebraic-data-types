@@ -55,17 +55,13 @@ autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
 nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, substituted<ExprClauses>, substitutions, appendedExprClauses, appendedExprClausesRes;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
 {
   propagate substituted;
   top.pp = cat( c.pp, rest.pp );
-
-  c.expectedTypes = top.expectedTypes;
-  rest.expectedTypes = top.expectedTypes;
-
   top.errors := c.errors ++ rest.errors;
   top.errors <-
     if typeAssignableTo(c.typerep, rest.typerep)
@@ -73,15 +69,20 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     else [err(c.location,
               s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
 
-  top.transform = seqStmt(c.transform, rest.transform);
-  c.transformIn = top.transformIn;
-  rest.transformIn = top.transformIn;
-
   top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
     then c.typerep
     else errorType();
   top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
+  
+  rest.env = addEnv(c.defs, c.env);
+
+  c.expectedTypes = top.expectedTypes;
+  rest.expectedTypes = top.expectedTypes;
+
+  top.transform = seqStmt(c.transform, rest.transform);
+  c.transformIn = top.transformIn;
+  rest.transformIn = top.transformIn;
 }
 
 abstract production failureExprClause
@@ -103,8 +104,8 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
   return p1.appendedExprClausesRes;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep, substituted<ExprClause>, substitutions;
-flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes}, errors {decorate}, transform {decorate, transformIn, endLabelName}, typerep {decorate}, substituted {substitutions};
+nonterminal ExprClause with location, matchLocation, pp, errors, defs, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep, substituted<ExprClause>, substitutions;
+flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate}, substituted {substitutions};
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
@@ -116,8 +117,9 @@ top::ExprClause ::= ps::PatternList e::Expr
     if ps.count != length(top.expectedTypes)
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
+  top.defs := ps.defs ++ e.defs;
 
-  e.env = addEnv(ps.defs, top.env);
+  e.env = addEnv(ps.defs ++ ps.patternDefs, top.env);
   ps.expectedTypes = top.expectedTypes;
 
   top.typerep = e.typerep;
@@ -127,7 +129,7 @@ top::ExprClause ::= ps::PatternList e::Expr
       {
         $Stmt{foldStmt(ps.decls)}
         if ($Expr{ps.transform}) {
-          _match_result = $Expr{e};
+          _match_result = $Expr{decExpr(e, location=builtin)};
           goto $name{top.endLabelName};
         }
       }
