@@ -30,7 +30,7 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
     else [];
   local fwrd::Expr =
     ableC_Expr {
-      ({$directTypeExpr{clauses.typerep} _match_result;
+      ({$BaseTypeExpr{completedTypeExpr(clauses.typerep)} _match_result;
         $Stmt{decStmt(initialTransform)}
         $Stmt{clauses.transform}
         fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
