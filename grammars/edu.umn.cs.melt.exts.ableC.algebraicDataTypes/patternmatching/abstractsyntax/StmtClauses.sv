@@ -117,7 +117,7 @@ abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
   propagate substituted;
-  top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, s.pp) ]);
+  top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors := ps.errors ++ s.errors;
   top.errors <-
     if ps.count != length(top.expectedTypes)

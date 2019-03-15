@@ -29,7 +29,7 @@ abstract production datatypeDecl
 top::Decl ::= adt::ADTDecl
 {
   propagate substituted;
-  top.pp = ppConcat([ text("datatype"), space(), adt.pp ]);
+  top.pp = ppConcat([ text("datatype"), space(), adt.pp, semi() ]);
   
   adt.givenRefId = nothing();
   adt.adtGivenName = adt.name;

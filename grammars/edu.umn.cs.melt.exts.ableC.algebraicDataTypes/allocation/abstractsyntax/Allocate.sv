@@ -4,7 +4,7 @@ abstract production allocateDecl
 top::Decl ::= id::Name  allocator::Name
 {
   propagate substituted;
-  top.pp = pp"allocate datatype ${id.pp} with ${allocator.pp});";
+  top.pp = pp"allocate datatype ${id.pp} with ${allocator.pp};";
   
   local expectedAllocatorType::Type =
     functionType(
