@@ -61,8 +61,13 @@ top::Pattern ::= n::Name ps::PatternList
     -- An error has occured, don't generate the tag check to avoid creating additional errors
     else errorExpr(top.errors, location=builtin);
   ps.transformIn =
-    do (bindList, returnList) {
-      fieldName::String <- constructorParamLookup.fromJust.fieldNames;
-      return ableC_Expr { $Expr{top.transformIn}.contents.$Name{n}.$name{fieldName} };
-    };
+    case constructorParamLookup of
+    | just(params) ->
+      do (bindList, returnList) {
+        fieldName::String <- params.fieldNames;
+        return ableC_Expr { $Expr{top.transformIn}.contents.$Name{n}.$name{fieldName} };
+      }
+    -- An error has occured, don't translate the field access to avoid creating additional errors
+    | nothing() -> [errorExpr(top.errors, location=builtin)]
+    end;
 }
