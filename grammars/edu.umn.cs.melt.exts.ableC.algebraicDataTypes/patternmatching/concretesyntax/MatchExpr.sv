@@ -19,5 +19,6 @@ nonterminal ExprClause_c with location, ast<abs:ExprClause> ;
 terminal Where_t 'where';
 
 concrete productions top::ExprClause_c
-| p::PatternList_c '->' e::Expr_c ';'
+| OpenScope_t p::PatternList_c '->' e::Expr_c ';'
   { top.ast = abs:exprClause(p.ast, e.ast, location=top.location); }
+  action { context = closeScope(context); }

@@ -11,6 +11,8 @@ imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 
 marking terminal Match_t 'match' lexer classes {Ckeyword};
 
+terminal OpenScope_t '' action { context = openScope(context); };
+
 -- Match statement --
 concrete production match_c
 top::SelectionStmt_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '{' cs::StmtClauses_c '}'
@@ -31,7 +33,9 @@ concrete productions top::StmtClauses_c
 nonterminal StmtClause_c with location, ast<abs:StmtClause>;
 
 concrete productions top::StmtClause_c
-| p::PatternList_c '->' '{' l::BlockItemList_c '}'
+| OpenScope_t p::PatternList_c '->' '{' l::BlockItemList_c '}'
   { top.ast = abs:stmtClause(p.ast, foldStmt(l.ast), location=top.location); }
-| p::PatternList_c '->' '{' '}'
+  action { context = closeScope(context); }
+| OpenScope_t p::PatternList_c '->' '{' '}'
   { top.ast = abs:stmtClause(p.ast, nullStmt(), location=top.location); }
+  action { context = closeScope(context); }

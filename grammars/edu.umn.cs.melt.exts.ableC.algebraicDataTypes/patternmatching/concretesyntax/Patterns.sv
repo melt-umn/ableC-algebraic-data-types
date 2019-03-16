@@ -77,6 +77,9 @@ concrete productions top::BasicPattern_c
       then abs:patternWildcard(location=top.location)
       else abs:patternName(fromId(id), location=top.location);
   }
+  action {
+    context = addIdentsToScope([fromId(id)], Identifier_t, context);
+  }
 | 'when' '(' e::Expr_c ')'
   { top.ast = abs:patternWhen(e.ast, location=top.location); }
 | '(' p1::Pattern_c ')'
