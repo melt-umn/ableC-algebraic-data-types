@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-template<a>
+template<typename a>
 struct foo {
   a x;
 };
