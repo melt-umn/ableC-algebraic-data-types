@@ -123,7 +123,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
     if ps.count != length(top.expectedTypes)
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
-  top.defs := ps.defs ++ s.defs;
+  top.defs := ps.defs ++ globalDeclsDefs(s.globalDecls);
   
   top.transform =
     ableC_Stmt {
@@ -138,5 +138,5 @@ top::StmtClause ::= ps::PatternList s::Stmt
   
   ps.expectedTypes = top.expectedTypes;
   ps.transformIn = top.transformIn;
-  s.env = addEnv(ps.defs ++ ps.patternDefs, top.env);
+  s.env = addEnv(ps.defs ++ ps.patternDefs, openScopeEnv(top.env));
 }
