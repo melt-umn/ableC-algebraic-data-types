@@ -1,7 +1,7 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:silverconstruction;
 
 imports silver:langutil:pp;
-imports silver:langutil:hostEmbedding;
+imports silver:hostEmbedding;
 imports silver:reflect;
 
 imports silver:definition:core;
