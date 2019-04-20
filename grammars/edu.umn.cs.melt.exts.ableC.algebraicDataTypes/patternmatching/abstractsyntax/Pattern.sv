@@ -4,8 +4,8 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     productions, instead of arbitrary new attributes with regular nonterminals, since
     this is generally expected to be more useful.
 -}
-closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs, patternDefs, env, returnType, substituted<Pattern>, substitutions;
-flowtype Pattern = decorate {expectedType, env, returnType, transformIn}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, patternDefs {decorate}, transform {decorate}, substituted {substitutions};
+closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs, patternDefs, env, returnType;
+flowtype Pattern = decorate {expectedType, env, returnType, transformIn}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, patternDefs {decorate}, transform {decorate};
 
 {-- This attribute collects declarations for pattern variables.
     During pattern matching, values are stored in these variables
@@ -32,7 +32,6 @@ attribute transform<Expr> occurs on Pattern;
 abstract production patternName
 top::Pattern ::= n::Name
 {
-  propagate substituted;
   top.pp = n.pp;
   forwards to
     case n.valueItem of
@@ -44,7 +43,6 @@ top::Pattern ::= n::Name
 abstract production patternVariable
 top::Pattern ::= n::Name
 {
-  propagate substituted;
   top.pp = n.pp;
   top.decls = [declStmt(decDecl(d))];
   top.patternDefs := d.defs;
@@ -67,7 +65,6 @@ top::Pattern ::= n::Name
 abstract production patternWildcard
 top::Pattern ::=
 {
-  propagate substituted;
   top.pp = text("_");
   top.decls = [];
   top.patternDefs := [];
@@ -79,7 +76,6 @@ top::Pattern ::=
 abstract production patternConst
 top::Pattern ::= constExpr::Expr
 {
-  propagate substituted;
   top.pp = constExpr.pp;
   top.decls = [];
   top.patternDefs := [];
@@ -96,7 +92,6 @@ top::Pattern ::= constExpr::Expr
 abstract production patternStringLiteral
 top::Pattern ::= s::String
 {
-  propagate substituted;
   top.pp = text(s);
   top.decls = [];
   top.patternDefs := [];
@@ -124,7 +119,6 @@ top::Pattern ::= s::String
 abstract production patternPointer
 top::Pattern ::= p::Pattern
 {
-  propagate substituted;
   top.pp = cat(pp"&", p.pp);
   top.decls = p.decls;
   top.patternDefs := p.patternDefs;
@@ -157,7 +151,6 @@ top::Pattern ::= p::Pattern
 abstract production patternBoth
 top::Pattern ::= p1::Pattern p2::Pattern
 {
-  propagate substituted;
   top.pp = ppConcat([p1.pp, space(), text("@"), space(), p2.pp ]);
   top.decls = p1.decls ++ p2.decls;
   top.patternDefs := p1.patternDefs ++ p2.patternDefs;
@@ -177,7 +170,6 @@ top::Pattern ::= p1::Pattern p2::Pattern
 abstract production patternNot
 top::Pattern ::= p::Pattern 
 {
-  propagate substituted;
   top.pp = cat(text("! "), p.pp);
   top.decls = p.decls;
   top.patternDefs := p.patternDefs;
@@ -194,7 +186,6 @@ top::Pattern ::= p::Pattern
 abstract production patternWhen
 top::Pattern ::= e::Expr
 {
-  propagate substituted;
   top.pp = cat( text("when"), parens(e.pp));
   top.decls = [];
   top.patternDefs := [];
@@ -211,7 +202,6 @@ top::Pattern ::= e::Expr
 abstract production patternParens
 top::Pattern ::= p::Pattern
 {
-  propagate substituted;
   top.pp = parens(p.pp);
   top.decls = p.decls;
   top.patternDefs := p.patternDefs;
@@ -228,13 +218,12 @@ top::Pattern ::= p::Pattern
 autocopy attribute appendedPatterns :: PatternList;
 synthesized attribute appendedPatternsRes :: PatternList;
 
-nonterminal PatternList with pps, errors, env, returnType, defs, decls, patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, substituted<PatternList>, substitutions, appendedPatterns, appendedPatternsRes;
-flowtype PatternList = decorate {expectedTypes, env, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate}, count {}, substituted {substitutions}, appendedPatternsRes {appendedPatterns};
+nonterminal PatternList with pps, errors, env, returnType, defs, decls, patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, appendedPatterns, appendedPatternsRes;
+flowtype PatternList = decorate {expectedTypes, env, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate}, count {}, appendedPatternsRes {appendedPatterns};
 
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
 {
-  propagate substituted;
   top.pps = p.pp :: rest.pps;
   top.errors := p.errors ++ rest.errors;
   top.decls = p.decls ++ rest.decls;
@@ -261,7 +250,6 @@ top::PatternList ::= p::Pattern rest::PatternList
 abstract production nilPattern
 top::PatternList ::= {-empty-}
 {
-  propagate substituted;
   top.pps = [];
   top.errors := [];
   top.count = 0;

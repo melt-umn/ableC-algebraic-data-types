@@ -5,7 +5,6 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 abstract production structPattern
 top::Pattern ::= ps::StructPatternList
 {
-  propagate substituted;
   top.pp = braces(ppImplode(text(", "), ps.pps));
   ps.env = top.env;
   top.decls = ps.decls;
@@ -57,13 +56,12 @@ autocopy attribute givenTagEnv::Decorated Env;
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
-nonterminal StructPatternList with pps, errors, env, returnType, defs, decls, patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>, substituted<StructPatternList>, substitutions;
-flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate}, substituted {substitutions};
+nonterminal StructPatternList with pps, errors, env, returnType, defs, decls, patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>;
+flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
 
 abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
 {
-  propagate substituted;
   top.pps = p.pp :: rest.pps;
   top.errors := p.errors ++ rest.errors;
   top.defs := p.defs ++ rest.defs;
@@ -84,7 +82,6 @@ top::StructPatternList ::= p::StructPattern rest::StructPatternList
 abstract production nilStructPattern
 top::StructPatternList ::= {-empty-}
 {
-  propagate substituted;
   top.pps = [];
   top.errors := [];
   top.defs := [];
@@ -93,13 +90,12 @@ top::StructPatternList ::= {-empty-}
   top.transform = mkIntConst(1, builtin);
 }
 
-nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs, givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>, env, returnType, substituted<StructPattern>, substitutions;
-flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate}, substituted {substitutions};
+nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs, givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>, env, returnType;
+flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
 
 abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern
 {
-  propagate substituted;
   top.pp = p.pp;
   top.errors := p.errors;
   top.defs := p.defs;
@@ -134,7 +130,6 @@ top::StructPattern ::= p::Pattern
 abstract production namedStructPattern
 top::StructPattern ::= n::Name p::Pattern
 {
-  propagate substituted;
   top.pp = pp".${n.pp} = ${p.pp}";
   top.errors := p.errors;
   top.errors <-

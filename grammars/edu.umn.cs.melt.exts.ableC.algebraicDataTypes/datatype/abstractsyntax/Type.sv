@@ -86,7 +86,6 @@ top::RefIdItem ::= adt::Decorated ADTDecl
 abstract production adtTagReferenceTypeExpr 
 top::BaseTypeExpr ::= q::Qualifiers n::Name
 {
-  propagate substituted;
   top.pp = ppConcat([terminate(space(), q.pps), pp"datatype", space(), n.pp]);
 
   local tags :: [TagItem] = lookupTag(n.name, top.env);
@@ -143,7 +142,7 @@ top::ExtType ::=
 abstract production adtExtType
 top::ExtType ::= adtName::String adtDeclName::String refId::String
 {
-  propagate substituted, canonicalType;
+  propagate canonicalType;
   top.host =
     extType(top.givenQualifiers, refIdExtType(structSEU(), adtDeclName ++ "_s", refId ++ "_s"));
   top.pp = ppConcat([pp"datatype", space(), text(adtDeclName)]);
