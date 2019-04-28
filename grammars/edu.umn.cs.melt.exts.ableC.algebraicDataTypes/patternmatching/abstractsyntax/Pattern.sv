@@ -140,11 +140,20 @@ top::Pattern ::= p::Pattern
   -- Store the result of the dereference in a temporary variable
   -- since p.transformIn may be used more than once.
   local tempName::String = "_match_pointer_" ++ toString(genInt());
+  local derefDecl::Decl =
+    ableC_Decl {
+      $directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};
+    };
+  derefDecl.env = top.env;
+  derefDecl.returnType = top.returnType;
+  derefDecl.isTopLevel = false;
+  
+  p.env = addEnv(derefDecl.defs, top.env);
+  
   p.transformIn = declRefExpr(name(tempName, location=builtin), location=builtin);
   top.transform =
     ableC_Expr {
-      ({$directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};
-        $Expr{p.transform};})
+      ({$Decl{decDecl(derefDecl)} $Expr{p.transform};})
     };
 }
 
