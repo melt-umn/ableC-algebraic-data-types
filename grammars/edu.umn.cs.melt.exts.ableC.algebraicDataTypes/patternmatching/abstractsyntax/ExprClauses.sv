@@ -54,13 +54,12 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, substituted<ExprClauses>, substitutions, appendedExprClauses, appendedExprClausesRes;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, substituted {substitutions}, appendedExprClausesRes {appendedExprClauses};
+nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, appendedExprClauses, appendedExprClausesRes;
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, appendedExprClausesRes {appendedExprClauses};
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
 {
-  propagate substituted;
   top.pp = cat( c.pp, rest.pp );
   top.errors := c.errors ++ rest.errors;
   top.errors <-
@@ -88,7 +87,6 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
 abstract production failureExprClause
 top::ExprClauses ::= 
 {
-  propagate substituted;
   top.pp = text("");
   top.errors := [];
   top.typerep = errorType();
@@ -104,13 +102,12 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
   return p1.appendedExprClausesRes;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors, defs, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep, substituted<ExprClause>, substitutions;
-flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate}, substituted {substitutions};
+nonterminal ExprClause with location, matchLocation, pp, errors, defs, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep;
+flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
 {
-  propagate substituted;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, e.pp), text(";")]);
   top.errors := ps.errors ++ e.errors;
   top.errors <-

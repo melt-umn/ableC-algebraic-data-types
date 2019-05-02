@@ -28,7 +28,6 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 abstract production datatypeDecl
 top::Decl ::= adt::ADTDecl
 {
-  propagate substituted;
   top.pp = ppConcat([ text("datatype"), space(), adt.pp, semi() ]);
   
   adt.givenRefId = nothing();
@@ -48,13 +47,12 @@ synthesized attribute transform<a> :: a;
 -- the same constructors.
 autocopy attribute adtGivenName :: String;
 
-nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, givenRefId, refId, constructors, tagEnv, transform<Decl>, substituted<ADTDecl>, substitutions;
-flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, transform {decorate}, substituted {substitutions};
+nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, givenRefId, refId, constructors, tagEnv, transform<Decl>;
+flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, transform {decorate};
 
 abstract production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
-  propagate substituted;
   top.pp = ppConcat([ ppAttributes(attrs), n.pp, space(), braces(nestlines(2, cs.pp)) ]);
   top.errors := cs.errors; -- TODO: check for redeclaration
 
@@ -190,14 +188,12 @@ synthesized attribute appendedConstructorsRes :: ConstructorList;
 
 nonterminal ConstructorList
   with pp, env, errors, defs, returnType, enumItems, structItems, funDecls, adtGivenName, adtDeclName, constructors,
-       substituted<ConstructorList>, substitutions,
        appendedConstructors, appendedConstructorsRes;
-flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, substituted {substitutions}, appendedConstructorsRes {appendedConstructors};
+flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName}, structItems {decorate}, funDecls {decorate}, constructors {decorate}, appendedConstructorsRes {appendedConstructors};
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
 {
-  propagate substituted;
   local sep::Document =
     case cl of
     | consConstructor(_,_) -> line()
@@ -218,7 +214,6 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
 abstract production nilConstructor
 top::ConstructorList ::=
 {
-  propagate substituted;
   top.pp = notext();
   top.errors := [];
   top.defs := [];
@@ -249,14 +244,12 @@ nonterminal Constructor
   with pp, env, defs, errors,
        enumItem, structItem, funDecl, adtGivenName, adtDeclName, constructors,
        returnType, -- because Types may contain Exprs
-       substituted<Constructor>, substitutions,
        location;
-flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName}, structItem {decorate}, funDecl {decorate}, constructors {decorate}, substituted {substitutions};
+flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName}, structItem {decorate}, funDecl {decorate}, constructors {decorate};
 
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
-  propagate substituted;
   
   {- This attribute is for extensions to use to initialize additional members added
      to the generated ADT struct. -}

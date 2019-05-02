@@ -6,7 +6,6 @@ imports silver:langutil:pp;
 imports edu:umn:cs:melt:ableC:abstractsyntax:host;
 imports edu:umn:cs:melt:ableC:abstractsyntax:overloadable;
 imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
-imports edu:umn:cs:melt:ableC:abstractsyntax:substitution;
 imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
@@ -28,7 +27,6 @@ top::ExtType ::= adtName::String adtDeclName::String refId::String
 abstract production showADT
 top::Expr ::= e::Expr
 {
-  propagate substituted;
   top.pp = pp"show(${e.pp})";
   
   local adtLookup::[RefIdItem] =

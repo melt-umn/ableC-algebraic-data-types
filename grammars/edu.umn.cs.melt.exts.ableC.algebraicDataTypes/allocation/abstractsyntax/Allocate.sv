@@ -3,7 +3,6 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:abstractsyntax;
 abstract production allocateDecl
 top::Decl ::= id::Name  allocator::Name
 {
-  propagate substituted;
   top.pp = pp"allocate datatype ${id.pp} with ${allocator.pp};";
   
   local expectedAllocatorType::Type =
@@ -109,7 +108,6 @@ top::ValueItem ::= adtName::Name allocatorName::Name constructorName::Name param
 abstract production allocateConstructorCallExpr
 top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes::[Type] n::Name args::Exprs
 {
-  propagate substituted;
   top.pp = parens(ppConcat([n.pp, parens(ppImplode(cat(comma(), space()), args.pps))]));
   local localErrors::[Message] = args.errors ++ args.argumentErrors;
   

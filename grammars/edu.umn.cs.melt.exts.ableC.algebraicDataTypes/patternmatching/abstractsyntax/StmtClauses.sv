@@ -54,14 +54,12 @@ synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
 nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
-  substituted<StmtClauses>, substitutions,
   appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, substituted {substitutions}, appendedStmtClausesRes {appendedStmtClauses};
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, appendedStmtClausesRes {appendedStmtClauses};
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
-  propagate substituted;
   top.pp = cat( c.pp, rest.pp );
   top.errors := c.errors ++ rest.errors;
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
@@ -79,7 +77,6 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
 abstract production failureStmtClause
 top::StmtClauses ::= 
 {
-  propagate substituted;
   top.pp = text("");
   top.errors := [];
   top.appendedStmtClausesRes = top.appendedStmtClauses;
@@ -97,9 +94,8 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 
 nonterminal StmtClause with location, matchLocation, pp, errors, defs, env,
   expectedTypes, returnType,
-  transform<Stmt>, transformIn<[Expr]>, endLabelName,
-  substituted<StmtClause>, substitutions;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, substituted {substitutions};
+  transform<Stmt>, transformIn<[Expr]>, endLabelName;
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -116,7 +112,6 @@ flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, t
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
-  propagate substituted;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors := ps.errors ++ s.errors;
   top.errors <-
