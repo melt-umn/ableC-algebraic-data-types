@@ -1,0 +1,15 @@
+ide_specification for edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:concretesyntax {
+  terminal Datatype_t {
+    atomMarkupName = keyword.other.extension;
+  };
+
+  terminal With_t {
+    atomMarkupName = keyword.other.extension;
+  };
+
+  terminal Allocate_t {
+    atomMarkupName = keyword.other.extension;
+  };
+
+}
+  

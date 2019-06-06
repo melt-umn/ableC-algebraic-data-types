@@ -1,0 +1,26 @@
+ide_specification for edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax {
+  terminal NamedPatternOp_t {
+    atomMarkupName = keyword.other.extension;
+  };
+
+  terminal AntipatternOp_t {
+    atomMarkupName = keyword.other.extension;
+  };
+  
+  terminal PointerOp_t {
+    atomMarkupName = keyword.other.extension;
+  };
+  
+  terminal When_t {
+    atomMarkupName = keyword.other.extension;
+  };
+  
+  terminal Match_t {
+    atomMarkupName = keyword.other.extension;
+  };
+
+  terminal Where_t {
+    atomMarkupName = keyword.other.extension;
+  };
+  
+}
