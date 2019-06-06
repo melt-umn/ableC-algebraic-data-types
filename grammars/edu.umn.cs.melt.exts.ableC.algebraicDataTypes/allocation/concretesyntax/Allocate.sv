@@ -12,7 +12,7 @@ marking terminal Allocate_t 'allocate' lexer classes {Ckeyword};
 terminal Datatype_t 'datatype';
 terminal With_t 'with';
 
-{--
+
 concrete production allocateDecl_c
 -- id is Identifer_t here to avoid follow spillage
 top::Declaration_c ::= 'allocate' 'datatype' id::Identifier_t 'with' alloc::Identifier_c ';'
@@ -29,8 +29,8 @@ action {
         context);
   -- If the datatype hasn't been declared, then do nothing
 }
---}
 
+{--
 concrete production allocateDeclShortName_c
 top::Declaration_c ::= 'allocate' 'datatype' id::Identifier_t 'with' alloc::Identifier_c ';'
 { top.ast = allocateDecl(fromId(id), alloc.ast); }
@@ -46,3 +46,4 @@ action {
         context);
   -- If the datatype hasn't been declared, then do nothing
 }
+--}
