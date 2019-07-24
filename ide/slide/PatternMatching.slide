@@ -1,3 +1,4 @@
+specification Standard;
 ide_specification for edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax {
   terminal NamedPatternOp_t {
     atomMarkupName = keyword.operator;

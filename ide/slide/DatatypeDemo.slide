@@ -1,6 +1,7 @@
+specification RealisticDemo;
 ide_specification for edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax {
   terminal Datatype_t {
-    atomMarkupName = keyword.control;
+    atomMarkupName = keyword.other.extension;
   };
 }
   

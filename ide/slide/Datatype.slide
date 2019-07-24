@@ -1,6 +1,7 @@
+specification Standard;
 ide_specification for edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax {
   terminal Datatype_t {
-    atomMarkupName = keyword.other.extension;
+    atomMarkupName = keyword.control;
   };
 }
   
