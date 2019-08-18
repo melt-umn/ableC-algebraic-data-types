@@ -18,6 +18,15 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   clauses.transformIn = scrutinees.scrutineeRefs;
   clauses.endLabelName = s"_end_${toString(genInt())}";
   
+  -- Workaround since clauses lack defs from _match_result type expr in env
+  local resultDecl::Decl =
+    ableC_Decl {
+      $directTypeExpr{clauses.typerep} _match_result;
+    };
+  resultDecl.env = addEnv(clauses.defs, clauses.env);
+  resultDecl.isTopLevel = false;
+  resultDecl.returnType = nothing();
+  
   local localErrors::[Message] =
     clauses.errors ++ scrutinees.errors ++
     if null(lookupValue("exit", top.env))
@@ -27,9 +36,10 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
     else if null(lookupValue("stderr", top.env))
     then [err(top.location, "Pattern match requires definition of stderr (include <stdio.h>?)")]
     else [];
+  
   local fwrd::Expr =
     ableC_Expr {
-      ({$BaseTypeExpr{completedTypeExpr(clauses.typerep)} _match_result;
+      ({$Decl{decDecl(resultDecl)}
         $Stmt{decStmt(initialTransform)}
         $Stmt{clauses.transform}
         fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
