@@ -4,7 +4,7 @@ ABLEC_BASE?=../../../ableC
 # Path from current directory to top level extensions directory
 EXTS_BASE?=../../../extensions
 
-# The jar file to built
+# The jar file to build
 ABLEC_JAR=ableC.jar
 # The artifact specification grammar to compile
 ARTIFACT=artifact
@@ -30,18 +30,22 @@ TESTS=$(XC_FILES:.xc=.test)
 
 # All directories contining extension header files that may be included
 XC_INCLUDE_DIRS=$(wildcard $(EXTS_BASE)/*/include)
+# All header files that may be included, to be included as dependencies
+XC_INCLUDE_SOURCES=$(foreach dir,$(XC_INCLUDE_DIRS),$(wildcard $(dir)/*.*h))
 # Flags passed to ableC including the appropriate directories
-XCFLAGS=$(addprefix -I,$(XC_INCLUDE_DIRS))
+override XCFLAGS+=$(addprefix -I,$(XC_INCLUDE_DIRS))
+# Flags passed to Java when invoking ableC
+override JAVAFLAGS+=-Xss6M
 
 # Flags passed to the C compiler, e.g. to enable various compiler extensions
-CFLAGS=
+override CFLAGS+=
 
 # All directories contining extension libraries that may be linked
 LIB_DIRS=$(wildcard $(EXTS_BASE)/*/lib)
 # Flags passed to the linker specifying the appropriate directories
-LDFLAGS=$(addprefix -L,$(LIB_DIRS))
+override LDFLAGS+=$(addprefix -L,$(LIB_DIRS))
 # Flags passed to the linker specifying libraries to link
-LDLIBS=
+LDLIBS=-lgc
 
 # All directories contining extension library sources
 SRC_DIRS=$(wildcard $(EXTS_BASE)/*/src)
@@ -55,21 +59,21 @@ all: $(ABLEC_JAR) $(C_FILES) $(OBJECTS) $(EXECUTABLES) $(TESTS)
 libs: $(LIBS)
 
 $(LIBS):
-	cd $(@:libs=src) && $(MAKE)
+	$(MAKE) -C $(@:libs=src)
 
 $(ABLEC_JAR): $(GRAMMAR_SOURCES)
 	touch $(wildcard $(ARTIFACT)/*.sv)
-	silver -o $(ABLEC_JAR) $(SVFLAGS) $(ARTIFACT)
+	silver-ableC -o $(ABLEC_JAR) $(SVFLAGS) $(ARTIFACT)
 
-%.c: %.xc $(ABLEC_JAR)
-	java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS)
+%.c: %.xc $(XC_INCLUDE_SOURCES) $(ABLEC_JAR)
+	java $(JAVAFLAGS) -jar $(ABLEC_JAR) $< $(XCFLAGS)
 
 %.out: %.o $(SRC_SOURCES) | libs
 	$(CC) $(LDFLAGS) $< $(LOADLIBES) $(LDLIBS) -o $@
 
-translate_error/%.test: translate_error/%.xc $(ABLEC_JAR)
-	@echo "java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS)"
-	@if java -Xss6M -jar $(ABLEC_JAR) $< $(XCFLAGS); then echo "Failed to error"; exit 1; fi
+translate_error/%.test: translate_error/%.xc $(XC_INCLUDE_SOURCES) $(ABLEC_JAR)
+	@echo "java $(JAVAFLAGS) -jar $(ABLEC_JAR) $< $(XCFLAGS)"
+	@if java $(JAVAFLAGS) -jar $(ABLEC_JAR) $< $(XCFLAGS); then echo "Failed to error"; exit 1; fi
 	touch $@
 
 runtime_error/%.test: runtime_error/%.out
@@ -82,6 +86,6 @@ runtime_error/%.test: runtime_error/%.out
 	touch $@
 
 clean:
-	rm -f *~ build.xml */*.i */*.c */*.o */*.out */*.test *.jar *.copperdump.html build.xml
+	rm -f *~ */*~ */*.i */*.c */*.o */*.out */*.test *.jar *.copperdump.html build.xml
 
 .PHONY: all libs $(LIBS) clean

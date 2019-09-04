@@ -13,186 +13,123 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     becomes
 
      {(
-       type-of-scrutinee  __result; 
-       if ( ... p1 matches ... ) {    
-         __result = e1;
-       } else {
-       if ( ... p2 matches ... ) {
-         __result = e2;
-       } else {
+       type-of-scrutinee  _match_result;
+       {
+         ... p1 pattern variable declarations ...
+         if ( ... p1 matches ... ) {
+           _match_result = e1;
+           goto _end;
+         }
+       }
+       {
+         ... p2 pattern variable declarations ...
+         if ( ... p2 matches ... ) {
+           _match_result = e2;
+           goto _end;
+         }
+       }
        ...
-       } else {
-       if ( ... pn matches ... ) {
-         __result = en;
-       } ;
-       __result;
+       {
+         ... pn pattern variable declarations ...
+         if ( ... pn matches ... ) {
+           _match_result = en;
+           goto _end;
+         }
+       }
+       _end:
+       _match_result;
      })
 
-    Thus, the translation of later clauses are children of the
-    translation of earlier clauses.  To achieve this, a pair of
-    (backward) threaded attribute, transform and tranformIn, are used.
+    The use of goto is required because having subsiquent patterns as
+    else clauses would mean that (unused) pattern variables from
+    preceding patterns could potentially shadow other variables with the
+    same name.
  -}
 
 {-  Patterns are checked against an expected type, which is initially
-    the type of the scrutinne.  The following inherited attribute are
+    the type of the scrutinee.  The following inherited attribute are
     used to pass these types down the clause and pattern ASTs.
  -}
 
-nonterminal ExprClauses with location, pp, errors, env,
-  expectedType, transform<Stmt>, returnType, typerep;
+autocopy attribute appendedExprClauses :: ExprClauses;
+synthesized attribute appendedExprClausesRes :: ExprClauses;
+
+nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, appendedExprClauses, appendedExprClausesRes;
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, appendedExprClausesRes {appendedExprClauses};
 
 abstract production consExprClause
-cs::ExprClauses ::= c::ExprClause rest::ExprClauses
-{ 
-  cs.pp = cat( c.pp, rest.pp );
-
-  c.expectedType = cs.expectedType;
-  rest.expectedType = cs.expectedType;
-
-  cs.errors := c.errors ++ rest.errors;
-  cs.errors <-
+top::ExprClauses ::= c::ExprClause rest::ExprClauses
+{
+  top.pp = cat( c.pp, rest.pp );
+  top.errors := c.errors ++ rest.errors;
+  top.errors <-
     if typeAssignableTo(c.typerep, rest.typerep)
     then []
     else [err(c.location,
-              "Incompatible types in rhs of pattern, expected " ++ showType(rest.typerep) ++
-              " but found " ++ showType(c.typerep))];
+              s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
 
-  cs.transform = c.transform;
-  c.transformIn = rest.transform;
-
-  cs.typerep =
+  top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
     then c.typerep
     else errorType();
+  top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
+  
+  rest.env = addEnv(c.defs, c.env);
+
+  c.expectedTypes = top.expectedTypes;
+  rest.expectedTypes = top.expectedTypes;
+
+  top.transform = seqStmt(c.transform, rest.transform);
+  c.transformIn = top.transformIn;
+  rest.transformIn = top.transformIn;
 }
 
-abstract production oneExprClause
-cs::ExprClauses ::= c::ExprClause
+abstract production failureExprClause
+top::ExprClauses ::= 
 {
-  cs.pp = c.pp;
-  c.expectedType = cs.expectedType;
-  cs.errors := c.errors;
+  top.pp = text("");
+  top.errors := [];
+  top.typerep = errorType();
+  top.appendedExprClausesRes = top.appendedExprClauses;
 
-  cs.transform = c.transform;
-  c.transformIn = parseStmt("printf(\"Failed to match any patterns in match expression.\\n\"); exit(1);\n");
-  cs.typerep = c.typerep;
+  top.transform = nullStmt();
 }
 
-nonterminal ExprClause with location, pp, errors, env, returnType, 
-  expectedType, transform<Stmt>, transformIn<Stmt>, typerep;
+function appendExprClauses
+ExprClauses ::= p1::ExprClauses p2::ExprClauses
+{
+  p1.appendedExprClauses = p2;
+  return p1.appendedExprClausesRes;
+}
+
+nonterminal ExprClause with location, matchLocation, pp, errors, defs, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep;
+flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
 abstract production exprClause
-c::ExprClause ::= p::Pattern e::Expr
+top::ExprClause ::= ps::PatternList e::Expr
 {
-  c.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, e.pp), text(";")]);
-  c.errors := p.errors ++ e.errors;
+  top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, e.pp), text(";")]);
+  top.errors := ps.errors ++ e.errors;
+  top.errors <-
+    if ps.count != length(top.expectedTypes)
+    then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
+    else [];
+  top.defs := ps.defs ++ e.defs;
 
-  e.env = addEnv(p.defs,c.env);
-  p.expectedType = c.expectedType;
+  e.env = addEnv(ps.defs ++ ps.patternDefs, top.env);
+  ps.expectedTypes = top.expectedTypes;
 
-  c.typerep = e.typerep;
+  top.typerep = e.typerep;
 
-  c.transform
-    = foldStmt( [
-        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=c.location)),
-
-        exprStmt(comment("... declarations of pattern variables", location=c.location)),
-	foldStmt( p.decls ),
-
-        mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), c.expectedType), 
-                -- unaryOpExpr( dereferenceOp(location=c.location), 
-                             declRefExpr( name("_match_scrutinee_ptr", 
-                                               location=c.location),
-                                          location=c.location ),
-                --             location=c.location),
-                c.location),
-
-        ifStmt (
-            -- condition: code to match the pattern
-            stmtExpr( 
-              foldStmt ([
-                mkIntDeclInit ("_match", "1", p.location),
-                p.transform
-              ]),
-              -- The stmtExpr result is the value of _match, which would be set
-              -- by the translation of the pattern p, above.
-              declRefExpr (name("_match", location=p.location), location=p.location),
-              location=p.location
-            ), 
-            -- then part 
-            mkAssign ("__result", e, e.location),
-            -- else part 
-            c.transformIn 
-        )
-      ] );
+  top.transform =
+    ableC_Stmt {
+      {
+        $Stmt{foldStmt(ps.decls)}
+        if ($Expr{ps.transform}) {
+          _match_result = $Expr{decExpr(e, location=builtin)};
+          goto $name{top.endLabelName};
+        }
+      }
+    };
+  ps.transformIn = top.transformIn;
 }
-{-
-  p.expectedType = c.expectedType;
-  s.env = addEnv(p.defs,c.env);
-
-
-  c.transform 
-    = stmtExpr(
-        -- Declarations of pattern variables.
-        foldStmt(p.decls),
-
-        conditionalExpr (
-          stmtExpr(
-              foldStmt ([
-                mkIntDeclInit ("_match", "0", p.location),
-                -- If-stmt to set _match and values to pattern variables.
-                p.transform 
-               ]),
-
-              -- The stmtExpr result is the value of _match, which would be set
-              -- by the translation of the pattern p, above.
-              declRefExpr (name("_match", location=p.location), location=p.location),
-
-              location=p.location
-          ),
-
-          -- The expression to evaluation on a successful match
-          s,
-
-          -- The expression to evaluation for following clauses
-          c.transformIn,
-
-          location=c.location
-        ),
-
-        location=c.location
-      );      
-
-  p.transformIn = mkIntAssign( "_match", "1", p.location );
-  p.position = 0;
-  p.depth = 0;
-  p.parentTag = "NoParent";  
-  
-  p.parent_id = "NoParent";
-  p.parent_idType = "NoParent";
-  p.parent_idTypeIndicator = scrutineeTypeInfo.fst;
-
-  local scrutineeTypeInfo :: Pair<String [ Pair<String [Type]> ]> 
-    = getExpectedADTTypeInfo ( c.expectedType, c.env );
--}
-
-
-
-{-
-abstract production guardedExprClause
-c::ExprClause ::= p::Pattern g::Expr s::Expr
-{
-  c.pp = ppConcat([ p.pp, space(), text("where"), space(), g.pp,
-                  text("->"), space(), nestlines(2, s.pp) ]);
-  c.errors := p.errors ++ s.errors;
-}
-
-abstract production defaultClause
-c::ExprClause ::= e::Expr
-{
-  c.pp = e.pp;
-  c.errors := e.errors;
---  c.transform = e;
-}
-
--}

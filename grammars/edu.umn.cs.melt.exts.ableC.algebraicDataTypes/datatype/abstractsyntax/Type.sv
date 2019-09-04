@@ -32,136 +32,130 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 ---------
 -- New defs for adding ADT tag items and refId items.
 abstract production adtTagDef
-d::Def ::= n::String t::TagItem
+top::Def ::= n::String t::TagItem
 {
-  d.tagContribs = [pair(n,t)];
-  --forwards to tagDef(n,t);
+  top.tagContribs = [pair(n,t)];
 }
 abstract production adtRefIdDef
-d::Def ::= n::String r::RefIdItem
+top::Def ::= n::String r::RefIdItem
 {
-  d.refIdContribs = [pair(n,r)];
-  --forwards to refIdDef(n,r);
+  top.refIdContribs = [pair(n,r)];
 }
 
 
 -- TagItem --
 --------------
-{- atdTagItem: when looking up this type by name in the env,
+{- adtTagItem: when looking up this type by name in the env,
    this is the structure that is returned.
  -}
 abstract production adtRefIdTagItem
-t::TagItem ::= adtRefId::String structRefId::String
+top::TagItem ::= refId::String
 {
-  t.pp = text("ADT, adtRefId = " ++ adtRefId ++ ", structRefId = " ++ structRefId);
-  forwards to refIdTagItem (structSEU(), structRefId) ;
+  top.pp = text("ADT, refId = " ++ refId);
 }
+
+-- RefIdItem --
+--------------
+attribute constructors occurs on RefIdItem;
+
+aspect default production
+top::RefIdItem ::=
+{
+  top.constructors = [];
+}
+ 
 {- adtRefIdItem: when looking up this type by RefId in the env,
    this is the structure that is returned.  It has a reference
    to the ADT declaration in the syntax tree. 
  -}
 abstract production adtRefIdItem
-t::RefIdItem ::= adt::Decorated ADTDecl s::Decorated StructDecl 
+top::RefIdItem ::= adt::Decorated ADTDecl
 {
-  t.pp = text("ADTDecl: adt.refId=" ++ adt.refId ++ ", s.refId=" ++ s.refId);
-  forwards to structRefIdItem (s);
+  top.pp = text("ADTDecl: adt.refId=" ++ adt.refId);
+  top.tagEnv = adt.tagEnv;
+  top.hasConstField = false; -- ADT is always assignable
+  top.constructors = adt.constructors;
 }
 
- 
+
 -- Type expressions --
 ----------------------
 
 -- e.g. "datatype Expr;"
 -- mirroring C structure of 'struct Expr'
 abstract production adtTagReferenceTypeExpr 
-b::BaseTypeExpr ::= q::Qualifiers n::Name
+top::BaseTypeExpr ::= q::Qualifiers n::Name
 {
-  propagate substituted;
-  b.pp = ppConcat([ 
-          terminate( space(), q.pps ),
-          text("datatype"), space(), 
-          n.pp ]);
+  top.pp = ppConcat([terminate(space(), q.pps), pp"datatype", space(), n.pp]);
 
-  local tags :: [TagItem] = lookupTag(n.name, b.env);
-
-  local name_refIdIfOld_workaround :: Maybe<String>
-    = case n.tagLocalLookup of
-      | adtRefIdTagItem(thisRefId,_) :: _ -> just(thisRefId)
-      -- | refIdTagItem(_, thisRefID) :: _ -> just(thisRefID)
-      | _ -> nothing()
-      end;
-  local name_tagRefId_workaround :: String
-    = fromMaybe(toString(genInt()), name_refIdIfOld_workaround);
-  local name_tagHasForwardDcl_workaround :: Boolean
-    = name_refIdIfOld_workaround.isJust;
-
-  local refId :: String =
+  local tags :: [TagItem] = lookupTag(n.name, top.env);
+  local refId :: String = fromMaybe(toString(genInt()), top.givenRefId);
+  
+  local defs::[Def] =
     case tags of
-    | [ ] -- not already declared, this is the declaration
-      -> name_tagRefId_workaround -- n.tagRefId
-    | adtRefIdTagItem (r,_)::_ -- already declared, so use previous refId
-      -> r
-    end ;
-    
-  local attribute structRefId :: String = toString(genInt());
-  -- maybe create it here, stick in in defs with some bogus name -
-  --    n.name ++ "STRUCT"?
-    
-  b.defs := 
-    case tags of
-    -- not already declared, this is the declaration
-    | [ ] -> [  adtTagDef( n.name, adtRefIdTagItem( refId, structRefId ) ) ]
+    -- We don't see the declaration, so we're adding it.
+    | [] -> [adtTagDef(n.name, adtRefIdTagItem(refId))]
     -- already declared, so nothing to declare here
     | _ -> [] 
-    end ;
-
-  b.typerep = 
-    case tags of
-    -- Don't see the declaration, so we're adding it.
-    | [ ] ->  adtTagType( n.name, refId, structRefId )
-    -- It's an ADT and the tag type agrees.
-    | adtRefIdTagItem(r,s)::_ -> adtTagType( n.name, refId, structRefId )
-    | _ -> errorType()
-    end ;    
-    
-  forwards to 
-    case tags of
-    | [ ] -> tagReferenceTypeExpr( q, structSEU(), n )
-    | adtRefIdTagItem(r,s)::_ -> tagReferenceTypeExpr( q, structSEU(), n )
-    | _ -> errorTypeExpr([err(n.location, n.name ++ " is not a declared datatype")])
-    end ;
-
+    end;
   
+  local fwrd::BaseTypeExpr =
+    case tags of
+    -- We don't see the declaration, so we're adding it.
+    | [] -> extTypeExpr(q, adtExtType(n.name, n.name, refId))
+    -- It's a datatype and the tag type agrees.
+    | adtRefIdTagItem(r) :: _ -> extTypeExpr(q, adtExtType(n.name, n.name, r))
+    -- It's a datatype and the tag type doesn't agree.
+    | _ -> errorTypeExpr([err(n.location, "Tag " ++ n.name ++ " is not a datatype")])
+    end;
   
+  forwards to defsTypeExpr(defs, fwrd);
 }
-
-{- ToDo: 
--- e.g. "datatype Expr { ... }"
-
-abstract production adtTypeExpr
-t::BaseTypeExpr ::= q::[Qualifier] def::StructDecl
-{
-}
---}
 
 -- Type --
 ----------
-abstract production adtTagType
-t::Type ::= name::String adtRefId::String structRefId::String
+synthesized attribute adtName::Maybe<String> occurs on Type, ExtType;
+
+aspect default production
+top::Type ::=
 {
-  t.lpp = text("ADT adtTagType(" ++ name ++ "," ++ adtRefId ++ "," ++ structRefId ++ ")"); -- TODO
-  t.rpp = notext();
-  t.withTypeQualifiers = t; -- TODO: Hack, discarding type qualifiers here!
-  t.withoutAttributes = t;
-  forwards to tagType( nilQualifier(),
-                refIdTagType( structSEU(), name, structRefId ) );
+  top.adtName = nothing();
 }
 
-
-nonterminal ADTInfo with name;
-abstract production adtInfo
-a::ADTInfo ::= n::String
+aspect production extType
+top::Type ::= q::Qualifiers sub::ExtType
 {
-  a.name = n;
+  top.adtName = sub.adtName;
 }
 
+aspect default production
+top::ExtType ::=
+{
+  top.adtName = nothing();
+}
+
+-- adtName is the name of the datatype, as written, used for field names and enum values.
+-- adtDeclName is the name of the datatype that is actually declared, used for struct/union names.
+-- These are always the same within this extension, but other extensions (such as templated ADTs)
+-- may wish to generate multiple datatypes from a single declaration, but the enum and field names
+-- don't need to be renamed.
+abstract production adtExtType
+top::ExtType ::= adtName::String adtDeclName::String refId::String
+{
+  propagate canonicalType;
+  top.host =
+    extType(top.givenQualifiers, refIdExtType(structSEU(), adtDeclName ++ "_s", refId ++ "_s"));
+  top.pp = ppConcat([pp"datatype", space(), text(adtDeclName)]);
+  top.mangledName =
+    s"datatype_${if adtDeclName == "<anon>" then "anon" else adtDeclName}_${substitute(":", "_", refId)}";
+  top.isEqualTo =
+    \ other::ExtType ->
+      case other of
+      | adtExtType(_, _, otherRefId) -> refId == otherRefId
+      | _ -> false
+      end;
+  top.maybeRefId = just(refId);
+  top.adtName = just(adtName);
+  top.isCompleteType =
+    \ env::Decorated Env -> !null(lookupRefId(refId, env));
+}

@@ -1,13 +1,13 @@
 a.out:	exprs_main.o exprs.o
 	gcc exprs_main.o exprs.o
 
-exprs.c:	exprs.xc exprs.h ../ableC.jar
+exprs.c:	exprs.xc exprs.xh ../ableC.jar
 	java -Xss6M -jar ../ableC.jar exprs.xc
 
 exprs.o:	exprs.c
 	gcc -c exprs.c -o exprs.o
 
-exprs_main.c:	exprs_main.xc  exprs.h ../ableC.jar
+exprs_main.c:	exprs_main.xc  exprs.xh ../ableC.jar
 	java -Xss6M -jar ../ableC.jar exprs_main.xc
 
 exprs_main.o:	exprs_main.c

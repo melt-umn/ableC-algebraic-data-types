@@ -2,5 +2,5 @@
 
 library "github.com/melt-umn/jenkins-lib"
 
-ablec.buildNormalExtension('ableC-algebraic-data-types')
+ablec.buildSilverAbleCExtension('ableC-algebraic-data-types', ['ableC-string', 'ableC-templating'])
 

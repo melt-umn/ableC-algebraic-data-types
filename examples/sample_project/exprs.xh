@@ -11,9 +11,7 @@ datatype Expr {
   Const (int);
 };
 
-int value (Expr *e) ;
-
-int free_Expr (Expr *e) ;
-
+int value(Expr *e);
+int free_Expr(Expr *e);
 
 #endif

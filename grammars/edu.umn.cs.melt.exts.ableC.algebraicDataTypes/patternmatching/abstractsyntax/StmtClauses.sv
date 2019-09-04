@@ -12,158 +12,126 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 
     becomes
 
-     if ( ... p1 matches ... ) {
-       s1
-     } else {
-     if ( ... p2 matches ... ) {
-       s2
-     } else {
-     ...
-     } else {
-     if ( ... pn matches ... ) {
-       sn
-     }
+    {
+      {
+        ... p1 pattern variable declarations ...
+        if ( ... p1 matches ... ) {
+          s1
+          goto _end;
+        }
+      }
+      {
+        ... p2 pattern variable declarations ...
+        if ( ... p2 matches ... ) {
+          s2
+          goto _end;
+        }
+      }
+      ...
+      {
+        ... p3 pattern variable declarations ...
+        if ( ... pn matches ... ) {
+          sn
+          goto _end;
+        }
+      }
+      _end: ;
+    }
  
-    The translation of the last clause is the body of the last
-    innermonst else.  The translation of later clauses are children of
-    the translation of earlier clauses.  To achieve this, a pair of
-    (backward) threaded attributes, transform and tranformIn, are used.
-    -}
+    The use of goto is required because having subsiquent patterns as
+    else clauses would mean that (unused) pattern variables from
+    preceding patterns could potentially shadow other variables with the
+    same name.
+-}
 
 synthesized attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
+autocopy attribute endLabelName::String;
+autocopy attribute matchLocation::Location;
 
-nonterminal StmtClauses with location, pp, errors, env, returnType,
-  expectedType, transform<Stmt>; 
+autocopy attribute appendedStmtClauses :: StmtClauses;
+synthesized attribute appendedStmtClausesRes :: StmtClauses;
+
+nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  appendedStmtClauses, appendedStmtClausesRes;
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, appendedStmtClausesRes {appendedStmtClauses};
 
 abstract production consStmtClause
-cs::StmtClauses ::= c::StmtClause rest::StmtClauses
-{ 
-  cs.pp = cat( c.pp, rest.pp );
+top::StmtClauses ::= c::StmtClause rest::StmtClauses
+{
+  top.pp = cat( c.pp, rest.pp );
+  top.errors := c.errors ++ rest.errors;
+  top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
+  
+  rest.env = addEnv(c.defs, c.env);
 
-  c.expectedType = cs.expectedType;
-  rest.expectedType = cs.expectedType;
+  top.transform = seqStmt(c.transform, rest.transform);
+  c.transformIn = top.transformIn;
+  rest.transformIn = top.transformIn;
 
-  cs.errors := c.errors ++ rest.errors;
-
-  cs.transform = c.transform;
-  c.transformIn = rest.transform;
+  c.expectedTypes = top.expectedTypes;
+  rest.expectedTypes = top.expectedTypes;
 }
 
 abstract production failureStmtClause
-cs::StmtClauses ::= 
+top::StmtClauses ::= 
 {
-  cs.pp = text("");
-  cs.errors := [];
+  top.pp = text("");
+  top.errors := [];
+  top.appendedStmtClausesRes = top.appendedStmtClauses;
 
-  cs.transform = exprStmt(comment("no match, do nothing.", location=cs.location));
+  top.transform = exprStmt(comment("no match, do nothing.", location=builtin));
 }
-  
 
-nonterminal StmtClause with location, pp, errors, env, 
-  expectedType, returnType,
-  transform<Stmt>, transformIn<Stmt>;
+function appendStmtClauses
+StmtClauses ::= p1::StmtClauses p2::StmtClauses
+{
+  p1.appendedStmtClauses = p2;
+  return p1.appendedStmtClausesRes;
+}
+
+
+nonterminal StmtClause with location, matchLocation, pp, errors, defs, env,
+  expectedTypes, returnType,
+  transform<Stmt>, transformIn<[Expr]>, endLabelName;
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
 
    ... declarations of pattern variables
 
-   ... declare _curr_scrutinee_ptr with expectedType
-       set it to _match_scrutinee_ptr
-
-   if ( ({ int _match = 1;
-           ... check if pattern matches, set _match to 0 some part doesn't
-           ... also assign values to pattern variables 
-           _match; 
-         }) )  
-     {
-       s   ... statement in clause
-     }
-   else {
+   if ( ... check if pattern matches, also assign values to pattern variables ){
+     s   ... statement in clause
+   } else {
      ... translation of remaining clauses, from transformIn
    }
 
  -}
 
 abstract production stmtClause
-c::StmtClause ::= p::Pattern s::Stmt
+top::StmtClause ::= ps::PatternList s::Stmt
 {
-  c.pp = ppConcat([ p.pp, text("->"), space(), nestlines(2, s.pp) ]);
-  c.errors := p.errors ++ s.errors;
-
-  s.env = addEnv(p.defs,c.env);
-  local l :: Location = c.location;
-
-  c.transform = 
-    foldStmt( [
-        exprStmt(comment("matching for pattern " ++ show(80,p.pp), location=c.location)),
-        exprStmt(comment("... declarations of pattern variables", location=c.location)),
-        
-        foldStmt( p.decls ),
-
-        mkDecl ("_curr_scrutinee_ptr", pointerType( nilQualifier(), c.expectedType), 
-                -- unaryOpExpr( dereferenceOp(location=c.location), 
-                             declRefExpr( name("_match_scrutinee_ptr", 
-                                               location=c.location),
-                                          location=c.location ),
-                --             location=c.location),
-                  -- TODO: don't change line number as workaround for Cilk extension
-                  loc(l.filename, l.line + 150000, l.column, l.endLine,
-                      l.endColumn, l.index, l.endIndex)),
---                c.location),
-
-        ifStmt (
-            -- condition: code to match the pattern
-            stmtExpr( 
-              foldStmt ([
-                mkIntDeclInit ("_match", "1", p.location),
-                p.transform
-              ]),
-              -- The stmtExpr result is the value of _match, which would be set
-              -- by the translation of the pattern p, above.
-              declRefExpr (name("_match", location=p.location), location=p.location),
-              location=p.location
-            ), 
-            -- then part 
-            s,
-            -- else part 
-            c.transformIn
-        )
-      ] );
-
-  p.expectedType = c.expectedType;
-
-{-
-
-  p.transformIn = mkIntAssign( "_match", "1", p.location );
-  p.position = 0;
-  p.depth = 0;
-  p.parentTag = "NoParent";  
+  top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
+  top.errors := ps.errors ++ s.errors;
+  top.errors <-
+    if ps.count != length(top.expectedTypes)
+    then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
+    else [];
+  top.defs := ps.defs ++ globalDeclsDefs(s.globalDecls);
   
-  p.parent_id = "NoParent";
-  p.parent_idType = "NoParent";
-  p.parent_idTypeIndicator = scrutineeTypeInfo.fst;
-
-  local scrutineeTypeInfo :: Pair<String [ Pair<String [Type]> ]> 
-    = getExpectedADTTypeInfo ( c.expectedType, c.env );
--}
+  top.transform =
+    ableC_Stmt {
+      {
+        $Stmt{foldStmt(ps.decls)}
+        if ($Expr{ps.transform}) {
+          $Stmt{decStmt(s)}
+          goto $name{top.endLabelName};
+        }
+      }
+    };
+  
+  ps.expectedTypes = top.expectedTypes;
+  ps.transformIn = top.transformIn;
+  s.env = addEnv(ps.defs ++ ps.patternDefs, openScopeEnv(top.env));
 }
-
-{-
-abstract production guardedStmtClause
-c::StmtClause ::= p::Pattern g::Stmt s::Stmt
-{
-  c.pp = ppConcat([ p.pp, space(), text("where"), space(), g.pp,
-                  text("->"), space(), nestlines(2, s.pp) ]);
-  c.errors := p.errors ++ s.errors;
-}
-
-abstract production defaultStmtClause
-c::StmtClause ::= e::Stmt
-{
-  c.pp = e.pp;
-  c.errors := e.errors;
---  c.transform = e;
-}
-
--}
