@@ -14,18 +14,18 @@ terminal EscapePattern_t         '$Pattern'         lexer classes {Escape, Ckeyw
 
 concrete productions top::Constructor_c
 | '$ConstructorList' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
-  { top.ast = escapeConstructorList(e, location=top.location); }
+  { top.ast = antiquoteConstructorList(e, location=top.location); }
 
 concrete productions top::StmtClause_c
 | '$StmtClauses' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
-  { top.ast = escapeStmtClauses(e, location=top.location); }
+  { top.ast = antiquoteStmtClauses(e, location=top.location); }
 
 concrete productions top::ExprClause_c
 | '$ExprClauses' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
-  { top.ast = escapeExprClauses(e, location=top.location); }
+  { top.ast = antiquoteExprClauses(e, location=top.location); }
 
 concrete productions top::Pattern_c
 | '$PatternList' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
-  { top.ast = escapePatternList(e, location=top.location); }
+  { top.ast = antiquotePatternList(e, location=top.location); }
 | '$Pattern' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
-  { top.ast = escapePattern(e, location=top.location); }
+  { top.ast = antiquotePattern(e, location=top.location); }
