@@ -54,7 +54,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, appendedExprClauses, appendedExprClausesRes;
+nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, appendedExprClauses, appendedExprClausesRes;
 flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, appendedExprClausesRes {appendedExprClauses};
 
 abstract production consExprClause
@@ -67,6 +67,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     then []
     else [err(c.location,
               s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
+  top.defs := c.defs ++ rest.defs;
 
   top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
@@ -89,6 +90,7 @@ top::ExprClauses ::=
 {
   top.pp = text("");
   top.errors := [];
+  top.defs := [];
   top.typerep = errorType();
   top.appendedExprClausesRes = top.appendedExprClauses;
 
