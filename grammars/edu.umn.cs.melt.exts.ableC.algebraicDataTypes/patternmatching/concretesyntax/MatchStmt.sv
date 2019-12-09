@@ -9,7 +9,7 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:construction;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax as abs;
 
-marking terminal Match_t 'match' lexer classes {Keyword, ScopedReserved};
+marking terminal Match_t 'match' lexer classes {Keyword, Global};
 
 terminal OpenScope_t '' action { context = openScope(context); };
 

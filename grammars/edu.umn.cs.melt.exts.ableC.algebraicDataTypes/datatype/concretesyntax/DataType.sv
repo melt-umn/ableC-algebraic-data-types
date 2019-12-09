@@ -28,7 +28,7 @@ datatype Type {
 parser attribute adtConstructors::[Pair<String [String]>]
   action { adtConstructors = []; };
 
-marking terminal Datatype_t 'datatype' lexer classes {Keyword, ScopedReserved};
+marking terminal Datatype_t 'datatype' lexer classes {Keyword, Global};
 
 -- e.g. "datatype Type { ... };"
 -- ADTs as structurally different from C structs
