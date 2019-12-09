@@ -8,7 +8,7 @@ imports edu:umn:cs:melt:ableC:concretesyntax;
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:abstractsyntax;
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype;
 
-marking terminal Allocate_t 'allocate' lexer classes {Ckeyword};
+marking terminal Allocate_t 'allocate' lexer classes {Keyword, ScopedReserved};
 terminal Datatype_t 'datatype';
 terminal With_t 'with';
 
