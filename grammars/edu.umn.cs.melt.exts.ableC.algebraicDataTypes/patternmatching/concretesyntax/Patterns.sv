@@ -1,10 +1,10 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 
-terminal NamedPatternOp_t '@' precedence = 0, association = left, lexer classes {Csymbol};
-terminal AntipatternOp_t  '!' precedence = 1, lexer classes {Csymbol};
-terminal PointerOp_t      '&' precedence = 1, lexer classes {Csymbol};
+terminal NamedPatternOp_t '@' precedence = 0, association = left, lexer classes {Operator};
+terminal AntipatternOp_t  '!' precedence = 1, lexer classes {Operator};
+terminal PointerOp_t      '&' precedence = 1, lexer classes {Operator};
 
-terminal When_t 'when' lexer classes {Ckeyword};
+terminal When_t 'when' lexer classes {Keyword, Global};
 
 -- Used to seed follow sets for MDA
 terminal PatternNEVER_t 'PatternNEVER_t123456789!!!never';
