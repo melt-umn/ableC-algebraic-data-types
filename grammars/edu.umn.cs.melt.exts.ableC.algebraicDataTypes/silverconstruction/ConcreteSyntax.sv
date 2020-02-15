@@ -13,19 +13,24 @@ terminal EscapePatternList_t     '$PatternList'     lexer classes {Escape, Reser
 terminal EscapePattern_t         '$Pattern'         lexer classes {Escape, Reserved};
 
 concrete productions top::Constructor_c
-| '$ConstructorList' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$ConstructorList' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteConstructorList(e, location=top.location); }
 
 concrete productions top::StmtClause_c
-| '$StmtClauses' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$StmtClauses' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteStmtClauses(e, location=top.location); }
 
 concrete productions top::ExprClause_c
-| '$ExprClauses' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$ExprClauses' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteExprClauses(e, location=top.location); }
 
 concrete productions top::Pattern_c
-| '$PatternList' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$PatternList' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquotePatternList(e, location=top.location); }
-| '$Pattern' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$Pattern' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquotePattern(e, location=top.location); }
