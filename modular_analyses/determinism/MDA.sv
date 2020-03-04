@@ -31,4 +31,7 @@ copper_mda testSilverConstruction(ableCWithDatatypes) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:silverconstruction;
   edu:umn:cs:melt:exts:silver:ableC:concretesyntax:antiquotation;
   silver:host:core;
+  silver:extension:patternmatching;
+  silver:extension:list;
+  silver:modification:let_fix;
 }
