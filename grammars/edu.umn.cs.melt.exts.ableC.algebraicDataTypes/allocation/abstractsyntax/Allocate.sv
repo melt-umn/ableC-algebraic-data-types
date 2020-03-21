@@ -53,9 +53,8 @@ top::Decl ::= id::Name  allocator::Name
 
 autocopy attribute allocatorName::Name occurs on ADTDecl, ConstructorList, Constructor;
 monoid attribute allocatorDefs::[Def] with [], ++;
-attribute allocatorDefs occurs on ADTDecl, ConstructorList, Constructor;
 monoid attribute allocatorErrorDefs::[Def] with [], ++;
-attribute allocatorErrorDefs occurs on ADTDecl, ConstructorList, Constructor;
+attribute allocatorDefs, allocatorErrorDefs occurs on ADTDecl, ConstructorList, Constructor;
 
 flowtype allocatorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
 flowtype allocatorErrorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
