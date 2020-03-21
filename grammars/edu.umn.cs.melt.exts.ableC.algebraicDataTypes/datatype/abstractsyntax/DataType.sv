@@ -53,8 +53,8 @@ flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenNa
 abstract production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
+  propagate errors;  -- TODO: check for redeclaration
   top.pp = ppConcat([ ppAttributes(attrs), n.pp, space(), braces(nestlines(2, cs.pp)) ]);
-  top.errors := cs.errors; -- TODO: check for redeclaration
 
   {- structs create a tagItem and a refIdItem in the environment
       < structName, adtTagItem ( SEU, RefIdAsString ) >
@@ -250,6 +250,7 @@ flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName}, pp
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
+  propagate errors;
   
   {- This attribute is for extensions to use to initialize additional members added
      to the generated ADT struct. -}
@@ -257,7 +258,6 @@ top::Constructor ::= n::Name ps::Parameters
   initStmts := [];
   
   top.pp = ppConcat([n.pp, parens(ppImplode(text(", "), ps.pps)), semi()]);
-  top.errors := ps.errors;
   top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   top.defs := ps.defs;

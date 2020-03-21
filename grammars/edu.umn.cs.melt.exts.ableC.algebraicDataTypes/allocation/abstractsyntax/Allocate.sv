@@ -52,44 +52,27 @@ top::Decl ::= id::Name  allocator::Name
 }
 
 autocopy attribute allocatorName::Name occurs on ADTDecl, ConstructorList, Constructor;
-synthesized attribute allocatorDefs::[Def] occurs on ADTDecl, ConstructorList, Constructor;
-synthesized attribute allocatorErrorDefs::[Def] occurs on ADTDecl, ConstructorList, Constructor;
+monoid attribute allocatorDefs::[Def] with [], ++;
+attribute allocatorDefs occurs on ADTDecl, ConstructorList, Constructor;
+monoid attribute allocatorErrorDefs::[Def] with [], ++;
+attribute allocatorErrorDefs occurs on ADTDecl, ConstructorList, Constructor;
 
 flowtype allocatorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
 flowtype allocatorErrorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
 
-aspect production adtDecl
-top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
-{
-  top.allocatorDefs = cs.allocatorDefs;
-  top.allocatorErrorDefs = cs.allocatorErrorDefs;
-}
-
-aspect production consConstructor
-top::ConstructorList ::= c::Constructor cl::ConstructorList
-{
-  top.allocatorDefs = c.allocatorDefs ++ cl.allocatorDefs;
-  top.allocatorErrorDefs = c.allocatorErrorDefs ++ cl.allocatorErrorDefs;
-}
-
-aspect production nilConstructor
-top::ConstructorList ::=
-{
-  top.allocatorDefs = [];
-  top.allocatorErrorDefs = [];
-}
+propagate allocatorDefs, allocatorErrorDefs on ADTDecl, ConstructorList;
 
 aspect production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
   production allocateConstructorName::String = top.allocatorName.name ++ "_" ++ n.name;
-  top.allocatorDefs =
+  top.allocatorDefs :=
     [valueDef(
        allocateConstructorName,
        allocateConstructorValueItem(
          name(top.adtGivenName, location=builtin),
          top.allocatorName, n, ps.typereps))];
-  top.allocatorErrorDefs = [valueDef(allocateConstructorName, errorValueItem())];
+  top.allocatorErrorDefs := [valueDef(allocateConstructorName, errorValueItem())];
 }
 
 abstract production allocateConstructorValueItem
