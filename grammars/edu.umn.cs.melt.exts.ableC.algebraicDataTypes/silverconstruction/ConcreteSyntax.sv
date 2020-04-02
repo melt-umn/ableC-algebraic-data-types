@@ -2,30 +2,35 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:silverconstruction;
 
 imports edu:umn:cs:melt:exts:silver:ableC:concretesyntax;
 
-exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype;
-exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching;
-exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation;
+imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype;
+imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching;
+imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation;
 
-terminal EscapeConstructorList_t '$ConstructorList' lexer classes {Escape, Ckeyword};
-terminal EscapeStmtClauses_t     '$StmtClauses'     lexer classes {Escape, Ckeyword};
-terminal EscapeExprClauses_t     '$ExprClauses'     lexer classes {Escape, Ckeyword};
-terminal EscapePatternList_t     '$PatternList'     lexer classes {Escape, Ckeyword};
-terminal EscapePattern_t         '$Pattern'         lexer classes {Escape, Ckeyword};
+marking terminal AntiquoteConstructorList_t '$ConstructorList' lexer classes {Antiquote, Reserved};
+marking terminal AntiquoteStmtClauses_t     '$StmtClauses'     lexer classes {Antiquote, Reserved};
+marking terminal AntiquoteExprClauses_t     '$ExprClauses'     lexer classes {Antiquote, Reserved};
+marking terminal AntiquotePatternList_t     '$PatternList'     lexer classes {Antiquote, Reserved};
+marking terminal AntiquotePattern_t         '$Pattern'         lexer classes {Antiquote, Reserved};
 
 concrete productions top::Constructor_c
-| '$ConstructorList' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$ConstructorList' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteConstructorList(e, location=top.location); }
 
 concrete productions top::StmtClause_c
-| '$StmtClauses' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$StmtClauses' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteStmtClauses(e, location=top.location); }
 
 concrete productions top::ExprClause_c
-| '$ExprClauses' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$ExprClauses' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteExprClauses(e, location=top.location); }
 
 concrete productions top::Pattern_c
-| '$PatternList' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$PatternList' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquotePatternList(e, location=top.location); }
-| '$Pattern' NotInAbleC silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t InAbleC
+| '$Pattern' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
+  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquotePattern(e, location=top.location); }
