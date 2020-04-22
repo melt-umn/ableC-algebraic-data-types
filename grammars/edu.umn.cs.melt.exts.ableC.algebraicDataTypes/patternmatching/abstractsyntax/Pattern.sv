@@ -7,13 +7,12 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs, patternDefs, env, returnType;
 flowtype Pattern = decorate {expectedType, env, returnType, transformIn}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, patternDefs {decorate}, transform {decorate};
 
-{-- This attribute collects declarations for pattern variables.
+{-- This attribute collects definitions for pattern variables.
     During pattern matching, values are stored in these variables
     and then used when evaluating or executing the right hand side
     of clauses in a match expression or match statement.
 -}
-synthesized attribute decls :: [Stmt];
-synthesized attribute patternDefs :: [Def] with ++;
+monoid attribute patternDefs :: [Def] with [], ++;
 
 
 {-- [Pattern] constructs are checked against an expected type, which
@@ -28,6 +27,8 @@ inherited attribute expectedTypes :: [Type];
     be used more than once in transform.  -}
 attribute transformIn<Expr> occurs on Pattern; 
 attribute transform<Expr> occurs on Pattern;
+
+propagate decls, defs, patternDefs, errors on Pattern;
 
 abstract production patternName
 top::Pattern ::= n::Name
@@ -44,10 +45,8 @@ abstract production patternVariable
 top::Pattern ::= n::Name
 {
   top.pp = n.pp;
-  top.decls = [declStmt(decDecl(d))];
-  top.patternDefs := d.defs;
-  top.defs := [];
-  top.errors := []; --ToDo: - check for non-linearity
+  top.decls <- [decDecl(d)];
+  top.patternDefs <- d.defs;
   top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   local d :: Decl =
@@ -66,10 +65,6 @@ abstract production patternWildcard
 top::Pattern ::=
 {
   top.pp = text("_");
-  top.decls = [];
-  top.patternDefs := [];
-  top.defs := [];
-  top.errors := [];
   top.transform = mkIntConst(1, builtin);
 }
 
@@ -77,10 +72,6 @@ abstract production patternConst
 top::Pattern ::= constExpr::Expr
 {
   top.pp = constExpr.pp;
-  top.decls = [];
-  top.patternDefs := [];
-  top.defs := [];
-  top.errors := [];
   top.errors <-
     if !typeAssignableTo(constExpr.typerep, top.expectedType) -- TODO: Proper handling for equality type checking
     then [err(constExpr.location, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
@@ -93,10 +84,6 @@ abstract production patternStringLiteral
 top::Pattern ::= s::String
 {
   top.pp = text(s);
-  top.decls = [];
-  top.patternDefs := [];
-  top.defs := [];
-  top.errors := [];
   
   local stringType::Type =
     pointerType(
@@ -120,10 +107,6 @@ abstract production patternPointer
 top::Pattern ::= p::Pattern
 {
   top.pp = cat(pp"&", p.pp);
-  top.decls = p.decls;
-  top.patternDefs := p.patternDefs;
-  top.defs := p.defs;
-  top.errors := p.errors;
   top.errors <-
     case top.expectedType.withoutAttributes of
     | pointerType(_, _) -> []
@@ -161,10 +144,6 @@ abstract production patternBoth
 top::Pattern ::= p1::Pattern p2::Pattern
 {
   top.pp = ppConcat([p1.pp, space(), text("@"), space(), p2.pp ]);
-  top.decls = p1.decls ++ p2.decls;
-  top.patternDefs := p1.patternDefs ++ p2.patternDefs;
-  top.defs := p1.defs ++ p2.defs;
-  top.errors := p1.errors ++ p2.errors;
   
   p1.env = top.env;
   p2.env = addEnv(p1.defs ++ p1.patternDefs, top.env);
@@ -180,10 +159,7 @@ abstract production patternNot
 top::Pattern ::= p::Pattern 
 {
   top.pp = cat(text("! "), p.pp);
-  top.decls = p.decls;
-  top.patternDefs := p.patternDefs;
-  top.defs := p.defs;
-  top.errors := p.errors; -- TODO: Exclude variable patterns
+  -- TODO: Exclude variable patterns
   
   p.env = top.env;
   p.expectedType = top.expectedType;
@@ -196,10 +172,6 @@ abstract production patternWhen
 top::Pattern ::= e::Expr
 {
   top.pp = cat( text("when"), parens(e.pp));
-  top.decls = [];
-  top.patternDefs := [];
-  top.defs := e.defs;
-  top.errors := e.errors;
   top.errors <-
     if !e.typerep.defaultFunctionArrayLvalueConversion.isScalarType
     then [err(e.location, "when condition must be scalar type, instead it is " ++ showType(e.typerep))]
@@ -212,10 +184,6 @@ abstract production patternParens
 top::Pattern ::= p::Pattern
 {
   top.pp = parens(p.pp);
-  top.decls = p.decls;
-  top.patternDefs := p.patternDefs;
-  top.defs := p.defs;
-  top.errors := p.errors;
   top.transform = p.transform;
   
   p.expectedType = top.expectedType;
@@ -230,14 +198,12 @@ synthesized attribute appendedPatternsRes :: PatternList;
 nonterminal PatternList with pps, errors, env, returnType, defs, decls, patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, appendedPatterns, appendedPatternsRes;
 flowtype PatternList = decorate {expectedTypes, env, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate}, count {}, appendedPatternsRes {appendedPatterns};
 
+propagate decls, defs, patternDefs, errors on PatternList;
+
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
 {
   top.pps = p.pp :: rest.pps;
-  top.errors := p.errors ++ rest.errors;
-  top.decls = p.decls ++ rest.decls;
-  top.patternDefs := p.patternDefs ++ rest.patternDefs;
-  top.defs := p.defs ++ rest.defs;
   top.count = 1 + rest.count;
   top.appendedPatternsRes = consPattern(p, rest.appendedPatternsRes);
  
@@ -260,11 +226,7 @@ abstract production nilPattern
 top::PatternList ::= {-empty-}
 {
   top.pps = [];
-  top.errors := [];
   top.count = 0;
-  top.decls = [];
-  top.defs := [];
-  top.patternDefs := [];
   top.transform = mkIntConst(1, builtin);
   top.appendedPatternsRes = top.appendedPatterns;
 }

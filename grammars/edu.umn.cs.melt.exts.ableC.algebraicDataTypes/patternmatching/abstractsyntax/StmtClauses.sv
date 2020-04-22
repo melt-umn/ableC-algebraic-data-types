@@ -57,11 +57,12 @@ nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnTyp
   appendedStmtClauses, appendedStmtClausesRes;
 flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, appendedStmtClausesRes {appendedStmtClauses};
 
+propagate errors on StmtClauses;
+
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
   top.pp = cat( c.pp, rest.pp );
-  top.errors := c.errors ++ rest.errors;
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
   
   rest.env = addEnv(c.defs, c.env);
@@ -78,7 +79,6 @@ abstract production failureStmtClause
 top::StmtClauses ::= 
 {
   top.pp = text("");
-  top.errors := [];
   top.appendedStmtClausesRes = top.appendedStmtClauses;
 
   top.transform = exprStmt(comment("no match, do nothing.", location=builtin));
@@ -112,8 +112,8 @@ flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, t
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
+  propagate errors;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
-  top.errors := ps.errors ++ s.errors;
   top.errors <-
     if ps.count != length(top.expectedTypes)
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
@@ -123,7 +123,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
   top.transform =
     ableC_Stmt {
       {
-        $Stmt{foldStmt(ps.decls)}
+        $Decl{decls(foldDecl(ps.decls))}
         if ($Expr{ps.transform}) {
           $Stmt{decStmt(s)}
           goto $name{top.endLabelName};

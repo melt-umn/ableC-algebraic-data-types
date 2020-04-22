@@ -73,7 +73,7 @@ top::RefIdItem ::= adt::Decorated ADTDecl
 {
   top.pp = text("ADTDecl: adt.refId=" ++ adt.refId);
   top.tagEnv = adt.tagEnv;
-  top.hasConstField = false; -- ADT is always assignable
+  top.hasConstField := false; -- ADT is always assignable
   top.constructors = adt.constructors;
 }
 
@@ -154,7 +154,7 @@ top::ExtType ::= adtName::String adtDeclName::String refId::String
       | adtExtType(_, _, otherRefId) -> refId == otherRefId
       | _ -> false
       end;
-  top.maybeRefId = just(refId);
+  top.maybeRefId := just(refId);
   top.adtName = just(adtName);
   top.isCompleteType =
     \ env::Decorated Env -> !null(lookupRefId(refId, env));
