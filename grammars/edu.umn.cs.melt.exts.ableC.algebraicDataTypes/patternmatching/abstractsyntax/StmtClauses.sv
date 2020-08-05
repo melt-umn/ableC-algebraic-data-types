@@ -52,12 +52,12 @@ autocopy attribute matchLocation::Location;
 autocopy attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
-nonterminal StmtClauses with location, matchLocation, pp, errors, env, returnType,
+nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs, env, returnType,
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, appendedStmtClausesRes {appendedStmtClauses};
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, functionDefs {}, transform {decorate, endLabelName}, appendedStmtClausesRes {appendedStmtClauses};
 
-propagate errors on StmtClauses;
+propagate errors, functionDefs on StmtClauses;
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -92,10 +92,10 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 }
 
 
-nonterminal StmtClause with location, matchLocation, pp, errors, defs, env,
+nonterminal StmtClause with location, matchLocation, pp, errors, defs, functionDefs, env,
   expectedTypes, returnType,
   transform<Stmt>, transformIn<[Expr]>, endLabelName;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName};
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, functionDefs {}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -112,7 +112,7 @@ flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, t
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
-  propagate errors;
+  propagate errors, functionDefs;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors <-
     if ps.count != length(top.expectedTypes)
