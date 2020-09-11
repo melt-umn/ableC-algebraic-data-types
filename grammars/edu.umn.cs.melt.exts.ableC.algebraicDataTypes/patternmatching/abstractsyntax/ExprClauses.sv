@@ -57,17 +57,17 @@ synthesized attribute appendedExprClausesRes :: ExprClauses;
 nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, appendedExprClauses, appendedExprClausesRes;
 flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, appendedExprClausesRes {appendedExprClauses};
 
+propagate errors, defs on ExprClauses;
+
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
 {
   top.pp = cat( c.pp, rest.pp );
-  top.errors := c.errors ++ rest.errors;
   top.errors <-
     if typeAssignableTo(c.typerep, rest.typerep)
     then []
     else [err(c.location,
               s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
-  top.defs := c.defs ++ rest.defs;
 
   top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
@@ -89,8 +89,6 @@ abstract production failureExprClause
 top::ExprClauses ::= 
 {
   top.pp = text("");
-  top.errors := [];
-  top.defs := [];
   top.typerep = errorType();
   top.appendedExprClausesRes = top.appendedExprClauses;
 
@@ -107,16 +105,16 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
 nonterminal ExprClause with location, matchLocation, pp, errors, defs, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep;
 flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
+propagate errors, defs on ExprClause;
+
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
 {
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, e.pp), text(";")]);
-  top.errors := ps.errors ++ e.errors;
   top.errors <-
     if ps.count != length(top.expectedTypes)
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
-  top.defs := ps.defs ++ e.defs;
 
   e.env = addEnv(ps.defs ++ ps.patternDefs, top.env);
   ps.expectedTypes = top.expectedTypes;
@@ -126,7 +124,7 @@ top::ExprClause ::= ps::PatternList e::Expr
   top.transform =
     ableC_Stmt {
       {
-        $Stmt{foldStmt(ps.decls)}
+        $Decl{decls(foldDecl(ps.decls))}
         if ($Expr{ps.transform}) {
           _match_result = $Expr{decExpr(e, location=builtin)};
           goto $name{top.endLabelName};

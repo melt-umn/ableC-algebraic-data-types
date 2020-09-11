@@ -7,9 +7,6 @@ top::Pattern ::= ps::StructPatternList
 {
   top.pp = braces(ppImplode(text(", "), ps.pps));
   ps.env = top.env;
-  top.decls = ps.decls;
-  top.patternDefs := ps.patternDefs;
-  top.defs := ps.defs;
   
   -- Type checking
   local refId::Maybe<String> =
@@ -24,14 +21,14 @@ top::Pattern ::= ps::StructPatternList
     | nothing() -> []
     end;
   
-  top.errors :=
+  top.errors <-
     case top.expectedType, refId, refIdLookup of
     | errorType(), _, _ -> []
     -- Check that expected type for this pattern is some sort of type with fields
     | t, nothing(), _ -> [err(top.location, s"Initializer pattern expected to match a struct or union (got ${showType(t)}).")]
     -- Check that this type has a definition
     | t, just(id), [] -> [err(top.location, s"${showType(t)} does not have a definition.")]
-    | _, _, _ -> ps.errors
+    | _, _, _ -> []
     end;
   
   ps.givenTagEnv =
@@ -59,14 +56,12 @@ synthesized attribute remainingFieldNames::[String];
 nonterminal StructPatternList with pps, errors, env, returnType, defs, decls, patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>;
 flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
 
+propagate errors, defs, decls, patternDefs on StructPatternList;
+
 abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
 {
   top.pps = p.pp :: rest.pps;
-  top.errors := p.errors ++ rest.errors;
-  top.defs := p.defs ++ rest.defs;
-  top.decls = p.decls ++ rest.decls;
-  top.patternDefs := p.patternDefs ++ rest.patternDefs;
   
   p.env = top.env;
   rest.env = addEnv(p.defs, top.env);
@@ -83,24 +78,18 @@ abstract production nilStructPattern
 top::StructPatternList ::= {-empty-}
 {
   top.pps = [];
-  top.errors := [];
-  top.defs := [];
-  top.decls = [];
-  top.patternDefs := [];
   top.transform = mkIntConst(1, builtin);
 }
 
 nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs, givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>, env, returnType;
 flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
 
+propagate errors, defs, decls, patternDefs on StructPattern;
+
 abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern
 {
   top.pp = p.pp;
-  top.errors := p.errors;
-  top.defs := p.defs;
-  top.decls = p.decls;
-  top.patternDefs := p.patternDefs;
   top.remainingFieldNames =
     case top.givenFieldNames of
     | n :: ns -> ns
@@ -131,14 +120,10 @@ abstract production namedStructPattern
 top::StructPattern ::= n::Name p::Pattern
 {
   top.pp = pp".${n.pp} = ${p.pp}";
-  top.errors := p.errors;
   top.errors <-
     if !null(n.valueLookupCheck)
     then [err(n.location, s"Unexpected named field ${n.name}")]
     else [];
-  top.defs := p.defs;
-  top.decls = p.decls;
-  top.patternDefs := p.patternDefs;
   top.remainingFieldNames = top.givenFieldNames;
   
   n.env = top.givenTagEnv;
