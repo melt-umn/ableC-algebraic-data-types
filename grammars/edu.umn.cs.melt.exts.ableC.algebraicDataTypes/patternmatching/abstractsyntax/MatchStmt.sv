@@ -6,8 +6,8 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
   -- Non-interfering equations required due to flow analysis
-  top.functionDefs := [labelDef(clauses.endLabelName, labelItem(builtin))];
-  forward.env = addEnv(forward.functionDefs, top.env);
+  propagate functionDefs;
+  top.functionDefs <- [labelDef(clauses.endLabelName, labelItem(builtin))];
   
   -- Compute defs for clauses env
   local initialTransform::Stmt = scrutinees.transform;

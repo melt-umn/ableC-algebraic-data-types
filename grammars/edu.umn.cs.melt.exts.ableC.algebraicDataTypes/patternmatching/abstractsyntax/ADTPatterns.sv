@@ -6,9 +6,6 @@ abstract production constructorPattern
 top::Pattern ::= n::Name ps::PatternList
 {
   top.pp = cat( n.pp, parens( ppImplode(text(","), ps.pps) ) );
-  top.decls = ps.decls;
-  top.patternDefs := ps.patternDefs;
-  top.defs := ps.defs;
   
   -- Type checking
   local adtName::Maybe<String> = top.expectedType.adtName;
@@ -27,7 +24,7 @@ top::Pattern ::= n::Name ps::PatternList
   
   local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, n.name, constructors);
   
-  local localErrors::[Message] =
+  top.errors <-
     case top.expectedType, adtName, adtLookup, constructorParamLookup of
     | errorType(), _, _, _ -> []
     -- Check that expected type for this pattern is an ADT of some sort
@@ -42,7 +39,6 @@ top::Pattern ::= n::Name ps::PatternList
       then [err(top.location, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
       else []
     end;
-  top.errors := localErrors ++ ps.errors;
   
   ps.expectedTypes =
     case constructorParamLookup of
