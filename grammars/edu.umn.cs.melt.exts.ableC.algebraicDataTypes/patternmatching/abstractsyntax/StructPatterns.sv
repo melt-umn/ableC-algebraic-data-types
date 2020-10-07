@@ -38,10 +38,9 @@ top::Pattern ::= ps::StructPatternList
     end;
   
   ps.givenFieldNames =
-    -- TODO: Ugly hack to get ordered list of field names from the tag environment
-    case ps.givenTagEnv of
-    | addEnv_i(d, _) -> map(fst, d.valueContribs)
-    | _ -> []
+    case refIdLookup of
+    | item :: _ -> item.fieldNames
+    | [] -> []
     end;
   
   top.transform = ps.transform;
