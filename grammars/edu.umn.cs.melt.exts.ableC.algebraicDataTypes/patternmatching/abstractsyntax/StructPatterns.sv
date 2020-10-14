@@ -1,6 +1,7 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
 -- struct/union patterns --
+-- Mirrors initializer syntax, but slightly more sane with nested objects
 -------------------
 abstract production structPattern
 top::Pattern ::= ps::StructPatternList
@@ -39,12 +40,30 @@ top::Pattern ::= ps::StructPatternList
   
   ps.givenFieldNames =
     case refIdLookup of
-    | item :: _ -> item.fieldNames
+    | item :: _ -> flattenFieldNames(item.fieldNames, top.env)
     | [] -> []
     end;
   
   top.transform = ps.transform;
   ps.transformIn = top.transformIn;
+}
+
+function flattenFieldNames
+[String] ::= fns::[Either<String ExtType>] env::Decorated Env
+{
+  return
+    flatMap(
+      \ f::Either<String ExtType> ->
+        case f of
+        | left(fn) -> [fn]
+        | right(e) ->
+          case e.maybeRefId of
+          | just(refId) when lookupRefId(refId, env) matches r :: _ ->
+            flattenFieldNames(r.fieldNames, env)
+          | _ -> error("Failed to get anon struct fields")
+          end
+        end,
+      fns);
 }
 
 autocopy attribute givenTagEnv::Decorated Env;

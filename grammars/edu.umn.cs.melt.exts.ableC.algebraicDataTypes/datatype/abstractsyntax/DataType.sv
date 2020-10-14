@@ -47,8 +47,8 @@ synthesized attribute transform<a> :: a;
 -- the same constructors.
 autocopy attribute adtGivenName :: String;
 
-nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, givenRefId, refId, constructors, tagEnv, transform<Decl>;
-flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, transform {decorate};
+nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType, adtGivenName, name, givenRefId, refId, constructors, tagEnv, hostFieldNames, transform<Decl>;
+flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenName}, pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate}, constructors {decorate}, tagEnv {decorate}, hostFieldNames {decorate}, transform {decorate};
 
 abstract production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
@@ -124,7 +124,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
       };
     };
   
-  -- Decorate struct and enum declarations here to compute tagEnv
+  -- Decorate struct and enum declarations here to compute tagEnv andfieldNames
   adtEnumDecl.env = top.env;
   adtEnumDecl.returnType = top.returnType;
   adtEnumDecl.isTopLevel = top.isTopLevel;
@@ -133,6 +133,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
   adtStructDecl.isTopLevel = top.isTopLevel;
   
   top.tagEnv = case adtStructDecl of typeExprDecl(_, structTypeExpr(_, d)) -> d.tagEnv end;
+  top.hostFieldNames := case adtStructDecl of typeExprDecl(_, structTypeExpr(_, d)) -> d.hostFieldNames end;
   
   {- This attribute is for extensions to use to add additional auto-generated functions
      for ADT, for example an auto-generated recursive freeing function. -}

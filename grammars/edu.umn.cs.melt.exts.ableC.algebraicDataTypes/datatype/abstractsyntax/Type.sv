@@ -73,6 +73,7 @@ top::RefIdItem ::= adt::Decorated ADTDecl
 {
   top.pp = text("ADTDecl: adt.refId=" ++ adt.refId);
   top.tagEnv = adt.tagEnv;
+  top.hostFieldNames := adt.hostFieldNames;
   top.hasConstField := false; -- ADT is always assignable
   top.constructors = adt.constructors;
 }
