@@ -3,7 +3,11 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:abstractsyntax;
 abstract production allocateDecl
 top::Decl ::= id::Name  allocator::Name pfx::Maybe<Name>
 {
-  top.pp = pp"allocate datatype ${id.pp} with ${allocator.pp};";
+  top.pp =
+    case pfx of
+    | just(pfx) -> pp"allocate datatype ${id.pp} with ${allocator.pp} prefix ${pfx.pp};"
+    | nothing() -> pp"allocate datatype ${id.pp} with ${allocator.pp};"
+    end;
   
   local expectedAllocatorType::Type =
     functionType(
@@ -62,8 +66,8 @@ monoid attribute allocatorDefs::[Def] with [], ++;
 monoid attribute allocatorErrorDefs::[Def] with [], ++;
 attribute allocatorDefs, allocatorErrorDefs occurs on ADTDecl, ConstructorList, Constructor;
 
-flowtype allocatorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
-flowtype allocatorErrorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
+flowtype allocatorDefs {decorate, allocatorName, allocatePfx} on ADTDecl, ConstructorList, Constructor;
+flowtype allocatorErrorDefs {decorate, allocatorName, allocatePfx} on ADTDecl, ConstructorList, Constructor;
 
 propagate allocatorDefs, allocatorErrorDefs on ADTDecl, ConstructorList;
 
