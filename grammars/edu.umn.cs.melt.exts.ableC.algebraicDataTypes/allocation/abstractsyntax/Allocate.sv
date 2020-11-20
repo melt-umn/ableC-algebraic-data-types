@@ -1,9 +1,13 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:abstractsyntax;
 
 abstract production allocateDecl
-top::Decl ::= id::Name  allocator::Name
+top::Decl ::= id::Name  allocator::Name pfx::Maybe<Name>
 {
-  top.pp = pp"allocate datatype ${id.pp} with ${allocator.pp};";
+  top.pp =
+    case pfx of
+    | just(pfx) -> pp"allocate datatype ${id.pp} with ${allocator.pp} prefix ${pfx.pp};"
+    | nothing() -> pp"allocate datatype ${id.pp} with ${allocator.pp};"
+    end;
   
   local expectedAllocatorType::Type =
     functionType(
@@ -42,6 +46,11 @@ top::Decl ::= id::Name  allocator::Name
   d.givenRefId = adtLookup.givenRefId;
   d.adtGivenName = adtLookup.adtGivenName;
   d.allocatorName = allocator;
+  d.allocatePfx =
+    case pfx of
+    | just(pfx) -> pfx.name
+    | nothing() -> allocator.name ++ "_"
+    end;
   
   forwards to
     if !null(adtLookupErrors)
@@ -52,19 +61,20 @@ top::Decl ::= id::Name  allocator::Name
 }
 
 autocopy attribute allocatorName::Name occurs on ADTDecl, ConstructorList, Constructor;
+autocopy attribute allocatePfx::String occurs on ADTDecl, ConstructorList, Constructor;
 monoid attribute allocatorDefs::[Def] with [], ++;
 monoid attribute allocatorErrorDefs::[Def] with [], ++;
 attribute allocatorDefs, allocatorErrorDefs occurs on ADTDecl, ConstructorList, Constructor;
 
-flowtype allocatorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
-flowtype allocatorErrorDefs {decorate, allocatorName} on ADTDecl, ConstructorList, Constructor;
+flowtype allocatorDefs {decorate, allocatorName, allocatePfx} on ADTDecl, ConstructorList, Constructor;
+flowtype allocatorErrorDefs {decorate, allocatorName, allocatePfx} on ADTDecl, ConstructorList, Constructor;
 
 propagate allocatorDefs, allocatorErrorDefs on ADTDecl, ConstructorList;
 
 aspect production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
-  production allocateConstructorName::String = top.allocatorName.name ++ "_" ++ n.name;
+  production allocateConstructorName::String = top.allocatePfx ++ n.name;
   top.allocatorDefs :=
     [valueDef(
        allocateConstructorName,
