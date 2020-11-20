@@ -39,7 +39,7 @@ action {
     context =
       addIdentsToScope(
         map(
-          \ c::String -> name(pfx.ast.name ++ "_" ++ c, location=id.location),
+          \ c::String -> name(pfx.ast.name ++ c, location=id.location),
           constructors.fromJust),
         Identifier_t,
         context);
