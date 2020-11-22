@@ -8,8 +8,3 @@ import silver:langutil;
 concrete productions top::StructOrUnionSpecifier_c
 | 'datatype' id::Identifier_c
     { top.realTypeSpecifiers = [adtTagReferenceTypeExpr(top.givenQualifiers, id.ast)]; }
-
-concrete productions top::StructOrEnumOrUnionKeyword_c
-| 'datatype'
-    { top.lookupType = \id::TypeName_t ->
-        adtTagReferenceTypeExpr(nilQualifier(), fromTy(id)); }

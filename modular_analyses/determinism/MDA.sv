@@ -12,6 +12,11 @@ copper_mda testDatatype(ablecParser) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax;
 }
 
+copper_mda testDatatypeWithString(ablecParser) {
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax;
+  edu:umn:cs:melt:exts:ableC:string:concretesyntax;
+}
+
 copper_mda testPatternMatching(ablecParser) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 }
