@@ -10,6 +10,9 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 
+exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax:showWith
+  with edu:umn:cs:melt:exts:ableC:string:concretesyntax;
+
 {-
 
 datatype Type;
