@@ -145,7 +145,7 @@ aspect production parameterDecl
 top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
   top.showErrors =
-    \ Location env::Decorated Env -> top.typerep.strShowErrors(top.sourceLocation, env);
+    \ Location env::Decorated Env -> strShowErrors(top.sourceLocation, env, top.typerep);
   local showField::Expr =
     showExpr(
       parenExpr(
