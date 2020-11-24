@@ -73,7 +73,7 @@ top::Pattern ::= constExpr::Expr
 {
   top.pp = constExpr.pp;
   top.errors <-  -- TODO: Proper handling for equality type checking
-    if !typeAssignableTo(constExpr.typerep, top.expectedType.defaultFunctionArrayLValueConversion)
+    if !typeAssignableTo(constExpr.typerep, top.expectedType.defaultFunctionArrayLvalueConversion)
     then [err(constExpr.location, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
     else [];
   
@@ -90,9 +90,9 @@ top::Pattern ::= s::String
       builtinType(
         consQualifier(constQualifier(location=builtin), nilQualifier()),
         signedType(charType())),
-      nilQualifier(), incompleteArrayType(), normalArraySize());
+      nilQualifier(), normalArraySize(), incompleteArrayType());
   top.errors <-
-    if !typeAssignableTo(stringType, top.expectedType.defaultFunctionArrayLValueConversion)
+    if !typeAssignableTo(stringType, top.expectedType.defaultFunctionArrayLvalueConversion)
     then [err(top.location, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
     else [];
   top.errors <-
