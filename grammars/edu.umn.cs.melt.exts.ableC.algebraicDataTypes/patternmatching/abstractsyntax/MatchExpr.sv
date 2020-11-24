@@ -29,8 +29,8 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   
   local localErrors::[Message] =
     clauses.errors ++ scrutinees.errors ++
-    if null(lookupValue("exit", top.env))
-    then [err(top.location, "Pattern match requires definition of exit (include <stdlib.h>?)")]
+    if null(lookupValue("abort", top.env))
+    then [err(top.location, "Pattern match requires definition of abort (include <stdlib.h>?)")]
     else if null(lookupValue("fprintf", top.env))
     then [err(top.location, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
     else if null(lookupValue("stderr", top.env))
@@ -43,7 +43,7 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
         $Stmt{decStmt(initialTransform)}
         $Stmt{clauses.transform}
         fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
-        exit(1);
+        abort();
         $name{clauses.endLabelName}: ;
         _match_result;})
     };
