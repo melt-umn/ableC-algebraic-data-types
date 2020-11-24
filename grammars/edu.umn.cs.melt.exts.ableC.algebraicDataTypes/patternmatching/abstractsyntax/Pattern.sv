@@ -72,8 +72,8 @@ abstract production patternConst
 top::Pattern ::= constExpr::Expr
 {
   top.pp = constExpr.pp;
-  top.errors <-
-    if !typeAssignableTo(constExpr.typerep, top.expectedType) -- TODO: Proper handling for equality type checking
+  top.errors <-  -- TODO: Proper handling for equality type checking
+    if !typeAssignableTo(constExpr.typerep, top.expectedType.defaultFunctionArrayLValueConversion)
     then [err(constExpr.location, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
     else [];
   
@@ -86,13 +86,13 @@ top::Pattern ::= s::String
   top.pp = text(s);
   
   local stringType::Type =
-    pointerType(
-      nilQualifier(),
+    arrayType(
       builtinType(
         consQualifier(constQualifier(location=builtin), nilQualifier()),
-        signedType(charType())));
+        signedType(charType())),
+      nilQualifier(), incompleteArrayType(), normalArraySize());
   top.errors <-
-    if !compatibleTypes(stringType, top.expectedType, true, true)
+    if !typeAssignableTo(stringType, top.expectedType.defaultFunctionArrayLValueConversion)
     then [err(top.location, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
     else [];
   top.errors <-
