@@ -87,13 +87,11 @@ top::Pattern ::= s::String
   
   local stringType::Type =
     arrayType(
-      builtinType(
-        consQualifier(constQualifier(location=builtin), nilQualifier()),
-        signedType(charType())),
+      builtinType(nilQualifier(), signedType(charType())),
       nilQualifier(), normalArraySize(), incompleteArrayType());
   top.errors <-
-    if !typeAssignableTo(stringType, top.expectedType.defaultFunctionArrayLvalueConversion)
-    then [err(top.location, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
+    if !typeAssignableTo(stringType.defaultFunctionArrayLvalueConversion, top.expectedType.defaultFunctionArrayLvalueConversion)
+    then [err(top.location, s"String constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
     else [];
   top.errors <-
     if null(lookupValue("strcmp", top.env))
