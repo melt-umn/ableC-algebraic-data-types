@@ -64,7 +64,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
 {
   top.pp = cat( c.pp, rest.pp );
   top.errors <-
-    if typeAssignableTo(c.typerep, rest.typerep)
+    if typeAssignableTo(c.typerep, rest.typerep) || typeAssignableTo(rest.typerep, c.typerep)
     then []
     else [err(c.location,
               s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
@@ -72,6 +72,8 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
   top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
     then c.typerep
+    else if typeAssignableTo(rest.typerep, c.typerep)
+    then rest.typerep
     else errorType();
   top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
   
