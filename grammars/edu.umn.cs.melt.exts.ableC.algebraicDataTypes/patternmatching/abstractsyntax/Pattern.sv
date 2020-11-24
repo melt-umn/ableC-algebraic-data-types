@@ -86,9 +86,10 @@ top::Pattern ::= s::String
   top.pp = text(s);
   
   local stringType::Type =
-    arrayType(
-      builtinType(nilQualifier(), signedType(charType())),
-      nilQualifier(), normalArraySize(), incompleteArrayType());
+    pointerType(nilQualifier(),
+      builtinType(
+        consQualifier(constQualifier(location=builtin), nilQualifier()),
+        signedType(charType())));
   top.errors <-
     if !typeAssignableTo(stringType.defaultFunctionArrayLvalueConversion, top.expectedType.defaultFunctionArrayLvalueConversion)
     then [err(top.location, s"String constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
