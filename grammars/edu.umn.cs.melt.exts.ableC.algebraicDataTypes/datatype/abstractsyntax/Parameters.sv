@@ -4,21 +4,22 @@ autocopy attribute constructorName::String;
 synthesized attribute fieldNames::[String];
 synthesized attribute fieldName::String;
 synthesized attribute asStructItemList<a>::a;
-synthesized attribute asConstructorParameters<a>::a;
+functor attribute asConstructorParameters;
 synthesized attribute asAssignments::Stmt;
 
-attribute constructorName, fieldNames, asStructItemList<StructItemList>, asConstructorParameters<Parameters>, asAssignments occurs on Parameters;
-attribute constructorName, fieldName, asStructItemList<StructItem>, asConstructorParameters<ParameterDecl>, asAssignments occurs on ParameterDecl;
+attribute constructorName, fieldNames, asStructItemList<StructItemList>, asConstructorParameters, asAssignments occurs on Parameters;
+attribute constructorName, fieldName, asStructItemList<StructItem>, asConstructorParameters, asAssignments occurs on ParameterDecl;
 
 flowtype Parameters = fieldNames {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
 flowtype ParameterDecl = fieldName {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
+
+propagate asConstructorParameters on Parameters;
 
 aspect production consParameters
 top::Parameters ::= h::ParameterDecl t::Parameters
 {
   top.fieldNames = h.fieldName :: t.fieldNames;
   top.asStructItemList = consStructItem(h.asStructItemList, t.asStructItemList);
-  top.asConstructorParameters = consParameters(h.asConstructorParameters, t.asConstructorParameters);
   top.asAssignments = seqStmt(h.asAssignments, t.asAssignments);
 }
 
@@ -27,7 +28,6 @@ top::Parameters ::=
 {
   top.fieldNames = [];
   top.asStructItemList = nilStructItem();
-  top.asConstructorParameters = nilParameters();
   top.asAssignments = nullStmt();
 }
 
