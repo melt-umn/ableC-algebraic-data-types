@@ -19,7 +19,7 @@ int main() {
 
   string res = show(b);
   printf("b: %s\n", res.text);
-  if (res != "F(B(&F(B(&F(B(<datatype Bar *  at 0x0>))))))") {
+  if (res != "F(B(&F(B(&F(B(<datatype Bar *  at (nil)>))))))") {
     return 1;
   }
 
