@@ -13,24 +13,24 @@ marking terminal AntiquotePatternList_t     '$PatternList'     lexer classes {An
 marking terminal AntiquotePattern_t         '$Pattern'         lexer classes {Antiquote, Reserved};
 
 concrete productions top::Constructor_c
-| '$ConstructorList' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
-  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
+| '$ConstructorList' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
+  layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteConstructorList(e, location=top.location); }
 
 concrete productions top::StmtClause_c
-| '$StmtClauses' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
-  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
+| '$StmtClauses' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
+  layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteStmtClauses(e, location=top.location); }
 
 concrete productions top::ExprClause_c
-| '$ExprClauses' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
-  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
+| '$ExprClauses' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
+  layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquoteExprClauses(e, location=top.location); }
 
 concrete productions top::Pattern_c
-| '$PatternList' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
-  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
+| '$PatternList' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
+  layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquotePatternList(e, location=top.location); }
-| '$Pattern' silver:definition:core:LCurly_t e::Expr silver:definition:core:RCurly_t
-  layout {silver:definition:core:WhiteSpace, BlockComments, Comments}
+| '$Pattern' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
+  layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
   { top.ast = antiquotePattern(e, location=top.location); }
