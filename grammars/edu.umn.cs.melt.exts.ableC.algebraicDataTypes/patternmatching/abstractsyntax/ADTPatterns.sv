@@ -22,7 +22,7 @@ top::Pattern ::= n::Name ps::PatternList
     | [] -> []
     end;
   
-  local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, n.name, constructors);
+  local constructorParamLookup::Maybe<Decorated Parameters> = lookup(n.name, constructors);
   
   top.errors <-
     case top.expectedType, adtName, adtLookup, constructorParamLookup of
