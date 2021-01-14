@@ -18,7 +18,7 @@ concrete production allocateDecl_c
 top::Declaration_c ::= 'allocate' 'datatype' id::Identifier_t 'with' alloc::Identifier_c ';'
 { top.ast = allocateDecl(fromId(id), alloc.ast, nothing()); }
 action {
-  local constructors::Maybe<[String]> = lookupBy(stringEq, id.lexeme, adtConstructors);
+  local constructors::Maybe<[String]> = lookup(id.lexeme, adtConstructors);
   if (constructors.isJust)
     context =
       addIdentsToScope(
@@ -34,7 +34,7 @@ concrete production allocateDeclPrefix_c
 top::Declaration_c ::= 'allocate' 'datatype' id::Identifier_t 'with' alloc::Identifier_t 'prefix' pfx::Identifier_c ';'
 { top.ast = allocateDecl(fromId(id), fromId(alloc), just(pfx.ast)); }
 action {
-  local constructors::Maybe<[String]> = lookupBy(stringEq, id.lexeme, adtConstructors);
+  local constructors::Maybe<[String]> = lookup(id.lexeme, adtConstructors);
   if (constructors.isJust)
     context =
       addIdentsToScope(
