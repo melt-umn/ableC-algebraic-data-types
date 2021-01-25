@@ -58,7 +58,7 @@ top::Pattern ::= n::Name ps::PatternList
   ps.transformIn =
     case constructorParamLookup of
     | just(params) ->
-      do (bindList, returnList) {
+      do {
         fieldName::String <- params.fieldNames;
         return ableC_Expr { $Expr{top.transformIn}.contents.$Name{n}.$name{fieldName} };
       }
