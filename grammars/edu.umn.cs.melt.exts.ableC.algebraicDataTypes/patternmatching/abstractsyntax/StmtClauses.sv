@@ -52,10 +52,14 @@ autocopy attribute matchLocation::Location;
 autocopy attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
-nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs, env, returnType,
+nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs,
+  env, returnType, breakValid, continueValid,
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, functionDefs {}, transform {decorate, endLabelName}, appendedStmtClausesRes {appendedStmtClauses};
+flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes,
+  transformIn, breakValid, continueValid},
+  errors {decorate}, functionDefs {}, transform {decorate, endLabelName},
+  appendedStmtClausesRes {appendedStmtClauses};
 
 propagate errors, functionDefs on StmtClauses;
 
@@ -93,9 +97,11 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 
 
 nonterminal StmtClause with location, matchLocation, pp, errors, defs, functionDefs, env,
-  expectedTypes, returnType,
+  expectedTypes, returnType, breakValid, continueValid,
   transform<Stmt>, transformIn<[Expr]>, endLabelName;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, functionDefs {}, transform {decorate, endLabelName};
+flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes,
+  transformIn, breakValid, continueValid},
+  errors {decorate}, defs {decorate}, functionDefs {}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
 

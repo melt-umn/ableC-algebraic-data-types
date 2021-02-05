@@ -71,8 +71,13 @@ autocopy attribute givenTagEnv::Decorated Env;
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
-nonterminal StructPatternList with pps, errors, env, returnType, defs, decls, patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>;
-flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
+nonterminal StructPatternList with pps, errors, env, returnType, defs, decls,
+  patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>,
+  breakValid, continueValid;
+flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames,
+  returnType, transformIn, breakValid, continueValid},
+  pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
+  defs {decorate}, transform {decorate};
 
 propagate errors, defs, decls, patternDefs on StructPatternList;
 
@@ -99,8 +104,13 @@ top::StructPatternList ::= {-empty-}
   top.transform = mkIntConst(1, builtin);
 }
 
-nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs, givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>, env, returnType;
-flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
+nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs,
+  givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>,
+  env, returnType, breakValid, continueValid;
+flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType,
+  transformIn, breakValid, continueValid},
+  pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate},
+  transform {decorate};
 
 propagate errors, defs, decls, patternDefs on StructPattern;
 

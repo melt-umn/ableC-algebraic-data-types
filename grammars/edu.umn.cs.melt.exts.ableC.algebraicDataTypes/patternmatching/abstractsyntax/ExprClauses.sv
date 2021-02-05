@@ -54,8 +54,13 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, appendedExprClauses, appendedExprClausesRes;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, appendedExprClausesRes {appendedExprClauses};
+nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env,
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType,
+  typerep, appendedExprClauses, appendedExprClausesRes, breakValid, continueValid;
+flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes,
+  transformIn, breakValid, continueValid},
+  errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
+  appendedExprClausesRes {appendedExprClauses};
 
 propagate errors, defs on ExprClauses;
 
@@ -104,8 +109,12 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
   return p1.appendedExprClausesRes;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors, defs, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep;
-flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
+nonterminal ExprClause with location, matchLocation, pp, errors, defs, env,
+  returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  typerep, breakValid, continueValid;
+flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes,
+  transformIn, breakValid, continueValid},
+  errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
 propagate errors, defs on ExprClause;
 

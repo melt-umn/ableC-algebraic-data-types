@@ -4,8 +4,12 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     productions, instead of arbitrary new attributes with regular nonterminals, since
     this is generally expected to be more useful.
 -}
-closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs, patternDefs, env, returnType;
-flowtype Pattern = decorate {expectedType, env, returnType, transformIn}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, patternDefs {decorate}, transform {decorate};
+closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs,
+  patternDefs, env, returnType, breakValid, continueValid;
+flowtype Pattern = decorate {expectedType, env, returnType, transformIn,
+  breakValid, continueValid},
+  pp {}, decls {decorate}, errors {decorate}, defs {decorate},
+  patternDefs {decorate}, transform {decorate};
 
 {-- This attribute collects definitions for pattern variables.
     During pattern matching, values are stored in these variables
@@ -57,6 +61,8 @@ top::Pattern ::= n::Name
   d.env = top.env;
   d.returnType = top.returnType;
   d.isTopLevel = false;
+  d.breakValid = top.breakValid;
+  d.continueValid = top.continueValid;
   
   top.transform = ableC_Expr { ($Name{n} = $Expr{top.transformIn}, 1) };
 }
@@ -129,6 +135,8 @@ top::Pattern ::= p::Pattern
   derefDecl.env = top.env;
   derefDecl.returnType = top.returnType;
   derefDecl.isTopLevel = false;
+  derefDecl.breakValid = top.breakValid;
+  derefDecl.continueValid = top.continueValid;
   
   p.env = addEnv(derefDecl.defs, top.env);
   
@@ -194,8 +202,14 @@ top::Pattern ::= p::Pattern
 autocopy attribute appendedPatterns :: PatternList;
 synthesized attribute appendedPatternsRes :: PatternList;
 
-nonterminal PatternList with pps, errors, env, returnType, defs, decls, patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, appendedPatterns, appendedPatternsRes;
-flowtype PatternList = decorate {expectedTypes, env, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate}, count {}, appendedPatternsRes {appendedPatterns};
+nonterminal PatternList with pps, errors, env, returnType, defs, decls,
+  patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>,
+  appendedPatterns, appendedPatternsRes, breakValid, continueValid;
+flowtype PatternList = decorate {expectedTypes, env, returnType, transformIn,
+  breakValid, continueValid},
+  pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
+  defs {decorate}, transform {decorate}, count {},
+  appendedPatternsRes {appendedPatterns};
 
 propagate decls, defs, patternDefs, errors on PatternList;
 

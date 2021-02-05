@@ -13,6 +13,8 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   local initialTransform::Stmt = scrutinees.transform;
   initialTransform.env = openScopeEnv(top.env);
   initialTransform.returnType = nothing();
+  initialTransform.breakValid = false;
+  initialTransform.continueValid = true;
   
   scrutinees.argumentPosition = 0;
   clauses.env = addEnv(initialTransform.defs, initialTransform.env);

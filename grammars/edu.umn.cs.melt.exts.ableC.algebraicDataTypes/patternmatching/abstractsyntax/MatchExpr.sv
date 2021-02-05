@@ -10,6 +10,8 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   local initialTransform::Stmt = scrutinees.transform;
   initialTransform.env = openScopeEnv(top.env);
   initialTransform.returnType = nothing();
+  initialTransform.breakValid = false;
+  initialTransform.continueValid = false;
   
   scrutinees.argumentPosition = 0;
   clauses.env = addEnv(initialTransform.defs, initialTransform.env);
@@ -26,6 +28,8 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   resultDecl.env = addEnv(clauses.defs, clauses.env);
   resultDecl.isTopLevel = false;
   resultDecl.returnType = nothing();
+  resultDecl.breakValid = false;
+  resultDecl.continueValid = false;
   
   local localErrors::[Message] =
     clauses.errors ++ scrutinees.errors ++
