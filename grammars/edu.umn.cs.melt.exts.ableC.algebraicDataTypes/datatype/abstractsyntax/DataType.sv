@@ -128,6 +128,12 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
         $StructItemList{structItems}
       };
     };
+  
+  production adtStructDeclaration::Decorated StructDecl =
+    case adtStructDecl of
+    | typeExprDecl(_, structTypeExpr(_, d)) -> d
+    | _ -> error("unexpected adtStructDecl structure")
+    end;
 
   -- Decorate struct and enum declarations here to compute tagEnv andfieldNames
   adtEnumDecl.env = top.env;
@@ -141,8 +147,8 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
   adtStructDecl.breakValid = top.breakValid;
   adtStructDecl.continueValid = top.continueValid;
 
-  top.tagEnv = case adtStructDecl of typeExprDecl(_, structTypeExpr(_, d)) -> d.tagEnv end;
-  top.hostFieldNames := case adtStructDecl of typeExprDecl(_, structTypeExpr(_, d)) -> d.hostFieldNames end;
+  top.tagEnv = adtStructDeclaration.tagEnv;
+  top.hostFieldNames := adtStructDeclaration.hostFieldNames;
 
   {- This attribute is for extensions to use to add additional auto-generated functions
      for ADT, for example an auto-generated recursive freeing function. -}

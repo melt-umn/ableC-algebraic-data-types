@@ -38,6 +38,7 @@ top::Expr ::= e::Expr
   local decl::Decorated ADTDecl =
     case adtLookup of
     | adtRefIdItem(decl) :: _ -> decl
+    | _ -> error("adt refId not an adtRefIdItem")
     end;
   
   forwards to
