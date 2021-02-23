@@ -36,7 +36,9 @@ top::Decl ::= id::Name  allocator::Name pfx::Maybe<Name>
     | adtRefIdTagItem(refId) ->
       case lookupRefId(refId, top.env) of
       | adtRefIdItem(d) :: _ -> d
+      | _ -> error("adtLookup demanded when not an adtRefIdItem")
       end
+    | _ -> error("adtLookup demanded when not an adtRefIdTagItem")
     end;
   -- Re-decorate the found ADT decl, also supplying the allocator name
   local d::ADTDecl = new(adtLookup);
