@@ -12,9 +12,7 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   -- Compute defs for clauses env
   local initialTransform::Stmt = scrutinees.transform;
   initialTransform.env = openScopeEnv(top.env);
-  initialTransform.returnType = nothing();
-  initialTransform.breakValid = false;
-  initialTransform.continueValid = true;
+  initialTransform.controlStmtContext = initialControlStmtContext;
   
   scrutinees.argumentPosition = 0;
   clauses.env = addEnv(initialTransform.defs, initialTransform.env);

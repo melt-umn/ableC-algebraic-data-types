@@ -71,11 +71,11 @@ autocopy attribute givenTagEnv::Decorated Env;
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
-nonterminal StructPatternList with pps, errors, env, returnType, defs, decls,
+nonterminal StructPatternList with pps, errors, env, defs, decls,
   patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>,
-  breakValid, continueValid;
+  controlStmtContext;
 flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames,
-  returnType, transformIn, breakValid, continueValid},
+  transformIn, controlStmtContext},
   pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
   defs {decorate}, transform {decorate};
 
@@ -106,9 +106,9 @@ top::StructPatternList ::= {-empty-}
 
 nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs,
   givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>,
-  env, returnType, breakValid, continueValid;
-flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType,
-  transformIn, breakValid, continueValid},
+  env, controlStmtContext;
+flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames,
+  transformIn, controlStmtContext},
   pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate},
   transform {decorate};
 

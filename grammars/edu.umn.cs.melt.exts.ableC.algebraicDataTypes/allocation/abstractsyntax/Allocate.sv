@@ -43,9 +43,7 @@ top::Decl ::= id::Name  allocator::Name pfx::Maybe<Name>
   -- Re-decorate the found ADT decl, also supplying the allocator name
   local d::ADTDecl = new(adtLookup);
   d.env = top.env; -- TODO: Not exactly correct, but the decl needs to see the tag to avoid re-generating the refId
-  d.returnType = adtLookup.returnType;
-  d.breakValid = adtLookup.breakValid;
-  d.continueValid = adtLookup.continueValid;
+  d.controlStmtContext = adtLookup.controlStmtContext;
   d.isTopLevel = adtLookup.isTopLevel;
   d.givenRefId = adtLookup.givenRefId;
   d.adtGivenName = adtLookup.adtGivenName;
@@ -109,7 +107,7 @@ top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes
   
   args.expectedTypes = paramTypes;
   args.argumentPosition = 1;
-  args.callExpr = decorate declRefExpr(n, location=n.location) with {env = top.env; returnType = top.returnType; breakValid = top.breakValid; continueValid = top.continueValid;};
+  args.callExpr = decorate declRefExpr(n, location=n.location) with {env = top.env; controlStmtContext = top.controlStmtContext; };
   args.callVariadic = false;
   
   local resultTypeExpr::BaseTypeExpr = adtTagReferenceTypeExpr(nilQualifier(), adtName);

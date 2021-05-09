@@ -55,10 +55,10 @@ autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
 nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env,
-  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType,
-  typerep, appendedExprClauses, appendedExprClausesRes, breakValid, continueValid;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes,
-  transformIn, breakValid, continueValid},
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  typerep, appendedExprClauses, appendedExprClausesRes, controlStmtContext;
+flowtype ExprClauses = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
   errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
   appendedExprClausesRes {appendedExprClauses};
 
@@ -110,10 +110,10 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
 }
 
 nonterminal ExprClause with location, matchLocation, pp, errors, defs, env,
-  returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
-  typerep, breakValid, continueValid;
-flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes,
-  transformIn, breakValid, continueValid},
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  typerep, controlStmtContext;
+flowtype ExprClause = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
   errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
 propagate errors, defs on ExprClause;

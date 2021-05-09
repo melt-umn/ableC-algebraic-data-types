@@ -5,9 +5,8 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     this is generally expected to be more useful.
 -}
 closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs,
-  patternDefs, env, returnType, breakValid, continueValid;
-flowtype Pattern = decorate {expectedType, env, returnType, transformIn,
-  breakValid, continueValid},
+  patternDefs, env, controlStmtContext;
+flowtype Pattern = decorate {expectedType, env, transformIn, controlStmtContext},
   pp {}, decls {decorate}, errors {decorate}, defs {decorate},
   patternDefs {decorate}, transform {decorate};
 
@@ -59,10 +58,8 @@ top::Pattern ::= n::Name
         declarator(n, baseTypeExpr(), nilAttribute(), nothingInitializer()),
         nilDeclarator()));
   d.env = top.env;
-  d.returnType = top.returnType;
   d.isTopLevel = false;
-  d.breakValid = top.breakValid;
-  d.continueValid = top.continueValid;
+  d.controlStmtContext = top.controlStmtContext;
   
   top.transform = ableC_Expr { ($Name{n} = $Expr{top.transformIn}, 1) };
 }
@@ -133,10 +130,8 @@ top::Pattern ::= p::Pattern
       $directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};
     };
   derefDecl.env = top.env;
-  derefDecl.returnType = top.returnType;
   derefDecl.isTopLevel = false;
-  derefDecl.breakValid = top.breakValid;
-  derefDecl.continueValid = top.continueValid;
+  derefDecl.controlStmtContext = top.controlStmtContext;
   
   p.env = addEnv(derefDecl.defs, top.env);
   
@@ -202,11 +197,11 @@ top::Pattern ::= p::Pattern
 autocopy attribute appendedPatterns :: PatternList;
 synthesized attribute appendedPatternsRes :: PatternList;
 
-nonterminal PatternList with pps, errors, env, returnType, defs, decls,
+nonterminal PatternList with pps, errors, env, defs, decls,
   patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>,
-  appendedPatterns, appendedPatternsRes, breakValid, continueValid;
-flowtype PatternList = decorate {expectedTypes, env, returnType, transformIn,
-  breakValid, continueValid},
+  appendedPatterns, appendedPatternsRes, controlStmtContext;
+flowtype PatternList = decorate {expectedTypes, env, transformIn,
+  controlStmtContext},
   pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
   defs {decorate}, transform {decorate}, count {},
   appendedPatternsRes {appendedPatterns};

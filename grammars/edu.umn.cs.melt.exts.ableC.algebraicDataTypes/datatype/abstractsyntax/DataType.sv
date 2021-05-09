@@ -47,11 +47,11 @@ synthesized attribute transform<a> :: a;
 -- the same constructors.
 autocopy attribute adtGivenName :: String;
 
-nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel, returnType,
+nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel,
   adtGivenName, name, givenRefId, refId, constructors, tagEnv, hostFieldNames,
-  transform<Decl>, breakValid, continueValid;
-flowtype ADTDecl = decorate {isTopLevel, env, returnType, givenRefId, adtGivenName,
-  breakValid, continueValid},
+  transform<Decl>, controlStmtContext;
+flowtype ADTDecl = decorate {isTopLevel, env, givenRefId, adtGivenName,
+  controlStmtContext},
   pp {}, defs {decorate}, errors {decorate}, name {}, refId {decorate},
   constructors {decorate}, tagEnv {decorate}, hostFieldNames {decorate}, transform {decorate};
 
@@ -137,15 +137,11 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 
   -- Decorate struct and enum declarations here to compute tagEnv andfieldNames
   adtEnumDecl.env = top.env;
-  adtEnumDecl.returnType = top.returnType;
   adtEnumDecl.isTopLevel = top.isTopLevel;
-  adtEnumDecl.breakValid = top.breakValid;
-  adtEnumDecl.continueValid = top.continueValid;
+  adtEnumDecl.controlStmtContext = top.controlStmtContext;
   adtStructDecl.env = addEnv(adtEnumDecl.defs, top.env);
-  adtStructDecl.returnType = top.returnType;
   adtStructDecl.isTopLevel = top.isTopLevel;
-  adtStructDecl.breakValid = top.breakValid;
-  adtStructDecl.continueValid = top.continueValid;
+  adtStructDecl.controlStmtContext = top.controlStmtContext;
 
   top.tagEnv = adtStructDeclaration.tagEnv;
   top.hostFieldNames := adtStructDeclaration.hostFieldNames;
@@ -155,13 +151,13 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
   production attribute adtDecls::Decls with appendDecls;
   adtDecls := nilDecl();
   -- Seed the flowtype
-  adtDecls <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
+  adtDecls <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.controlStmtContext) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
 
   {- Used to generate prototypes for adtDecls which are inserted before the constructors -}
   production attribute adtProtos::Decls with appendDecls;
   adtProtos := nilDecl();
   -- Seed the flowtype
-  adtProtos <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.returnType) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
+  adtProtos <- if false then error(hackUnparse(top.env) ++ hackUnparse(top.controlStmtContext) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
 
   {- This attribute is for extensions to use to add additional members to the generated
      ADT struct. -}
@@ -203,11 +199,11 @@ autocopy attribute appendedConstructors :: ConstructorList;
 synthesized attribute appendedConstructorsRes :: ConstructorList;
 
 nonterminal ConstructorList
-  with pp, env, errors, defs, returnType, enumItems, structItems, funDecls,
-    adtGivenName, adtDeclName, constructors, breakValid, continueValid,
+  with pp, env, errors, defs, enumItems, structItems, funDecls,
+    adtGivenName, adtDeclName, constructors, controlStmtContext,
     appendedConstructors, appendedConstructorsRes;
-flowtype ConstructorList = decorate {env, returnType, adtGivenName, adtDeclName,
-  breakValid, continueValid},
+flowtype ConstructorList = decorate {env, adtGivenName, adtDeclName,
+  controlStmtContext},
   pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName},
   structItems {decorate}, funDecls {decorate}, constructors {decorate},
   appendedConstructorsRes {appendedConstructors};
@@ -264,10 +260,10 @@ synthesized attribute funDecl :: Decl;
 nonterminal Constructor
   with pp, env, defs, errors,
        enumItem, structItem, funDecl, adtGivenName, adtDeclName, constructors,
-       returnType, breakValid, continueValid, -- because Types may contain Exprs
+       controlStmtContext, -- because Types may contain Exprs
        location;
-flowtype Constructor = decorate {env, returnType, adtGivenName, adtDeclName,
-  breakValid, continueValid},
+flowtype Constructor = decorate {env, adtGivenName, adtDeclName,
+  controlStmtContext},
   pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName},
   structItem {decorate}, funDecl {decorate}, constructors {decorate};
 

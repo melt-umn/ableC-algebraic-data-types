@@ -53,11 +53,11 @@ autocopy attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
 nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs,
-  env, returnType, breakValid, continueValid,
+  env, controlStmtContext,
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes,
-  transformIn, breakValid, continueValid},
+flowtype StmtClauses = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
   errors {decorate}, functionDefs {}, transform {decorate, endLabelName},
   appendedStmtClausesRes {appendedStmtClauses};
 
@@ -97,10 +97,10 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 
 
 nonterminal StmtClause with location, matchLocation, pp, errors, defs, functionDefs, env,
-  expectedTypes, returnType, breakValid, continueValid,
+  expectedTypes, controlStmtContext,
   transform<Stmt>, transformIn<[Expr]>, endLabelName;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes,
-  transformIn, breakValid, continueValid},
+flowtype StmtClause = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
   errors {decorate}, defs {decorate}, functionDefs {}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
