@@ -4,8 +4,11 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     productions, instead of arbitrary new attributes with regular nonterminals, since
     this is generally expected to be more useful.
 -}
-closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs, patternDefs, env, returnType;
-flowtype Pattern = decorate {expectedType, env, returnType, transformIn}, pp {}, decls {decorate}, errors {decorate}, defs {decorate}, patternDefs {decorate}, transform {decorate};
+closed nonterminal Pattern with location, pp, decls, expectedType, errors, defs,
+  patternDefs, env, controlStmtContext;
+flowtype Pattern = decorate {expectedType, env, transformIn, controlStmtContext},
+  pp {}, decls {decorate}, errors {decorate}, defs {decorate},
+  patternDefs {decorate}, transform {decorate};
 
 {-- This attribute collects definitions for pattern variables.
     During pattern matching, values are stored in these variables
@@ -55,8 +58,8 @@ top::Pattern ::= n::Name
         declarator(n, baseTypeExpr(), nilAttribute(), nothingInitializer()),
         nilDeclarator()));
   d.env = top.env;
-  d.returnType = top.returnType;
   d.isTopLevel = false;
+  d.controlStmtContext = top.controlStmtContext;
   
   top.transform = ableC_Expr { ($Name{n} = $Expr{top.transformIn}, 1) };
 }
@@ -72,8 +75,8 @@ abstract production patternConst
 top::Pattern ::= constExpr::Expr
 {
   top.pp = constExpr.pp;
-  top.errors <-
-    if !typeAssignableTo(constExpr.typerep, top.expectedType) -- TODO: Proper handling for equality type checking
+  top.errors <-  -- TODO: Proper handling for equality type checking
+    if !typeAssignableTo(constExpr.typerep, top.expectedType.defaultFunctionArrayLvalueConversion)
     then [err(constExpr.location, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
     else [];
   
@@ -86,14 +89,13 @@ top::Pattern ::= s::String
   top.pp = text(s);
   
   local stringType::Type =
-    pointerType(
-      nilQualifier(),
+    pointerType(nilQualifier(),
       builtinType(
         consQualifier(constQualifier(location=builtin), nilQualifier()),
         signedType(charType())));
   top.errors <-
-    if !compatibleTypes(stringType, top.expectedType, true, true)
-    then [err(top.location, s"Constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
+    if !typeAssignableTo(stringType.defaultFunctionArrayLvalueConversion, top.expectedType.defaultFunctionArrayLvalueConversion)
+    then [err(top.location, s"String constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
     else [];
   top.errors <-
     if null(lookupValue("strcmp", top.env))
@@ -128,8 +130,8 @@ top::Pattern ::= p::Pattern
       $directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};
     };
   derefDecl.env = top.env;
-  derefDecl.returnType = top.returnType;
   derefDecl.isTopLevel = false;
+  derefDecl.controlStmtContext = top.controlStmtContext;
   
   p.env = addEnv(derefDecl.defs, top.env);
   
@@ -195,8 +197,14 @@ top::Pattern ::= p::Pattern
 autocopy attribute appendedPatterns :: PatternList;
 synthesized attribute appendedPatternsRes :: PatternList;
 
-nonterminal PatternList with pps, errors, env, returnType, defs, decls, patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>, appendedPatterns, appendedPatternsRes;
-flowtype PatternList = decorate {expectedTypes, env, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate}, count {}, appendedPatternsRes {appendedPatterns};
+nonterminal PatternList with pps, errors, env, defs, decls,
+  patternDefs, expectedTypes, count, transform<Expr>, transformIn<[Expr]>,
+  appendedPatterns, appendedPatternsRes, controlStmtContext;
+flowtype PatternList = decorate {expectedTypes, env, transformIn,
+  controlStmtContext},
+  pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
+  defs {decorate}, transform {decorate}, count {},
+  appendedPatternsRes {appendedPatterns};
 
 propagate decls, defs, patternDefs, errors on PatternList;
 

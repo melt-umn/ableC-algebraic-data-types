@@ -73,6 +73,7 @@ top::RefIdItem ::= adt::Decorated ADTDecl
 {
   top.pp = text("ADTDecl: adt.refId=" ++ adt.refId);
   top.tagEnv = adt.tagEnv;
+  top.hostFieldNames := adt.hostFieldNames;
   top.hasConstField := false; -- ADT is always assignable
   top.constructors = adt.constructors;
 }
@@ -144,7 +145,7 @@ top::ExtType ::= adtName::String adtDeclName::String refId::String
 {
   propagate canonicalType;
   top.host =
-    extType(top.givenQualifiers, refIdExtType(structSEU(), adtDeclName ++ "_s", refId ++ "_s"));
+    extType(top.givenQualifiers, refIdExtType(structSEU(), just(adtDeclName ++ "_s"), refId ++ "_s"));
   top.pp = ppConcat([pp"datatype", space(), text(adtDeclName)]);
   top.mangledName =
     s"datatype_${if adtDeclName == "<anon>" then "anon" else adtDeclName}_${substitute(":", "_", refId)}";

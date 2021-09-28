@@ -52,12 +52,16 @@ autocopy attribute matchLocation::Location;
 autocopy attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
-nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs, env, returnType,
+nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs,
+  env, controlStmtContext,
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
-  appendedStmtClauses, appendedStmtClausesRes;
-flowtype StmtClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, functionDefs {}, transform {decorate, endLabelName}, appendedStmtClausesRes {appendedStmtClauses};
+  appendedStmtClauses, appendedStmtClausesRes, labelDefs;
+flowtype StmtClauses = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
+  errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName},
+  appendedStmtClausesRes {appendedStmtClauses};
 
-propagate errors, functionDefs on StmtClauses;
+propagate errors, functionDefs, labelDefs on StmtClauses;
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -93,9 +97,11 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 
 
 nonterminal StmtClause with location, matchLocation, pp, errors, defs, functionDefs, env,
-  expectedTypes, returnType,
-  transform<Stmt>, transformIn<[Expr]>, endLabelName;
-flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, functionDefs {}, transform {decorate, endLabelName};
+  expectedTypes, controlStmtContext,
+  transform<Stmt>, transformIn<[Expr]>, endLabelName, labelDefs;
+flowtype StmtClause = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
+  errors {decorate}, defs {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -112,7 +118,7 @@ flowtype StmtClause = decorate {env, returnType, matchLocation, expectedTypes, t
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
-  propagate errors, functionDefs;
+  propagate errors, functionDefs, labelDefs;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors <-
     if ps.count != length(top.expectedTypes)

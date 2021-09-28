@@ -1,6 +1,7 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
 -- struct/union patterns --
+-- Mirrors initializer syntax, but slightly more sane with nested objects
 -------------------
 abstract production structPattern
 top::Pattern ::= ps::StructPatternList
@@ -38,14 +39,31 @@ top::Pattern ::= ps::StructPatternList
     end;
   
   ps.givenFieldNames =
-    -- TODO: Ugly hack to get ordered list of field names from the tag environment
-    case ps.givenTagEnv of
-    | addEnv_i(d, _) -> map(fst, d.valueContribs)
-    | _ -> []
+    case refIdLookup of
+    | item :: _ -> flattenFieldNames(item.fieldNames, top.env)
+    | [] -> []
     end;
   
   top.transform = ps.transform;
   ps.transformIn = top.transformIn;
+}
+
+function flattenFieldNames
+[String] ::= fns::[Either<String ExtType>] env::Decorated Env
+{
+  return
+    flatMap(
+      \ f::Either<String ExtType> ->
+        case f of
+        | left(fn) -> [fn]
+        | right(e) ->
+          case e.maybeRefId of
+          | just(refId) when lookupRefId(refId, env) matches r :: _ ->
+            flattenFieldNames(r.fieldNames, env)
+          | _ -> error("Failed to get anon struct fields")
+          end
+        end,
+      fns);
 }
 
 autocopy attribute givenTagEnv::Decorated Env;
@@ -53,8 +71,13 @@ autocopy attribute givenTagEnv::Decorated Env;
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
-nonterminal StructPatternList with pps, errors, env, returnType, defs, decls, patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>;
-flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
+nonterminal StructPatternList with pps, errors, env, defs, decls,
+  patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>,
+  controlStmtContext;
+flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames,
+  transformIn, controlStmtContext},
+  pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
+  defs {decorate}, transform {decorate};
 
 propagate errors, defs, decls, patternDefs on StructPatternList;
 
@@ -81,8 +104,13 @@ top::StructPatternList ::= {-empty-}
   top.transform = mkIntConst(1, builtin);
 }
 
-nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs, givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>, env, returnType;
-flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames, returnType, transformIn}, pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate}, transform {decorate};
+nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs,
+  givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>,
+  env, controlStmtContext;
+flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames,
+  transformIn, controlStmtContext},
+  pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate},
+  transform {decorate};
 
 propagate errors, defs, decls, patternDefs on StructPattern;
 

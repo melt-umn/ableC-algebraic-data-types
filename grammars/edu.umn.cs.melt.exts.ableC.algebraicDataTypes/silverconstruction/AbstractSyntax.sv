@@ -1,10 +1,10 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:silverconstruction;
 
 imports silver:langutil:pp;
-imports silver:metatranslation;
 imports silver:reflect;
 
-imports silver:definition:core;
+imports silver:compiler:definition:core;
+imports silver:compiler:metatranslation;
 
 imports edu:umn:cs:melt:exts:silver:ableC:abstractsyntax;
 imports edu:umn:cs:melt:ableC:abstractsyntax:host as ableC;
