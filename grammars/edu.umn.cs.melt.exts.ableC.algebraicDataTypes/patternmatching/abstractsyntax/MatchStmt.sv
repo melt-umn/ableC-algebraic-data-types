@@ -19,7 +19,7 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   clauses.matchLocation = clauses.location; -- Whatever.
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
-  clauses.endLabelName = s"_end_${toString(genInt())}";
+  clauses.endLabelName = s"_end_${toString(genIntT())}";
   
   local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
   local fwrd::Stmt =

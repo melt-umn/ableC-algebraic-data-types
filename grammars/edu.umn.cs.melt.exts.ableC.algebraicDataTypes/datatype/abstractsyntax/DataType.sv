@@ -85,7 +85,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
     | _ -> nothing()
     end;
   local name_tagRefId_workaround :: String =
-    fromMaybe(toString(genInt()), name_refIdIfOld_workaround);
+    fromMaybe(toString(genIntT()), name_refIdIfOld_workaround);
   local name_tagHasForwardDcl_workaround :: Boolean =
     name_refIdIfOld_workaround.isJust;
 
@@ -110,7 +110,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
             nilEnumItem() ->
               consEnumItem(
                 enumItem(
-                  name(s"_dummy_${top.adtGivenName}_enum_item_${toString(genInt())}", location=builtin),
+                  name(s"_dummy_${top.adtGivenName}_enum_item_${toString(genIntT())}", location=builtin),
                   nothingExpr()),
                 nilEnumItem())
           | _ -> cs.enumItems

@@ -16,7 +16,7 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
   clauses.matchLocation = top.location;
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
-  clauses.endLabelName = s"_end_${toString(genInt())}";
+  clauses.endLabelName = s"_end_${toString(genIntT())}";
   
   -- Workaround since clauses lack defs from _match_result type expr in env
   local resultDecl::Decl =
