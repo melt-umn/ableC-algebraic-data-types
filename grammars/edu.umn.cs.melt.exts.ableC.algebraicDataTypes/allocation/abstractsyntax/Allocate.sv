@@ -111,7 +111,7 @@ top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes
   args.callVariadic = false;
   
   local resultTypeExpr::BaseTypeExpr = adtTagReferenceTypeExpr(nilQualifier(), adtName);
-  local resultName::String = "result_" ++ toString(genIntT());
+  local resultName::String = "result_" ++ toString(genInt());
   local fwrd::Expr =
     ableC_Expr {
       ({$BaseTypeExpr{resultTypeExpr} *$name{resultName} = $Name{allocatorName}(sizeof($BaseTypeExpr{resultTypeExpr}));

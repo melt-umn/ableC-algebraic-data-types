@@ -124,7 +124,7 @@ top::Pattern ::= p::Pattern
   
   -- Store the result of the dereference in a temporary variable
   -- since p.transformIn may be used more than once.
-  local tempName::String = "_match_pointer_" ++ toString(genIntT());
+  local tempName::String = "_match_pointer_" ++ toString(genInt());
   local derefDecl::Decl =
     ableC_Decl {
       $directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};

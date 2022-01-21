@@ -90,7 +90,7 @@ top::BaseTypeExpr ::= q::Qualifiers n::Name
   top.pp = ppConcat([terminate(space(), q.pps), pp"datatype", space(), n.pp]);
 
   local tags :: [TagItem] = lookupTag(n.name, top.env);
-  local refId :: String = fromMaybe(toString(genIntT()), top.givenRefId);
+  local refId :: String = fromMaybe(toString(genInt()), top.givenRefId);
   
   local defs::[Def] =
     case tags of
