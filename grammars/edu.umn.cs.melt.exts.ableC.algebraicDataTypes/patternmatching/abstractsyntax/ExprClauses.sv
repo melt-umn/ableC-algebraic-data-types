@@ -54,8 +54,13 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 autocopy attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, returnType, typerep, appendedExprClauses, appendedExprClausesRes;
-flowtype ExprClauses = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, transform {decorate, endLabelName}, typerep {decorate}, appendedExprClausesRes {appendedExprClauses};
+nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env,
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  typerep, appendedExprClauses, appendedExprClausesRes, controlStmtContext;
+flowtype ExprClauses = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
+  errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
+  appendedExprClausesRes {appendedExprClauses};
 
 propagate errors, defs on ExprClauses;
 
@@ -64,7 +69,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
 {
   top.pp = cat( c.pp, rest.pp );
   top.errors <-
-    if typeAssignableTo(c.typerep, rest.typerep)
+    if typeAssignableTo(c.typerep, rest.typerep) || typeAssignableTo(rest.typerep, c.typerep)
     then []
     else [err(c.location,
               s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
@@ -72,6 +77,8 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
   top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
     then c.typerep
+    else if typeAssignableTo(rest.typerep, c.typerep)
+    then rest.typerep
     else errorType();
   top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
   
@@ -102,8 +109,12 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
   return p1.appendedExprClausesRes;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors, defs, env, returnType, expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, typerep;
-flowtype ExprClause = decorate {env, returnType, matchLocation, expectedTypes, transformIn}, errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
+nonterminal ExprClause with location, matchLocation, pp, errors, defs, env,
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  typerep, controlStmtContext;
+flowtype ExprClause = decorate {env, matchLocation, expectedTypes,
+  transformIn, controlStmtContext},
+  errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
 propagate errors, defs on ExprClause;
 

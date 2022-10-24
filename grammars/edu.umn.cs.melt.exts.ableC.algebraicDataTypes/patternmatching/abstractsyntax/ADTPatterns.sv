@@ -22,7 +22,7 @@ top::Pattern ::= n::Name ps::PatternList
     | [] -> []
     end;
   
-  local constructorParamLookup::Maybe<Decorated Parameters> = lookupBy(stringEq, n.name, constructors);
+  local constructorParamLookup::Maybe<Decorated Parameters> = lookup(n.name, constructors);
   
   top.errors <-
     case top.expectedType, adtName, adtLookup, constructorParamLookup of
@@ -58,7 +58,7 @@ top::Pattern ::= n::Name ps::PatternList
   ps.transformIn =
     case constructorParamLookup of
     | just(params) ->
-      do (bindList, returnList) {
+      do {
         fieldName::String <- params.fieldNames;
         return ableC_Expr { $Expr{top.transformIn}.contents.$Name{n}.$name{fieldName} };
       }

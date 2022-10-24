@@ -1,6 +1,5 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
-imports core:monad;
 imports silver:langutil; 
 imports silver:langutil:pp;
 

@@ -12,6 +12,15 @@ copper_mda testDatatype(ablecParser) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax;
 }
 
+parser ableCWithStrings :: Root {
+  edu:umn:cs:melt:ableC:concretesyntax;
+  edu:umn:cs:melt:exts:ableC:string:concretesyntax;
+}
+
+copper_mda testDatatypeWithString(ableCWithStrings) {
+  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax;
+}
+
 copper_mda testPatternMatching(ablecParser) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 }
@@ -30,8 +39,8 @@ parser ableCWithDatatypes :: Root {
 copper_mda testSilverConstruction(ableCWithDatatypes) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:silverconstruction;
   edu:umn:cs:melt:exts:silver:ableC:concretesyntax:antiquotation;
-  silver:host:core;
-  silver:extension:patternmatching;
-  silver:extension:list;
-  silver:modification:let_fix;
+  silver:compiler:host:core;
+  silver:compiler:extension:patternmatching;
+  silver:compiler:modification:list;
+  silver:compiler:modification:let_fix;
 }
