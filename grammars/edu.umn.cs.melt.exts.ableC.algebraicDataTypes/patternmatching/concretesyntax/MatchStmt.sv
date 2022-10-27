@@ -30,7 +30,7 @@ concrete productions top::StmtClauses_c
   { top.ast = abs:failureStmtClause(location=top.location); }
 
 
-nonterminal StmtClause_c with location, ast<abs:StmtClause>;
+closed nonterminal StmtClause_c with location, ast<abs:StmtClause>;
 
 concrete productions top::StmtClause_c
 | OpenScope_t p::PatternList_c '->' '{' l::BlockItemList_c '}'

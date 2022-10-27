@@ -7,7 +7,6 @@ abstract production structPattern
 top::Pattern ::= ps::StructPatternList
 {
   top.pp = braces(ppImplode(text(", "), ps.pps));
-  ps.env = top.env;
   
   -- Type checking
   local refId::Maybe<String> =
@@ -66,7 +65,7 @@ function flattenFieldNames
       fns);
 }
 
-autocopy attribute givenTagEnv::Decorated Env;
+inherited attribute givenTagEnv::Decorated Env;
 
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
@@ -79,7 +78,7 @@ flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames,
   pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
   defs {decorate}, transform {decorate};
 
-propagate errors, defs, decls, patternDefs on StructPatternList;
+propagate givenTagEnv, controlStmtContext, errors, defs, decls, patternDefs on StructPatternList;
 
 abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
@@ -112,12 +111,13 @@ flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames,
   pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate},
   transform {decorate};
 
-propagate errors, defs, decls, patternDefs on StructPattern;
+propagate givenTagEnv, controlStmtContext, errors, defs, decls, patternDefs on StructPattern;
 
 abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern
 {
   top.pp = p.pp;
+  propagate env;
   top.remainingFieldNames =
     case top.givenFieldNames of
     | n :: ns -> ns
@@ -155,6 +155,7 @@ top::StructPattern ::= n::Name p::Pattern
   top.remainingFieldNames = top.givenFieldNames;
   
   n.env = top.givenTagEnv;
+  p.env = top.env;
   p.expectedType = n.valueItem.typerep;
   
   p.transformIn = memberExpr(top.transformIn, false, n, location=builtin);

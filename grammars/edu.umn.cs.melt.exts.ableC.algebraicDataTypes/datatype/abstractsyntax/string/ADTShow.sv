@@ -28,6 +28,7 @@ abstract production showADT
 top::Expr ::= e::Expr
 {
   top.pp = pp"show(${e.pp})";
+  propagate env, controlStmtContext;
   
   local adtLookup::[RefIdItem] =
     case e.typerep.maybeRefId of

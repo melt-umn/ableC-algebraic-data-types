@@ -30,6 +30,7 @@ top::Decl ::= adt::ADTDecl
 {
   top.pp = ppConcat([ text("datatype"), space(), adt.pp, semi() ]);
 
+  propagate env, isTopLevel, controlStmtContext;
   adt.givenRefId = nothing();
   adt.adtGivenName = adt.name;
 
@@ -45,7 +46,7 @@ synthesized attribute transform<a> :: a;
 -- Usually the same as adtDeclName, but but extensions building on ADTs can
 -- specify a different one.  This can be the same for multiple adtDecls with
 -- the same constructors.
-autocopy attribute adtGivenName :: String;
+inherited attribute adtGivenName :: String;
 
 nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel,
   adtGivenName, name, givenRefId, refId, constructors, tagEnv, hostFieldNames,
@@ -58,7 +59,7 @@ flowtype ADTDecl = decorate {isTopLevel, env, givenRefId, adtGivenName,
 abstract production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
-  propagate errors;  -- TODO: check for redeclaration
+  propagate isTopLevel, controlStmtContext, adtGivenName, errors;  -- TODO: check for redeclaration
   top.pp = ppConcat([ ppAttributes(attrs), n.pp, space(), braces(nestlines(2, cs.pp)) ]);
 
   {- structs create a tagItem and a refIdItem in the environment
@@ -69,6 +70,9 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
      We have to do this for ADTs as well.
    -}
   top.name = n.name;
+
+  attrs.env = top.env;
+  n.env = top.env;
 
   production preDefs :: [Def] =
     if name_tagHasForwardDcl_workaround
@@ -181,7 +185,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 }
 
 -- Used to pass down the datatype's actual declared name for naming conventions
-autocopy attribute adtDeclName :: String;
+inherited attribute adtDeclName :: String;
 
 -- Constructs the enum item for each constructor
 synthesized attribute enumItems :: EnumItemList;
@@ -195,7 +199,7 @@ synthesized attribute funDecls :: Decls;
 -- Constructor list used, e.g., when type checking patterns
 synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 
-autocopy attribute appendedConstructors :: ConstructorList;
+inherited attribute appendedConstructors :: ConstructorList;
 synthesized attribute appendedConstructorsRes :: ConstructorList;
 
 nonterminal ConstructorList
@@ -207,6 +211,7 @@ flowtype ConstructorList = decorate {env, adtGivenName, adtDeclName,
   pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName},
   structItems {decorate}, funDecls {decorate}, constructors {decorate},
   appendedConstructorsRes {appendedConstructors};
+propagate adtGivenName, adtDeclName, controlStmtContext, errors, defs, appendedConstructors on ConstructorList;
 
 abstract production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
@@ -217,14 +222,13 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
     | nilConstructor() -> notext()
     end;
   top.pp = ppConcat([ c.pp, sep, cl.pp ]);
-  top.errors := c.errors ++ cl.errors;
-  top.defs := c.defs ++ cl.defs;
   top.enumItems = consEnumItem(c.enumItem, cl.enumItems);
   top.structItems = consStructItem(c.structItem, cl.structItems);
   top.funDecls = consDecl(c.funDecl, cl.funDecls);
   top.constructors = c.constructors ++ cl.constructors;
   top.appendedConstructorsRes = consConstructor(c, cl.appendedConstructorsRes);
 
+  c.env = top.env;
   cl.env = addEnv(c.defs, c.env);
 }
 
@@ -232,8 +236,6 @@ abstract production nilConstructor
 top::ConstructorList ::=
 {
   top.pp = notext();
-  top.errors := [];
-  top.defs := [];
   top.enumItems = nilEnumItem();
   top.structItems = nilStructItem();
   top.funDecls = nilDecl();
@@ -267,11 +269,11 @@ flowtype Constructor = decorate {env, adtGivenName, adtDeclName,
   pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName},
   structItem {decorate}, funDecl {decorate}, constructors {decorate};
 
+propagate env, adtGivenName, adtDeclName, controlStmtContext, errors, defs on Constructor;
+
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
-  propagate errors;
-
   {- This attribute is for extensions to use to initialize additional members added
      to the generated ADT struct. -}
   production attribute initStmts::[Stmt] with ++;
@@ -279,8 +281,6 @@ top::Constructor ::= n::Name ps::Parameters
 
   top.pp = ppConcat([n.pp, parens(ppImplode(text(", "), ps.pps)), semi()]);
   top.errors <- n.valueRedeclarationCheckNoCompatible;
-
-  top.defs := ps.defs;
 
   ps.position = 0;
   ps.constructorName = n.name;

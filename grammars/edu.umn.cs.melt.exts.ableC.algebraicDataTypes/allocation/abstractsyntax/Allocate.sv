@@ -8,6 +8,7 @@ top::Decl ::= id::Name  allocator::Name pfx::Maybe<Name>
     | just(pfx) -> pp"allocate datatype ${id.pp} with ${allocator.pp} prefix ${pfx.pp};"
     | nothing() -> pp"allocate datatype ${id.pp} with ${allocator.pp};"
     end;
+  propagate env;
   
   local expectedAllocatorType::Type =
     functionType(
@@ -62,8 +63,8 @@ top::Decl ::= id::Name  allocator::Name pfx::Maybe<Name>
     else defsDecl(d.allocatorDefs);
 }
 
-autocopy attribute allocatorName::Name occurs on ADTDecl, ConstructorList, Constructor;
-autocopy attribute allocatePfx::String occurs on ADTDecl, ConstructorList, Constructor;
+inherited attribute allocatorName::Name occurs on ADTDecl, ConstructorList, Constructor;
+inherited attribute allocatePfx::String occurs on ADTDecl, ConstructorList, Constructor;
 monoid attribute allocatorDefs::[Def] with [], ++;
 monoid attribute allocatorErrorDefs::[Def] with [], ++;
 attribute allocatorDefs, allocatorErrorDefs occurs on ADTDecl, ConstructorList, Constructor;
@@ -71,7 +72,7 @@ attribute allocatorDefs, allocatorErrorDefs occurs on ADTDecl, ConstructorList, 
 flowtype allocatorDefs {decorate, allocatorName, allocatePfx} on ADTDecl, ConstructorList, Constructor;
 flowtype allocatorErrorDefs {decorate, allocatorName, allocatePfx} on ADTDecl, ConstructorList, Constructor;
 
-propagate allocatorDefs, allocatorErrorDefs on ADTDecl, ConstructorList;
+propagate allocatorName, allocatePfx, allocatorDefs, allocatorErrorDefs on ADTDecl, ConstructorList;
 
 aspect production constructor
 top::Constructor ::= n::Name ps::Parameters
@@ -103,6 +104,7 @@ abstract production allocateConstructorCallExpr
 top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes::[Type] n::Name args::Exprs
 {
   top.pp = parens(ppConcat([n.pp, parens(ppImplode(cat(comma(), space()), args.pps))]));
+  propagate env, controlStmtContext;
   local localErrors::[Message] = args.errors ++ args.argumentErrors;
   
   args.expectedTypes = paramTypes;

@@ -74,7 +74,7 @@ concrete productions top::ConstructorList_c
 
 synthesized attribute constructorName::Name;
 
-nonterminal Constructor_c with ast<Constructor>, constructorName, location;
+closed nonterminal Constructor_c with ast<Constructor>, constructorName, location;
 concrete productions top::Constructor_c
 | n::Identifier_c '(' ad::ParameterTypeList_c ')' ';'
   {

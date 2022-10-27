@@ -15,7 +15,10 @@ marking terminal AntiquotePattern_t         '$Pattern'         lexer classes {An
 concrete productions top::Constructor_c
 | '$ConstructorList' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquoteConstructorList(e, location=top.location); }
+{
+  top.ast = antiquoteConstructorList(e, location=top.location);
+  top.constructorName = ableC:name("", location=top.location);
+}
 
 concrete productions top::StmtClause_c
 | '$StmtClauses' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
