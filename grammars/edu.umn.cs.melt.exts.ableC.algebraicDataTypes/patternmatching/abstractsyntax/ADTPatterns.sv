@@ -12,7 +12,7 @@ top::Pattern ::= n::Name ps::PatternList
   
   local adtLookup::[RefIdItem] =
     case top.expectedType.maybeRefId of
-    | just(rid) -> lookupRefId(rid, top.env)
+    | just(rid) -> lookupRefId(rid, top.transform.env)
     | nothing() -> []
     end;
   
@@ -47,14 +47,10 @@ top::Pattern ::= n::Name ps::PatternList
     end;
   
   top.transform =
-    if adtName.isJust && constructorParamLookup.isJust
-    then
-      -- adtName ++ "_" ++ n.name is the tag name to match against
-      ableC_Expr {
-        $Expr{top.transformIn}.tag == $name{adtName.fromJust ++ "_" ++ n.name} && $Expr{ps.transform}
-      }
-    -- An error has occured, don't generate the tag check to avoid creating additional errors
-    else errorExpr(top.errors, location=builtin);
+    -- adtName ++ "_" ++ n.name is the tag name to match against
+    ableC_Expr {
+      $Expr{top.transformIn}.tag == $name{adtName.fromJust ++ "_" ++ n.name} && $Expr{@ps.transform}
+    };
   ps.transformIn =
     case constructorParamLookup of
     | just(params) ->

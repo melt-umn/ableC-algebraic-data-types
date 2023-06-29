@@ -44,7 +44,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     same name.
 -}
 
-synthesized attribute transform<a> :: a;
+translation attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
 inherited attribute endLabelName::String;
 inherited attribute matchLocation::Location;
@@ -53,26 +53,21 @@ inherited attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
 nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs,
-  env, controlStmtContext,
   expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   appendedStmtClauses, appendedStmtClausesRes, labelDefs;
-flowtype StmtClauses = decorate {env, matchLocation, expectedTypes,
-  transformIn, controlStmtContext},
+flowtype StmtClauses = decorate {transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
   errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName},
   appendedStmtClausesRes {appendedStmtClauses};
 
-propagate controlStmtContext, endLabelName, matchLocation, errors, functionDefs, labelDefs, appendedStmtClauses on StmtClauses;
+propagate endLabelName, matchLocation, errors, functionDefs, labelDefs, appendedStmtClauses on StmtClauses;
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
   top.pp = cat( c.pp, rest.pp );
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
-  
-  c.env = top.env;
-  rest.env = addEnv(c.defs, c.env);
 
-  top.transform = seqStmt(c.transform, rest.transform);
+  top.transform = seqStmt(@c.transform, @rest.transform);
   c.transformIn = top.transformIn;
   rest.transformIn = top.transformIn;
 
@@ -97,12 +92,10 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 }
 
 
-nonterminal StmtClause with location, matchLocation, pp, errors, defs, functionDefs, env,
-  expectedTypes, controlStmtContext,
-  transform<Stmt>, transformIn<[Expr]>, endLabelName, labelDefs;
-flowtype StmtClause = decorate {env, matchLocation, expectedTypes,
-  transformIn, controlStmtContext},
-  errors {decorate}, defs {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName};
+nonterminal StmtClause with location, matchLocation, pp, errors, functionDefs,
+  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, labelDefs;
+flowtype StmtClause = decorate {transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
+  errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
 
@@ -119,27 +112,24 @@ flowtype StmtClause = decorate {env, matchLocation, expectedTypes,
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
-  propagate controlStmtContext, matchLocation, errors, functionDefs, labelDefs;
+  propagate matchLocation, errors, functionDefs, labelDefs;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors <-
     if ps.count != length(top.expectedTypes)
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
-  top.defs := ps.defs ++ globalDeclsDefs(s.globalDecls);
   
   top.transform =
     ableC_Stmt {
       {
         $Decl{decls(foldDecl(ps.decls))}
-        if ($Expr{ps.transform}) {
-          $Stmt{decStmt(s)}
+        if ($Expr{@ps.transform}) {
+          $Stmt{@s}
           goto $name{top.endLabelName};
         }
       }
     };
   
-  ps.env = top.env;
   ps.expectedTypes = top.expectedTypes;
   ps.transformIn = top.transformIn;
-  s.env = addEnv(ps.defs ++ ps.patternDefs, openScopeEnv(top.env));
 }

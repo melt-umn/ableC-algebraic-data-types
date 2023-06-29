@@ -4,7 +4,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesy
 concrete production matchMatch_c
 top::PrimaryExpr_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '(' cs::ExprClauses_c ')'
 {
-  top.ast = abs:matchExpr(foldExpr(scrutinees.ast), cs.ast, location=top.location);
+  top.ast = abs:matchExpr(foldr(abs:consScrutineeExpr, abs:nilScrutineeExpr(), scrutinees.ast), cs.ast, location=top.location);
 }
 
 nonterminal ExprClauses_c with location, ast<abs:ExprClauses>;
