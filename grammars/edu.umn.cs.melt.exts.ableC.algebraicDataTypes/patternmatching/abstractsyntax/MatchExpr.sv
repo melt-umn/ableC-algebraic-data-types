@@ -11,6 +11,7 @@ top::Expr ::= scrutinees::ScrutineeExprs  clauses::ExprClauses
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
   clauses.endLabelName = s"_end_${toString(genInt())}";
+  clauses.initialEnv = top.env;
   
   local localErrors::[Message] =
     clauses.errors ++ scrutinees.errors ++

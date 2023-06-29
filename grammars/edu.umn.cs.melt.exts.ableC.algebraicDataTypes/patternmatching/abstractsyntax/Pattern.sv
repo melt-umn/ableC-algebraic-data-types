@@ -4,8 +4,8 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     productions, instead of arbitrary new attributes with regular nonterminals, since
     this is generally expected to be more useful.
 -}
-closed nonterminal Pattern with location, pp, decls, expectedType, errors;
-flowtype Pattern = decorate {expectedType, transform.env, transform.controlStmtContext, transformIn},
+closed nonterminal Pattern with location, pp, decls, expectedType, initialEnv, errors;
+flowtype Pattern = decorate {expectedType, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   pp {}, decls {decorate}, errors {decorate}, transform {decorate};
 
 
@@ -16,19 +16,22 @@ flowtype Pattern = decorate {expectedType, transform.env, transform.controlStmtC
 inherited attribute expectedType :: Type;
 inherited attribute expectedTypes :: [Type];
 
+-- The env for the overall match construct, used to resolve forwarding in patterns.
+inherited attribute initialEnv::Decorated Env;
+
 {-- [Pattern] constructs transform into expressions that evaluate to non-zero
     if there is a match.  Note that transformIn, the value to match against, may
     be used more than once in transform.  -}
 attribute transformIn<Expr> occurs on Pattern; 
 attribute transform<Expr> occurs on Pattern;
 
-propagate decls, errors on Pattern;
+propagate decls, errors, initialEnv on Pattern;
 
 abstract production patternName
 top::Pattern ::= n::Name
 {
   top.pp = n.pp;
-  n.env = top.transform.env;  -- TODO: circularity?
+  n.env = top.initialEnv;
   forwards to
     case n.valueItem of
     | enumValueItem(_) -> patternConst(declRefExpr(n, location=builtin), location=top.location)
@@ -173,13 +176,13 @@ inherited attribute appendedPatterns :: PatternList;
 synthesized attribute appendedPatternsRes :: PatternList;
 
 nonterminal PatternList with pps, errors, decls,
-  expectedTypes, count, transform<Expr>, transformIn<[Expr]>,
+  expectedTypes, initialEnv, count, transform<Expr>, transformIn<[Expr]>,
   appendedPatterns, appendedPatternsRes, controlStmtContext;
-flowtype PatternList = decorate {expectedTypes, transform.env, transform.controlStmtContext, transformIn},
+flowtype PatternList = decorate {expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   pps {}, decls {decorate}, errors {decorate}, transform {decorate}, count {},
   appendedPatternsRes {appendedPatterns};
 
-propagate decls, errors, appendedPatterns on PatternList;
+propagate decls, errors, initialEnv, appendedPatterns on PatternList;
 
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList

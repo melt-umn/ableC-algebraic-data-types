@@ -71,12 +71,12 @@ inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
 nonterminal StructPatternList with pps, errors, decls,
-  givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>;
+  givenTagEnv, givenFieldNames, initialEnv, transform<Expr>, transformIn<Expr>;
 flowtype StructPatternList =
-  decorate {givenTagEnv, givenFieldNames, transform.env, transform.controlStmtContext, transformIn},
+  decorate {givenTagEnv, givenFieldNames, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   pps {}, decls {decorate}, errors {decorate}, transform {decorate};
 
-propagate givenTagEnv, errors, decls on StructPatternList;
+propagate givenTagEnv, initialEnv, errors, decls on StructPatternList;
 
 abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
@@ -99,12 +99,12 @@ top::StructPatternList ::= {-empty-}
 }
 
 nonterminal StructPattern with location, pp, errors, decls,
-  givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>;
+  givenTagEnv, givenFieldNames, remainingFieldNames, initialEnv, transform<Expr>, transformIn<Expr>;
 flowtype StructPattern =
-  decorate {givenTagEnv, givenFieldNames, transform.env, transform.controlStmtContext, transformIn},
+  decorate {givenTagEnv, givenFieldNames, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   pp {}, decls {decorate}, errors {decorate}, transform {decorate};
 
-propagate givenTagEnv, errors, decls on StructPattern;
+propagate givenTagEnv, initialEnv, errors, decls on StructPattern;
 
 abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern

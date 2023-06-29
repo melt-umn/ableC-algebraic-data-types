@@ -53,13 +53,13 @@ inherited attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
 nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs,
-  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   appendedStmtClauses, appendedStmtClausesRes, labelDefs;
-flowtype StmtClauses = decorate {transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
+flowtype StmtClauses = decorate {initialEnv, transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
   errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName},
   appendedStmtClausesRes {appendedStmtClauses};
 
-propagate endLabelName, matchLocation, errors, functionDefs, labelDefs, appendedStmtClauses on StmtClauses;
+propagate endLabelName, matchLocation, errors, functionDefs, labelDefs, initialEnv, appendedStmtClauses on StmtClauses;
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -93,8 +93,8 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 
 
 nonterminal StmtClause with location, matchLocation, pp, errors, functionDefs,
-  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName, labelDefs;
-flowtype StmtClause = decorate {transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
+  expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName, labelDefs;
+flowtype StmtClause = decorate {initialEnv, transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
   errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
@@ -112,7 +112,7 @@ flowtype StmtClause = decorate {transform.env, transform.controlStmtContext, mat
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
-  propagate matchLocation, errors, functionDefs, labelDefs;
+  propagate matchLocation, errors, functionDefs, labelDefs, initialEnv;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors <-
     if ps.count != length(top.expectedTypes)

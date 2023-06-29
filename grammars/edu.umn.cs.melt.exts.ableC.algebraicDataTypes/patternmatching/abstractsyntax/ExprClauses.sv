@@ -55,14 +55,14 @@ inherited attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
 nonterminal ExprClauses with location, matchLocation, pp, errors,
-  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   typerep, appendedExprClauses, appendedExprClausesRes, controlStmtContext;
 flowtype ExprClauses =
-  decorate {matchLocation, expectedTypes, transform.env, transform.controlStmtContext, transformIn},
+  decorate {matchLocation, expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
   appendedExprClausesRes {appendedExprClauses};
 
-propagate matchLocation, endLabelName, errors, appendedExprClauses on ExprClauses;
+propagate matchLocation, endLabelName, errors, initialEnv, appendedExprClauses on ExprClauses;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -108,13 +108,13 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
 }
 
 nonterminal ExprClause with location, matchLocation, pp, errors,
-  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   typerep;
 flowtype ExprClause =
-  decorate {matchLocation, expectedTypes, transform.env, transform.controlStmtContext, transformIn},
+  decorate {matchLocation, expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   errors {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
-propagate matchLocation, endLabelName, errors on ExprClause;
+propagate matchLocation, endLabelName, errors, initialEnv on ExprClause;
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr

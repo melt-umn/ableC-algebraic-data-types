@@ -14,6 +14,7 @@ top::Stmt ::= scrutinees::ScrutineeExprs  clauses::StmtClauses
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
   clauses.endLabelName = s"_end_${toString(genInt())}";
+  clauses.initialEnv = top.env;
   
   local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
   forward fwrd =
@@ -35,7 +36,7 @@ flowtype ScrutineeExprs = decorate {transform.env, transform.controlStmtContext}
   pps {}, transform {argumentPosition}, scrutineeRefs {argumentPosition},
   typereps {decorate}, errors {decorate};
 
-propagate errors on ScrutineeExprs;
+propagate errors, initialEnv on ScrutineeExprs;
 
 abstract production consScrutineeExpr
 top::ScrutineeExprs ::= h::Expr  t::ScrutineeExprs
