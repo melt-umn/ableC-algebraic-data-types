@@ -134,7 +134,9 @@ top::ExprClause ::= ps::PatternList e::Expr
       {
         $Decl{decls(foldDecl(ps.decls))}
         if ($Expr{@ps.transform}) {
-          _match_result = $Expr{@e};
+          // Using the host assignment operator to avoid a circularity
+          // with looking up the type of _match_result.
+          _match_result host::= $Expr{@e};
           goto $name{top.endLabelName};
         }
       }
