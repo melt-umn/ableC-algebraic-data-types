@@ -12,7 +12,7 @@ top::Pattern ::= n::Name ps::PatternList
   
   local adtLookup::[RefIdItem] =
     case top.expectedType.maybeRefId of
-    | just(rid) -> lookupRefId(rid, top.transform.env)
+    | just(rid) -> lookupRefId(rid, top.initialEnv)
     | nothing() -> []
     end;
   
@@ -46,6 +46,7 @@ top::Pattern ::= n::Name ps::PatternList
     | nothing() -> []
     end;
   
+  top.patternDecls = @ps.patternDecls;
   top.transform =
     -- adtName ++ "_" ++ n.name is the tag name to match against
     ableC_Expr {
@@ -59,6 +60,6 @@ top::Pattern ::= n::Name ps::PatternList
         return ableC_Expr { $Expr{top.transformIn}.contents.$Name{n}.$name{fieldName} };
       }
     -- An error has occured, don't translate the field access to avoid creating additional errors
-    | nothing() -> [errorExpr(top.errors, location=builtin)]
+    | nothing() -> []
     end;
 }

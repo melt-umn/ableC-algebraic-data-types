@@ -132,7 +132,7 @@ top::ExprClause ::= ps::PatternList e::Expr
   top.transform =
     ableC_Stmt {
       {
-        $Decl{decls(foldDecl(ps.decls))}
+        $Decl{decls(@ps.patternDecls)}
         if ($Expr{@ps.transform}) {
           // Using the host assignment operator to avoid a circularity
           // with looking up the type of _match_result.

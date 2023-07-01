@@ -122,7 +122,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
   top.transform =
     ableC_Stmt {
       {
-        $Decl{decls(foldDecl(ps.decls))}
+        $Decl{decls(@ps.patternDecls)}
         if ($Expr{@ps.transform}) {
           $Stmt{@s}
           goto $name{top.endLabelName};
