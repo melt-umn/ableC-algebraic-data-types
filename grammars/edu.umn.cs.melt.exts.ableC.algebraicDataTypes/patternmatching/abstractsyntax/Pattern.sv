@@ -221,8 +221,8 @@ top::PatternList ::= p::Pattern rest::PatternList
   
   local splitTypes :: Pair<Type [Type]> =
     case top.expectedTypes of
-    | t::ts -> pair(t, ts)
-    | [] -> pair(errorType(), [])
+    | t::ts -> (t, ts)
+    | [] -> (errorType(), [])
     end;
   p.expectedType = splitTypes.fst;
   rest.expectedTypes = splitTypes.snd;
