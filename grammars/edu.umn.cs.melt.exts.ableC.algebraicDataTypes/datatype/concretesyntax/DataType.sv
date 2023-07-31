@@ -38,7 +38,7 @@ marking terminal Datatype_t 'datatype' lexer classes {Keyword, Global};
 concrete production datatypeDecl_c
 top::Declaration_c ::= 'datatype' n::Identifier_c '{' cs::ConstructorList_c '}'
 {
-  top.ast = datatypeDecl(adtDecl(nilAttribute(), n.ast, cs.ast, location=top.location));
+  top.ast = datatypeDecl(adtDecl(nilAttribute(), n.ast, cs.ast));
 }
 action {
   context = addIdentsToScope(cs.constructorNames, Identifier_t, context);
@@ -48,7 +48,7 @@ action {
 concrete production datatypeAttrDecl_c
 top::Declaration_c ::= 'datatype' aa::Attributes_c n::Identifier_c '{' cs::ConstructorList_c '}'
 {
-  top.ast = datatypeDecl(adtDecl(aa.ast, n.ast, cs.ast, location=top.location));
+  top.ast = datatypeDecl(adtDecl(aa.ast, n.ast, cs.ast));
 }
 action {
   context = addIdentsToScope(cs.constructorNames, Identifier_t, context);
@@ -58,7 +58,7 @@ action {
 
 synthesized attribute constructorNames::[Name];
 
-nonterminal ConstructorList_c with ast<ConstructorList>, constructorNames;
+tracked nonterminal ConstructorList_c with ast<ConstructorList>, constructorNames;
 concrete productions top::ConstructorList_c
 | c::Constructor_c cl::ConstructorList_c
   {
@@ -74,15 +74,15 @@ concrete productions top::ConstructorList_c
 
 synthesized attribute constructorName::Name;
 
-closed nonterminal Constructor_c with ast<Constructor>, constructorName, location;
+closed tracked nonterminal Constructor_c with ast<Constructor>, constructorName;
 concrete productions top::Constructor_c
 | n::Identifier_c '(' ad::ParameterTypeList_c ')' ';'
   {
-    top.ast = constructor(n.ast, foldParameterDecl(ad.ast), location=top.location);
+    top.ast = constructor(n.ast, foldParameterDecl(ad.ast));
     top.constructorName = n.ast;
   }
 | n::Identifier_c '(' ')' ';'
   {
-    top.ast = constructor(n.ast, nilParameters(), location=top.location);
+    top.ast = constructor(n.ast, nilParameters());
     top.constructorName = n.ast;
   }

@@ -7,7 +7,6 @@ top::Expr ::= scrutinees::ScrutineeExprs  clauses::ExprClauses
                     parens(nestlines(2, clauses.pp)) ]);
 
   scrutinees.argumentPosition = 0;
-  clauses.matchLocation = top.location;
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
   clauses.endLabelName = s"_end_${toString(genInt())}";
@@ -16,23 +15,23 @@ top::Expr ::= scrutinees::ScrutineeExprs  clauses::ExprClauses
   local localErrors::[Message] =
     clauses.errors ++ scrutinees.errors ++
     if null(lookupValue("abort", top.env))
-    then [err(top.location, "Pattern match requires definition of abort (include <stdlib.h>?)")]
+    then [errFromOrigin(top, "Pattern match requires definition of abort (include <stdlib.h>?)")]
     else if null(lookupValue("fprintf", top.env))
-    then [err(top.location, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
+    then [errFromOrigin(top, "Pattern match requires definition of fprintf (include <stdio.h>?)")]
     else if null(lookupValue("stderr", top.env))
-    then [err(top.location, "Pattern match requires definition of stderr (include <stdio.h>?)")]
+    then [errFromOrigin(top, "Pattern match requires definition of stderr (include <stdio.h>?)")]
     else [];
   
   forward fwrd =
     ableC_Expr {
-      ({$Decl{preDecl(clauses.typerep, name("_match_result", location=builtin))}
+      ({$Decl{preDecl(clauses.typerep, name("_match_result"))}
         $Stmt{@scrutinees.transform}
         $Stmt{@clauses.transform}
-        fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${top.location.unparse}\n"});
+        fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${getParsedOriginLocationOrFallback(top).unparse}\n"});
         abort();
         $name{clauses.endLabelName}: ;
         _match_result;})
     };
   
-  forwards to if !null(localErrors) then errorExpr(localErrors, location=builtin) else @fwrd;
+  forwards to if !null(localErrors) then errorExpr(localErrors) else @fwrd;
 }

@@ -47,25 +47,24 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 translation attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
 inherited attribute endLabelName::String;
-inherited attribute matchLocation::Location;
 
 inherited attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
-nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs,
+tracked nonterminal StmtClauses with pp, errors, functionDefs,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   appendedStmtClauses, appendedStmtClausesRes, labelDefs;
-flowtype StmtClauses = decorate {initialEnv, transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
+flowtype StmtClauses = decorate {initialEnv, transform.env, transform.controlStmtContext, expectedTypes, transformIn},
   errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName},
   appendedStmtClausesRes {appendedStmtClauses};
 
-propagate endLabelName, matchLocation, errors, functionDefs, labelDefs, initialEnv, appendedStmtClauses on StmtClauses;
+propagate endLabelName, errors, functionDefs, labelDefs, initialEnv, appendedStmtClauses on StmtClauses;
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
   top.pp = cat( c.pp, rest.pp );
-  top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
+  top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes);
 
   top.transform = seqStmt(@c.transform, @rest.transform);
   c.transformIn = top.transformIn;
@@ -81,7 +80,7 @@ top::StmtClauses ::=
   top.pp = text("");
   top.appendedStmtClausesRes = top.appendedStmtClauses;
 
-  top.transform = exprStmt(comment("no match, do nothing.", location=builtin));
+  top.transform = exprStmt(comment("no match, do nothing."));
 }
 
 function appendStmtClauses
@@ -92,9 +91,9 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 }
 
 
-nonterminal StmtClause with location, matchLocation, pp, errors, functionDefs,
+tracked nonterminal StmtClause with pp, errors, functionDefs,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName, labelDefs;
-flowtype StmtClause = decorate {initialEnv, transform.env, transform.controlStmtContext, matchLocation, expectedTypes, transformIn},
+flowtype StmtClause = decorate {initialEnv, transform.env, transform.controlStmtContext, expectedTypes, transformIn},
   errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName};
 
 {- A statement clause becomes a Stmt, in the form:
@@ -112,11 +111,11 @@ flowtype StmtClause = decorate {initialEnv, transform.env, transform.controlStmt
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
-  propagate matchLocation, errors, functionDefs, labelDefs, initialEnv;
+  propagate errors, functionDefs, labelDefs, initialEnv;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors <-
     if ps.count != length(top.expectedTypes)
-    then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
+    then [errFromOrigin(top, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
   
   top.transform =

@@ -7,10 +7,9 @@ top::Stmt ::= scrutinees::ScrutineeExprs  clauses::StmtClauses
                     braces(nestlines(2, clauses.pp)) ]);
   -- Non-interfering equations required due to flow analysis
   propagate functionDefs, labelDefs;
-  top.labelDefs <- [(clauses.endLabelName, labelItem(builtin))];
+  top.labelDefs <- [(clauses.endLabelName, labelItem())];
 
   scrutinees.argumentPosition = 0;
-  clauses.matchLocation = clauses.location; -- Whatever.
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
   clauses.endLabelName = s"_end_${toString(genInt())}";
@@ -31,7 +30,7 @@ top::Stmt ::= scrutinees::ScrutineeExprs  clauses::StmtClauses
 
 synthesized attribute scrutineeRefs::[Expr];
 
-nonterminal ScrutineeExprs with pps, transform<Stmt>, scrutineeRefs, typereps, errors, argumentPosition;
+tracked nonterminal ScrutineeExprs with pps, transform<Stmt>, scrutineeRefs, typereps, errors, argumentPosition;
 flowtype ScrutineeExprs = decorate {transform.env, transform.controlStmtContext},
   pps {}, transform {argumentPosition}, scrutineeRefs {argumentPosition},
   typereps {decorate}, errors {decorate};
@@ -43,7 +42,7 @@ top::ScrutineeExprs ::= h::Expr  t::ScrutineeExprs
 {
   top.pps = h.pp :: t.pps;
 
-  local matchVarName::Name = name("_match_scrutinee_val_" ++ toString(top.argumentPosition), location=builtin);
+  local matchVarName::Name = name("_match_scrutinee_val_" ++ toString(top.argumentPosition));
   top.transform =
     ableC_Stmt {
       $Decl{autoDecl(matchVarName, @h)}

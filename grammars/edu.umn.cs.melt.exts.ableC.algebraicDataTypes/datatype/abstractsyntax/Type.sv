@@ -107,7 +107,7 @@ top::BaseTypeExpr ::= q::Qualifiers n::Name
     -- It's a datatype and the tag type agrees.
     | adtRefIdTagItem(r) :: _ -> extTypeExpr(q, adtExtType(n.name, n.name, r))
     -- It's a datatype and the tag type doesn't agree.
-    | _ -> errorTypeExpr([err(n.location, "Tag " ++ n.name ++ " is not a datatype")])
+    | _ -> errorTypeExpr([errFromOrigin(n, "Tag " ++ n.name ++ " is not a datatype")])
     end;
   
   forwards to defsTypeExpr(defs, fwrd);

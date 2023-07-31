@@ -37,7 +37,7 @@ top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModi
   production fieldName::Name =
     case n of
     | justName(n) -> n
-    | nothingName() -> name("f" ++ toString(top.position), location=builtin)
+    | nothingName() -> name("f" ++ toString(top.position))
     end;
   top.fieldName = fieldName.name;
   

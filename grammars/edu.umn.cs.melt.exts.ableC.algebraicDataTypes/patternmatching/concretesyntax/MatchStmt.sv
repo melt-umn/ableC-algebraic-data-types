@@ -21,21 +21,21 @@ top::SelectionStmt_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '{' cs::
 }
 
 
-nonterminal StmtClauses_c with location, ast<abs:StmtClauses>;
+tracked nonterminal StmtClauses_c with ast<abs:StmtClauses>;
 
 concrete productions top::StmtClauses_c
 | c::StmtClause_c rest::StmtClauses_c
-  { top.ast = abs:consStmtClause(c.ast, rest.ast, location=top.location); }
+  { top.ast = abs:consStmtClause(c.ast, rest.ast); }
 | {- empty -}
-  { top.ast = abs:failureStmtClause(location=top.location); }
+  { top.ast = abs:failureStmtClause(); }
 
 
-closed nonterminal StmtClause_c with location, ast<abs:StmtClause>;
+closed tracked nonterminal StmtClause_c with ast<abs:StmtClause>;
 
 concrete productions top::StmtClause_c
 | OpenScope_t p::PatternList_c '->' '{' l::BlockItemList_c '}'
-  { top.ast = abs:stmtClause(p.ast, foldStmt(l.ast), location=top.location); }
+  { top.ast = abs:stmtClause(p.ast, foldStmt(l.ast)); }
   action { context = closeScope(context); }
 | OpenScope_t p::PatternList_c '->' '{' '}'
-  { top.ast = abs:stmtClause(p.ast, nullStmt(), location=top.location); }
+  { top.ast = abs:stmtClause(p.ast, nullStmt()); }
   action { context = closeScope(context); }

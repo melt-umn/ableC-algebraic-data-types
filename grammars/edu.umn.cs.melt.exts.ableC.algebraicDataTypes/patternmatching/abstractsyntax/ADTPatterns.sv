@@ -28,15 +28,15 @@ top::Pattern ::= n::Name ps::PatternList
     case top.expectedType, adtName, adtLookup, constructorParamLookup of
     | errorType(), _, _, _ -> []
     -- Check that expected type for this pattern is an ADT of some sort
-    | t, nothing(), _, _ -> [err(top.location, s"Constructor pattern expected to match a datatype (got ${showType(t)}).")]
+    | t, nothing(), _, _ -> [errFromOrigin(top, s"Constructor pattern expected to match a datatype (got ${showType(t)}).")]
     -- Check that this ADT has a definition
-    | _, just(id), [], _ -> [err(top.location, s"datatype ${id} does not have a definition.")]
+    | _, just(id), [], _ -> [errFromOrigin(top, s"datatype ${id} does not have a definition.")]
     -- Check that this pattern is a constructor for the expected ADT type.
-    | t, _, _, nothing() -> [err(top.location, s"${showType(t)} does not have constructor ${n.name}.")]
+    | t, _, _, nothing() -> [errFromOrigin(top, s"${showType(t)} does not have constructor ${n.name}.")]
     | _, _, _, just(params) ->
       -- Check that the number of patterns matches number of parameters for this constructor.
       if ps.count != params.count
-      then [err(top.location, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
+      then [errFromOrigin(top, s"This pattern has ${toString(ps.count)} arguments, but ${toString(params.count)} were expected.")]
       else []
     end;
   

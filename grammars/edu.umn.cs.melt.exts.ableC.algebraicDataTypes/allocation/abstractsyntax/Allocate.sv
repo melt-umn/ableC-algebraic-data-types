@@ -22,14 +22,14 @@ top::Decl ::= id::Name  allocator::Name pfx::Maybe<Name>
     | adtRefIdTagItem(refId) :: _ ->
       case lookupRefId(refId, top.env) of
       | adtRefIdItem(_) :: _ -> []
-      | _ -> [err(id.location, "datatype " ++ id.name ++ " does not have a definition")]
+      | _ -> [errFromOrigin(id, "datatype " ++ id.name ++ " does not have a definition")]
       end
-    | _ -> [err(id.location, "Tag " ++ id.name ++ " is not a datatype")]
+    | _ -> [errFromOrigin(id, "Tag " ++ id.name ++ " is not a datatype")]
     end;
   local localErrors::[Message] =
     adtLookupErrors ++ allocator.valueLookupCheck ++
     (if !compatibleTypes(expectedAllocatorType, allocator.valueItem.typerep, true, false)
-     then [err(allocator.location, s"Allocator must have type void *(unsigned long) (got ${showType(allocator.valueItem.typerep)})")]
+     then [errFromOrigin(allocator, s"Allocator must have type void *(unsigned long) (got ${showType(allocator.valueItem.typerep)})")]
      else []);
   
   local adtLookup::Decorated ADTDecl =
@@ -82,7 +82,7 @@ top::Constructor ::= n::Name ps::Parameters
     [valueDef(
        allocateConstructorName,
        allocateConstructorValueItem(
-         name(top.adtGivenName, location=builtin),
+         name(top.adtGivenName),
          top.allocatorName, n, ps.typereps))];
   top.allocatorErrorDefs := [valueDef(allocateConstructorName, errorValueItem())];
 }
@@ -92,12 +92,11 @@ top::ValueItem ::= adtName::Name allocatorName::Name constructorName::Name param
 {
   top.pp = pp"allocateConstructorValueItem(${adtName.pp}, ${allocatorName.pp}, ${constructorName.pp})";
   top.typerep = errorType();
-  top.sourceLocation = allocatorName.location;
   top.directRefHandler =
-    \ n::Name l::Location ->
-      errorExpr([err(l, s"Allocate constructor ${n.name} cannot be referenced, only called directly")], location=builtin);
+    \ n::Name ->
+      errorExpr([errFromOrigin(n, s"Allocate constructor ${n.name} cannot be referenced, only called directly")]);
   top.directCallHandler =
-    allocateConstructorCallExpr(adtName, allocatorName, constructorName, paramTypes, _, _, location=_);
+    allocateConstructorCallExpr(adtName, allocatorName, constructorName, paramTypes, _, _);
 }
 
 abstract production allocateConstructorCallExpr
@@ -109,7 +108,7 @@ top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes
   
   args.expectedTypes = paramTypes;
   args.argumentPosition = 1;
-  args.callExpr = decorate declRefExpr(n, location=n.location) with {env = top.env; controlStmtContext = top.controlStmtContext; };
+  args.callExpr = decorate declRefExpr(n) with {env = top.env; controlStmtContext = top.controlStmtContext; };
   args.callVariadic = false;
   
   local resultTypeExpr::BaseTypeExpr = adtTagReferenceTypeExpr(nilQualifier(), adtName);
