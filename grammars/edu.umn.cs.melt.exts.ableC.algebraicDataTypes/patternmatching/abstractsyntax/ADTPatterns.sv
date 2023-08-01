@@ -51,7 +51,7 @@ top::Pattern ::= n::Name ps::PatternList
   top.transform =
     -- adtName ++ "_" ++ n.name is the tag name to match against
     ableC_Expr {
-      $Expr{top.transformIn}.tag == $name{adtName.fromJust ++ "_" ++ n.name} && $Expr{@ps.transform}
+      $Expr{top.transformIn}.tag == $name{fromMaybe("", adtName) ++ "_" ++ n.name} && $Expr{@ps.transform}
     };
   ps.transformIn =
     case constructorParamLookup of
