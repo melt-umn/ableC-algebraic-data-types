@@ -58,6 +58,7 @@ abstract production patternVariable
 top::Pattern ::= n::Name
 {
   top.pp = n.pp;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   top.patternDecls = ableC_Decls { $directTypeExpr{top.expectedType} $Name{@n}; };
@@ -75,6 +76,7 @@ abstract production patternConst
 top::Pattern ::= constExpr::Expr
 {
   top.pp = constExpr.pp;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-  -- TODO: Proper handling for equality type checking
     if !typeAssignableTo(constExpr.typerep, top.expectedType.defaultFunctionArrayLvalueConversion)
     then [errFromOrigin(constExpr, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
@@ -87,6 +89,7 @@ abstract production patternStringLiteral
 top::Pattern ::= s::String
 {
   top.pp = text(s);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   
   local stringType::Type =
     pointerType(nilQualifier(),
@@ -109,6 +112,7 @@ abstract production patternPointer
 top::Pattern ::= p::Pattern
 {
   top.pp = cat(pp"&", p.pp);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     case top.expectedType.withoutAttributes of
     | pointerType(_, _) -> []
@@ -139,6 +143,7 @@ abstract production patternBoth
 top::Pattern ::= p1::Pattern p2::Pattern
 {
   top.pp = ppConcat([p1.pp, space(), text("@"), space(), p2.pp ]);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   
   p1.expectedType = top.expectedType;
   p2.expectedType = top.expectedType;
@@ -153,6 +158,7 @@ abstract production patternNot
 top::Pattern ::= p::Pattern 
 {
   top.pp = cat(text("! "), p.pp);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   -- TODO: Exclude variable patterns
 
   p.expectedType = top.expectedType;
@@ -205,6 +211,7 @@ abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
 {
   top.pps = p.pp :: rest.pps;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.count = 1 + rest.count;
   top.appendedPatternsRes = consPattern(p, rest.appendedPatternsRes);
   

@@ -60,6 +60,7 @@ abstract production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
   propagate isTopLevel, controlStmtContext, adtGivenName, errors;  -- TODO: check for redeclaration
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.pp = ppConcat([ ppAttributes(attrs), n.pp, space(), braces(nestlines(2, cs.pp)) ]);
 
   {- structs create a tagItem and a refIdItem in the environment
@@ -273,6 +274,8 @@ propagate env, adtGivenName, adtDeclName, controlStmtContext, errors, defs on Co
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
+  attachNote extensionGenerated("ableC-algebraic-data-types");
+
   {- This attribute is for extensions to use to initialize additional members added
      to the generated ADT struct. -}
   production attribute initStmts::[Stmt] with ++;

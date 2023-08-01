@@ -114,10 +114,10 @@ top::Expr ::= adtName::Name allocatorName::Name constructorName::Name paramTypes
   local resultTypeExpr::BaseTypeExpr = adtTagReferenceTypeExpr(nilQualifier(), adtName);
   local resultName::String = "result_" ++ toString(genInt());
   local fwrd::Expr =
-    ableC_Expr {
+    attachNote extensionGenerated("ableC-algebraic-data-types") on ableC_Expr {
       ({$BaseTypeExpr{resultTypeExpr} *$name{resultName} = $Name{allocatorName}(sizeof($BaseTypeExpr{resultTypeExpr}));
         *$name{resultName} = $Name{constructorName}($Exprs{args});
         $name{resultName};})
-    };
+    } end;
   forwards to mkErrorCheck(localErrors, fwrd);
 }

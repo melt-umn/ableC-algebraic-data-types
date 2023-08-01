@@ -5,6 +5,7 @@ top::Expr ::= scrutinees::ScrutineeExprs  clauses::ExprClauses
 {
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     parens(nestlines(2, clauses.pp)) ]);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
 
   scrutinees.argumentPosition = 0;
   clauses.expectedTypes = scrutinees.typereps;

@@ -83,6 +83,7 @@ abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
 {
   top.pps = p.pp :: rest.pps;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
 
   p.givenFieldNames = top.givenFieldNames;
   rest.givenFieldNames = p.remainingFieldNames;
@@ -113,6 +114,7 @@ abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern
 {
   top.pp = p.pp;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   propagate env;
   top.remainingFieldNames =
     case top.givenFieldNames of
@@ -146,6 +148,7 @@ abstract production namedStructPattern
 top::StructPattern ::= n::Name p::Pattern
 {
   top.pp = pp".${n.pp} = ${p.pp}";
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     if !null(n.valueLookupCheck)
     then [errFromOrigin(n, s"Unexpected named field ${n.name}")]

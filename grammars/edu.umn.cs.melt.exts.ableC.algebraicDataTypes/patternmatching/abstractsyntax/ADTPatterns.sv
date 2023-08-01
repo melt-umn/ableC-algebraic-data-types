@@ -6,6 +6,7 @@ abstract production constructorPattern
 top::Pattern ::= n::Name ps::PatternList
 {
   top.pp = cat( n.pp, parens( ppImplode(text(","), ps.pps) ) );
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   
   -- Type checking
   local adtName::Maybe<String> = top.expectedType.adtName;

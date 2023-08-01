@@ -64,6 +64,7 @@ abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
   top.pp = cat( c.pp, rest.pp );
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes);
 
   top.transform = seqStmt(@c.transform, @rest.transform);
@@ -113,6 +114,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
 {
   propagate errors, functionDefs, labelDefs, initialEnv;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     if ps.count != length(top.expectedTypes)
     then [errFromOrigin(top, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]

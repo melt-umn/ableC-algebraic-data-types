@@ -68,6 +68,7 @@ abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
 {
   top.pp = cat( c.pp, rest.pp );
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     if typeAssignableTo(c.typerep, rest.typerep) || typeAssignableTo(rest.typerep, c.typerep)
     then []
@@ -120,6 +121,7 @@ abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
 {
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, e.pp), text(";")]);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     if ps.count != length(top.expectedTypes)
     then [errFromOrigin(top, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]

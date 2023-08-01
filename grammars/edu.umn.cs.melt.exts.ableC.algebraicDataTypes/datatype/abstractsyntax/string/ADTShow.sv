@@ -28,6 +28,7 @@ abstract production showADT
 top::Expr ::= e::Expr
 {
   top.pp = pp"show(${e.pp})";
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   propagate env, controlStmtContext;
   
   local adtLookup::[RefIdItem] =
@@ -60,6 +61,7 @@ flowtype showTransform {decorate} on ADTDecl;
 aspect production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.showFnName = "_show_" ++ n.name;
   local checkExpr::Expr = errorExpr([]); -- Expr that gets decorated to pass the right origin and env
   top.showErrors =
@@ -112,6 +114,7 @@ top::ConstructorList ::=
 aspect production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.showErrors = ps.adtShowErrors;
   top.showTransform =
     ableC_Stmt {
@@ -152,11 +155,15 @@ top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModi
   top.adtShowErrors =
     \ e::Decorated Expr with {env} -> showErrors(decorate checkExpr with {env = e.env;}, top.typerep);
   local showField::Expr =
-    showExpr(
-      parenExpr(
-        ableC_Expr { adt.contents.$name{top.constructorName}.$Name{fieldName} }));
+    attachNote extensionGenerated("ableC-algebraic-data-types") on
+      showExpr(
+        parenExpr(
+          ableC_Expr { adt.contents.$name{top.constructorName}.$Name{fieldName} }))
+    end;
   top.adtShowTransform =
-    if top.position == 0
-    then ableC_Stmt { result += $Expr{showField}; }
-    else ableC_Stmt { result += ", " + $Expr{showField}; };
+    attachNote extensionGenerated("ableC-algebraic-data-types") on
+      if top.position == 0
+      then ableC_Stmt { result += $Expr{showField}; }
+      else ableC_Stmt { result += ", " + $Expr{showField}; }
+    end;
 }

@@ -18,6 +18,7 @@ propagate constructorName, asConstructorParameters on Parameters;
 aspect production consParameters
 top::Parameters ::= h::ParameterDecl t::Parameters
 {
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.fieldNames = h.fieldName :: t.fieldNames;
   top.asStructItemList = consStructItem(h.asStructItemList, t.asStructItemList);
   top.asAssignments = seqStmt(h.asAssignments, t.asAssignments);
@@ -26,6 +27,7 @@ top::Parameters ::= h::ParameterDecl t::Parameters
 aspect production nilParameters
 top::Parameters ::= 
 {
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.fieldNames = [];
   top.asStructItemList = nilStructItem();
   top.asAssignments = nullStmt();
@@ -34,6 +36,7 @@ top::Parameters ::=
 aspect production parameterDecl
 top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   production fieldName::Name =
     case n of
     | justName(n) -> n

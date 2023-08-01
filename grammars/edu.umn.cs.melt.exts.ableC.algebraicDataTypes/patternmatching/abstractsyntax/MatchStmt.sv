@@ -5,6 +5,7 @@ top::Stmt ::= scrutinees::ScrutineeExprs  clauses::StmtClauses
 {
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   -- Non-interfering equations required due to flow analysis
   propagate functionDefs, labelDefs;
   top.labelDefs <- [(clauses.endLabelName, labelItem())];
@@ -41,6 +42,7 @@ abstract production consScrutineeExpr
 top::ScrutineeExprs ::= h::Expr  t::ScrutineeExprs
 {
   top.pps = h.pp :: t.pps;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
 
   local matchVarName::Name = name("_match_scrutinee_val_" ++ toString(top.argumentPosition));
   top.transform =
