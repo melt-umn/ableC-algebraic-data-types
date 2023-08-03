@@ -15,11 +15,11 @@ aspect production adtExtType
 top::ExtType ::= adtName::String adtDeclName::String refId::String
 {
   top.showErrors =
-    \ e::Decorated Expr with {env} ->
-      checkStringHeaderDef("concat_string", e.env) ++
-      case lookupRefId(refId, globalEnv(e.env)) of
-      | adtRefIdItem(adt) :: _ -> adt.showErrors(e)
-      | _ -> [errFromOrigin(e, s"datatype ${adtName} does not have a (global) definition.")]
+    \ env::Decorated Env ->
+      checkStringHeaderDef("concat_string", env) ++
+      case lookupRefId(refId, globalEnv(env)) of
+      | adtRefIdItem(adt) :: _ -> adt.showErrors(env)
+      | _ -> [errFromOrigin(ambientOrigin(), s"datatype ${adtName} does not have a (global) definition.")]
       end;
   top.showProd = showADT;
 }
@@ -63,14 +63,15 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
   attachNote extensionGenerated("ableC-algebraic-data-types");
   top.showFnName = "_show_" ++ n.name;
-  local checkExpr::Expr = errorExpr([]); -- Expr that gets decorated to pass the right origin and env
   top.showErrors =
-    \ e::Decorated Expr with {env} ->
-      if null(lookupValue(top.showFnName, e.env))
+    \ env::Decorated Env ->
+      if null(lookupValue(top.showFnName, env))
       then
-        case cs.showErrors(decorate checkExpr with {env = addEnv([valueDef(top.showFnName, errorValueItem())], e.env);}) of
+        case attachNote logicalLocationFromOrigin(top) on
+            cs.showErrors(addEnv([valueDef(top.showFnName, errorValueItem())], env))
+          end of
         | [] -> []
-        | m -> [nested(getParsedOriginLocationOrFallback(e), s"In showing datatype ${top.adtGivenName}", m)]
+        | m -> [nested(getParsedOriginLocationOrFallback(ambientOrigin()), s"In showing datatype ${top.adtGivenName}", m)]
         end
       else [];
   top.showTransform =
@@ -97,8 +98,7 @@ flowtype showTransform {decorate, showTransformIn} on ConstructorList, Construct
 aspect production consConstructor
 top::ConstructorList ::= c::Constructor cl::ConstructorList
 {
-  top.showErrors =
-    \ e::Decorated Expr with {env} -> c.showErrors(e) ++ cl.showErrors(e);
+  top.showErrors = \ env::Decorated Env -> c.showErrors(env) ++ cl.showErrors(env);
   top.showTransform = c.showTransform;
   c.showTransformIn = cl.showTransform;
   cl.showTransformIn = top.showTransformIn;
@@ -107,7 +107,7 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
 aspect production nilConstructor
 top::ConstructorList ::=
 {
-  top.showErrors = \ e::Decorated Expr with {env} -> [];
+  top.showErrors = \ Decorated Env -> [];
   top.showTransform = top.showTransformIn;
 }
 
@@ -129,22 +129,21 @@ top::Constructor ::= n::Name ps::Parameters
 }
 
 -- Seperate attribute needed to avoid orphaned occurs
-synthesized attribute adtShowErrors::([Message] ::= Decorated Expr with {env}) occurs on Parameters, ParameterDecl;
+synthesized attribute adtShowErrors::([Message] ::= Decorated Env) occurs on Parameters, ParameterDecl;
 synthesized attribute adtShowTransform::Stmt occurs on Parameters, ParameterDecl;
 flowtype adtShowTransform {decorate, constructorName} on Parameters, ParameterDecl;
 
 aspect production consParameters
 top::Parameters ::= h::ParameterDecl t::Parameters
 {
-  top.adtShowErrors =
-    \ e::Decorated Expr with {env} -> h.adtShowErrors(e) ++ t.adtShowErrors(e);
+  top.adtShowErrors = \ env::Decorated Env -> h.adtShowErrors(env) ++ t.adtShowErrors(env);
   top.adtShowTransform = seqStmt(h.adtShowTransform, t.adtShowTransform);
 }
 
 aspect production nilParameters
 top::Parameters ::= 
 {
-  top.adtShowErrors = \ e::Decorated Expr with {env} -> [];
+  top.adtShowErrors = \ Decorated Env -> [];
   top.adtShowTransform = nullStmt();
 }
 
@@ -152,8 +151,8 @@ aspect production parameterDecl
 top::ParameterDecl ::= storage::StorageClasses  bty::BaseTypeExpr  mty::TypeModifierExpr  n::MaybeName  attrs::Attributes
 {
   local checkExpr::Expr = errorExpr([]); -- Expr that gets decorated to pass the right origin and env
-  top.adtShowErrors =
-    \ e::Decorated Expr with {env} -> showErrors(decorate checkExpr with {env = e.env;}, top.typerep);
+  top.adtShowErrors = \ env::Decorated Env ->
+    attachNote logicalLocationFromOrigin(top) on showErrors(env, top.typerep) end;
   local showField::Expr =
     attachNote extensionGenerated("ableC-algebraic-data-types") on
       showExpr(
