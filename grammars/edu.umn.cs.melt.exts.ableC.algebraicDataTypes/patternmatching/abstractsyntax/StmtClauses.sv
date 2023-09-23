@@ -46,10 +46,10 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 
 synthesized attribute transform<a> :: a;
 inherited attribute transformIn<a> :: a;
-autocopy attribute endLabelName::String;
-autocopy attribute matchLocation::Location;
+inherited attribute endLabelName::String;
+inherited attribute matchLocation::Location;
 
-autocopy attribute appendedStmtClauses :: StmtClauses;
+inherited attribute appendedStmtClauses :: StmtClauses;
 synthesized attribute appendedStmtClausesRes :: StmtClauses;
 
 nonterminal StmtClauses with location, matchLocation, pp, errors, functionDefs,
@@ -61,7 +61,7 @@ flowtype StmtClauses = decorate {env, matchLocation, expectedTypes,
   errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName},
   appendedStmtClausesRes {appendedStmtClauses};
 
-propagate errors, functionDefs, labelDefs on StmtClauses;
+propagate controlStmtContext, endLabelName, matchLocation, errors, functionDefs, labelDefs, appendedStmtClauses on StmtClauses;
 
 abstract production consStmtClause
 top::StmtClauses ::= c::StmtClause rest::StmtClauses
@@ -69,6 +69,7 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
   top.pp = cat( c.pp, rest.pp );
   top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes, location=top.location);
   
+  c.env = top.env;
   rest.env = addEnv(c.defs, c.env);
 
   top.transform = seqStmt(c.transform, rest.transform);
@@ -118,7 +119,7 @@ flowtype StmtClause = decorate {env, matchLocation, expectedTypes,
 abstract production stmtClause
 top::StmtClause ::= ps::PatternList s::Stmt
 {
-  propagate errors, functionDefs, labelDefs;
+  propagate controlStmtContext, matchLocation, errors, functionDefs, labelDefs;
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), braces(nestlines(2, s.pp)) ]);
   top.errors <-
     if ps.count != length(top.expectedTypes)
@@ -137,6 +138,7 @@ top::StmtClause ::= ps::PatternList s::Stmt
       }
     };
   
+  ps.env = top.env;
   ps.expectedTypes = top.expectedTypes;
   ps.transformIn = top.transformIn;
   s.env = addEnv(ps.defs ++ ps.patternDefs, openScopeEnv(top.env));

@@ -14,6 +14,8 @@ top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
   initialTransform.env = openScopeEnv(top.env);
   initialTransform.controlStmtContext = initialControlStmtContext;
   
+  propagate controlStmtContext;
+  scrutinees.env = top.env;
   scrutinees.argumentPosition = 0;
   clauses.env = addEnv(initialTransform.defs, initialTransform.env);
   clauses.matchLocation = clauses.location; -- Whatever.

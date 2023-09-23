@@ -15,7 +15,7 @@ concrete productions top::ExprClauses_c
 | {- empty -}
   { top.ast = abs:failureExprClause(location=top.location); }
 
-nonterminal ExprClause_c with location, ast<abs:ExprClause> ;
+closed nonterminal ExprClause_c with location, ast<abs:ExprClause> ;
 terminal Where_t 'where';
 
 concrete productions top::ExprClause_c

@@ -51,7 +51,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     used to pass these types down the clause and pattern ASTs.
  -}
 
-autocopy attribute appendedExprClauses :: ExprClauses;
+inherited attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
 nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env,
@@ -62,7 +62,7 @@ flowtype ExprClauses = decorate {env, matchLocation, expectedTypes,
   errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
   appendedExprClausesRes {appendedExprClauses};
 
-propagate errors, defs on ExprClauses;
+propagate controlStmtContext, matchLocation, endLabelName, errors, defs, appendedExprClauses on ExprClauses;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -82,6 +82,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     else errorType();
   top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
   
+  c.env = top.env;
   rest.env = addEnv(c.defs, c.env);
 
   c.expectedTypes = top.expectedTypes;
@@ -116,7 +117,7 @@ flowtype ExprClause = decorate {env, matchLocation, expectedTypes,
   transformIn, controlStmtContext},
   errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
-propagate errors, defs on ExprClause;
+propagate controlStmtContext, matchLocation, endLabelName, errors, defs on ExprClause;
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
@@ -127,6 +128,7 @@ top::ExprClause ::= ps::PatternList e::Expr
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
 
+  ps.env = top.env;
   e.env = addEnv(ps.defs ++ ps.patternDefs, top.env);
   ps.expectedTypes = top.expectedTypes;
 

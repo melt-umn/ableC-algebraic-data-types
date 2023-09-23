@@ -1,6 +1,6 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 
-autocopy attribute constructorName::String;
+inherited attribute constructorName::String;
 synthesized attribute fieldNames::[String];
 synthesized attribute fieldName::String;
 synthesized attribute asStructItemList<a>::a;
@@ -13,7 +13,7 @@ attribute constructorName, fieldName, asStructItemList<StructItem>, asConstructo
 flowtype Parameters = fieldNames {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
 flowtype ParameterDecl = fieldName {decorate}, asStructItemList {decorate}, asConstructorParameters {decorate}, asAssignments {decorate, constructorName};
 
-propagate asConstructorParameters on Parameters;
+propagate constructorName, asConstructorParameters on Parameters;
 
 aspect production consParameters
 top::Parameters ::= h::ParameterDecl t::Parameters

@@ -5,12 +5,14 @@ top::Expr ::= scrutinees::Exprs  clauses::ExprClauses
 {
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     parens(nestlines(2, clauses.pp)) ]);
+  propagate controlStmtContext;
   
   -- Compute defs for clauses env
   local initialTransform::Stmt = scrutinees.transform;
   initialTransform.env = openScopeEnv(top.env);
   initialTransform.controlStmtContext = initialControlStmtContext;
   
+  scrutinees.env = top.env;
   scrutinees.argumentPosition = 0;
   clauses.env = addEnv(initialTransform.defs, initialTransform.env);
   clauses.matchLocation = top.location;

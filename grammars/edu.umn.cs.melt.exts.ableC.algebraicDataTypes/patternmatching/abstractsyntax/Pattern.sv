@@ -31,12 +31,14 @@ inherited attribute expectedTypes :: [Type];
 attribute transformIn<Expr> occurs on Pattern; 
 attribute transform<Expr> occurs on Pattern;
 
-propagate decls, defs, patternDefs, errors on Pattern;
+propagate controlStmtContext, decls, defs, patternDefs, errors on Pattern;
+propagate env on Pattern excluding patternPointer, patternBoth;
 
 abstract production patternName
 top::Pattern ::= n::Name
 {
   top.pp = n.pp;
+  propagate env;
   forwards to
     case n.valueItem of
     | enumValueItem(_) -> patternConst(declRefExpr(n, location=builtin), location=top.location)
@@ -162,8 +164,7 @@ top::Pattern ::= p::Pattern
 {
   top.pp = cat(text("! "), p.pp);
   -- TODO: Exclude variable patterns
-  
-  p.env = top.env;
+
   p.expectedType = top.expectedType;
 
   p.transformIn = top.transformIn;
@@ -194,7 +195,7 @@ top::Pattern ::= p::Pattern
 
 -- PatternList --
 -----------------
-autocopy attribute appendedPatterns :: PatternList;
+inherited attribute appendedPatterns :: PatternList;
 synthesized attribute appendedPatternsRes :: PatternList;
 
 nonterminal PatternList with pps, errors, env, defs, decls,
@@ -206,7 +207,7 @@ flowtype PatternList = decorate {expectedTypes, env, transformIn,
   defs {decorate}, transform {decorate}, count {},
   appendedPatternsRes {appendedPatterns};
 
-propagate decls, defs, patternDefs, errors on PatternList;
+propagate controlStmtContext, decls, defs, patternDefs, errors, appendedPatterns on PatternList;
 
 abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
@@ -214,7 +215,8 @@ top::PatternList ::= p::Pattern rest::PatternList
   top.pps = p.pp :: rest.pps;
   top.count = 1 + rest.count;
   top.appendedPatternsRes = consPattern(p, rest.appendedPatternsRes);
- 
+
+  p.env = top.env;
   rest.env = addEnv(p.defs ++ p.patternDefs, top.env);
   
   local splitTypes :: Pair<Type [Type]> =
