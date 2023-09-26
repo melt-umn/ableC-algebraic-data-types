@@ -111,7 +111,7 @@ flowtype StmtClause = decorate {env, matchLocation, expectedTypes,
    if ( ... check if pattern matches, also assign values to pattern variables ){
      s   ... statement in clause
    } else {
-     ... translation of remaining clauses, from transformIn
+     goto _end;
    }
 
  -}

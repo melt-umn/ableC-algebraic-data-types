@@ -285,7 +285,7 @@ top::Constructor ::= n::Name ps::Parameters
   ps.position = 0;
   ps.constructorName = n.name;
 
-  top.constructors = [pair(n.name, ps)];
+  top.constructors = [(n.name, ps)];
 
   production enumItemName::String = top.adtGivenName ++ "_" ++ n.name;
   top.enumItem =
