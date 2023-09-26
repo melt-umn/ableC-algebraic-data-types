@@ -34,12 +34,12 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax;
 abstract production adtTagDef
 top::Def ::= n::String t::TagItem
 {
-  top.tagContribs = [pair(n,t)];
+  top.tagContribs = [(n,t)];
 }
 abstract production adtRefIdDef
 top::Def ::= n::String r::RefIdItem
 {
-  top.refIdContribs = [pair(n,r)];
+  top.refIdContribs = [(n,r)];
 }
 
 

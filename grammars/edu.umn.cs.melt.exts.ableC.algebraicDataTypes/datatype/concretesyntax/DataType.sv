@@ -42,7 +42,7 @@ top::Declaration_c ::= 'datatype' n::Identifier_c '{' cs::ConstructorList_c '}'
 }
 action {
   context = addIdentsToScope(cs.constructorNames, Identifier_t, context);
-  adtConstructors = pair(n.ast.name, map((.name), cs.constructorNames)) :: adtConstructors;
+  adtConstructors = (n.ast.name, map((.name), cs.constructorNames)) :: adtConstructors;
 }
 
 concrete production datatypeAttrDecl_c
@@ -52,7 +52,7 @@ top::Declaration_c ::= 'datatype' aa::Attributes_c n::Identifier_c '{' cs::Const
 }
 action {
   context = addIdentsToScope(cs.constructorNames, Identifier_t, context);
-  adtConstructors = pair(n.ast.name, map((.name), cs.constructorNames)) :: adtConstructors;
+  adtConstructors = (n.ast.name, map((.name), cs.constructorNames)) :: adtConstructors;
 }
 
 
