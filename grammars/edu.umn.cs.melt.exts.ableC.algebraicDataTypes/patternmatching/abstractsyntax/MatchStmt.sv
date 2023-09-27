@@ -1,62 +1,67 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsyntax;
 
 abstract production matchStmt
-top::Stmt ::= scrutinees::Exprs  clauses::StmtClauses
+top::Stmt ::= scrutinees::ScrutineeExprs  clauses::StmtClauses
 {
   top.pp = ppConcat([ text("match"), space(), parens(ppImplode(comma(), scrutinees.pps)), line(), 
                     braces(nestlines(2, clauses.pp)) ]);
   -- Non-interfering equations required due to flow analysis
   propagate functionDefs, labelDefs;
   top.labelDefs <- [(clauses.endLabelName, labelItem(builtin))];
-  
-  -- Compute defs for clauses env
-  local initialTransform::Stmt = scrutinees.transform;
-  initialTransform.env = openScopeEnv(top.env);
-  initialTransform.controlStmtContext = initialControlStmtContext;
-  
-  propagate controlStmtContext;
-  scrutinees.env = top.env;
+
   scrutinees.argumentPosition = 0;
-  clauses.env = addEnv(initialTransform.defs, initialTransform.env);
   clauses.matchLocation = clauses.location; -- Whatever.
   clauses.expectedTypes = scrutinees.typereps;
   clauses.transformIn = scrutinees.scrutineeRefs;
   clauses.endLabelName = s"_end_${toString(genInt())}";
+  clauses.initialEnv = top.env;
   
   local localErrors::[Message] = clauses.errors ++ scrutinees.errors;
-  local fwrd::Stmt =
+  forward fwrd =
     ableC_Stmt {
       {
-        $Stmt{decStmt(initialTransform)}
-        $Stmt{clauses.transform}
+        $Stmt{@scrutinees.transform}
+        $Stmt{@clauses.transform}
         $name{clauses.endLabelName}: ;
       }
     };
   
-  forwards to if !null(localErrors) then warnStmt(localErrors) else fwrd;
+  forwards to if !null(localErrors) then warnStmt(localErrors) else @fwrd;
 }
 
 synthesized attribute scrutineeRefs::[Expr];
 
-attribute transform<Stmt>, scrutineeRefs occurs on Exprs;
-flowtype Exprs = transform {decorate, argumentPosition}, scrutineeRefs {decorate, argumentPosition};
+nonterminal ScrutineeExprs with pps, transform<Stmt>, scrutineeRefs, typereps, errors, argumentPosition;
+flowtype ScrutineeExprs = decorate {transform.env, transform.controlStmtContext},
+  pps {}, transform {argumentPosition}, scrutineeRefs {argumentPosition},
+  typereps {decorate}, errors {decorate};
 
-aspect production consExpr
-top::Exprs ::= h::Expr  t::Exprs
+propagate errors, initialEnv on ScrutineeExprs;
+
+abstract production consScrutineeExpr
+top::ScrutineeExprs ::= h::Expr  t::ScrutineeExprs
 {
+  top.pps = h.pp :: t.pps;
+
+  local matchVarName::Name = name("_match_scrutinee_val_" ++ toString(top.argumentPosition), location=builtin);
   top.transform =
     ableC_Stmt {
-      $directTypeExpr{h.typerep} $name{"_match_scrutinee_val_" ++ toString(top.argumentPosition)} = $Expr{h};
-      $Stmt{t.transform}
+      $Decl{autoDecl(matchVarName, @h)}
+      $Stmt{@t.transform}
     };
   top.scrutineeRefs =
-    ableC_Expr { $name{"_match_scrutinee_val_" ++ toString(top.argumentPosition)} } ::
+    ableC_Expr { $Name{matchVarName} } ::
     t.scrutineeRefs;
+  top.typereps = h.typerep :: t.typereps;
+
+  t.argumentPosition = top.argumentPosition + 1;
 }
 
-aspect production nilExpr
-top::Exprs ::=
+abstract production nilScrutineeExpr
+top::ScrutineeExprs ::=
 {
+  top.pps = [];
   top.transform = nullStmt();
   top.scrutineeRefs = [];
+  top.typereps = [];
 }

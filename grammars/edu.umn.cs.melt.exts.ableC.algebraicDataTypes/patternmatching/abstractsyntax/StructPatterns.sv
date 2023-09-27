@@ -17,7 +17,7 @@ top::Pattern ::= ps::StructPatternList
   
   local refIdLookup::[RefIdItem] =
     case refId of
-    | just(rid) -> lookupRefId(rid, top.env)
+    | just(rid) -> lookupRefId(rid, top.initialEnv)
     | nothing() -> []
     end;
   
@@ -39,11 +39,12 @@ top::Pattern ::= ps::StructPatternList
   
   ps.givenFieldNames =
     case refIdLookup of
-    | item :: _ -> flattenFieldNames(item.fieldNames, top.env)
+    | item :: _ -> flattenFieldNames(item.fieldNames, top.initialEnv)
     | [] -> []
     end;
   
-  top.transform = ps.transform;
+  top.patternDecls = @ps.patternDecls;
+  top.transform = @ps.transform;
   ps.transformIn = top.transformIn;
 }
 
@@ -70,28 +71,24 @@ inherited attribute givenTagEnv::Decorated Env;
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
-nonterminal StructPatternList with pps, errors, env, defs, decls,
-  patternDefs, givenTagEnv, givenFieldNames, transform<Expr>, transformIn<Expr>,
-  controlStmtContext;
-flowtype StructPatternList = decorate {env, givenTagEnv, givenFieldNames,
-  transformIn, controlStmtContext},
-  pps {}, decls {decorate}, patternDefs {decorate}, errors {decorate},
-  defs {decorate}, transform {decorate};
+nonterminal StructPatternList with pps, errors, patternDecls,
+  givenTagEnv, givenFieldNames, initialEnv, transform<Expr>, transformIn<Expr>;
+flowtype StructPatternList =
+  decorate {givenTagEnv, givenFieldNames, initialEnv, patternDecls.env, patternDecls.isTopLevel, patternDecls.controlStmtContext, transform.env, transform.controlStmtContext, transformIn},
+  pps {}, errors {decorate}, patternDecls {givenFieldNames, givenTagEnv, initialEnv}, transform {givenFieldNames, givenTagEnv, initialEnv, transformIn};
 
-propagate givenTagEnv, controlStmtContext, errors, defs, decls, patternDefs on StructPatternList;
+propagate givenTagEnv, initialEnv, errors on StructPatternList;
 
 abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
 {
   top.pps = p.pp :: rest.pps;
-  
-  p.env = top.env;
-  rest.env = addEnv(p.defs, top.env);
 
   p.givenFieldNames = top.givenFieldNames;
   rest.givenFieldNames = p.remainingFieldNames;
   
-  top.transform = andExpr(p.transform, rest.transform, location=builtin);
+  top.patternDecls = consDecl(decls(@p.patternDecls), @rest.patternDecls);
+  top.transform = andExpr(@p.transform, @rest.transform, location=builtin);
   p.transformIn = top.transformIn;
   rest.transformIn = top.transformIn;
 }
@@ -100,18 +97,17 @@ abstract production nilStructPattern
 top::StructPatternList ::= {-empty-}
 {
   top.pps = [];
+  top.patternDecls = nilDecl();
   top.transform = mkIntConst(1, builtin);
 }
 
-nonterminal StructPattern with location, pp, errors, defs, decls, patternDefs,
-  givenTagEnv, givenFieldNames, remainingFieldNames, transform<Expr>, transformIn<Expr>,
-  env, controlStmtContext;
-flowtype StructPattern = decorate {env, givenTagEnv, givenFieldNames,
-  transformIn, controlStmtContext},
-  pp {}, decls {decorate}, patternDefs {decorate}, errors {decorate}, defs {decorate},
-  transform {decorate};
+nonterminal StructPattern with location, pp, errors, patternDecls,
+  givenTagEnv, givenFieldNames, remainingFieldNames, initialEnv, transform<Expr>, transformIn<Expr>;
+flowtype StructPattern =
+  decorate {givenTagEnv, givenFieldNames, initialEnv, patternDecls.env, patternDecls.isTopLevel, patternDecls.controlStmtContext, transform.env, transform.controlStmtContext, transformIn},
+  pp {}, errors {decorate}, patternDecls {givenFieldNames, givenTagEnv, initialEnv}, transform {givenFieldNames, givenTagEnv, initialEnv, transformIn};
 
-propagate givenTagEnv, controlStmtContext, errors, defs, decls, patternDefs on StructPattern;
+propagate givenTagEnv, initialEnv, errors on StructPattern;
 
 abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern
@@ -139,9 +135,11 @@ top::StructPattern ::= p::Pattern
     | [] -> errorType()
     end;
   
+  top.patternDecls = @p.patternDecls;
+
   p.transformIn =
     memberExpr(top.transformIn, false, name(fieldName, location=builtin), location=builtin);
-  top.transform = p.transform;
+  top.transform = @p.transform;
 }
 
 abstract production namedStructPattern
@@ -155,9 +153,10 @@ top::StructPattern ::= n::Name p::Pattern
   top.remainingFieldNames = top.givenFieldNames;
   
   n.env = top.givenTagEnv;
-  p.env = top.env;
   p.expectedType = n.valueItem.typerep;
   
+  top.patternDecls = @p.patternDecls;
+  
   p.transformIn = memberExpr(top.transformIn, false, n, location=builtin);
-  top.transform = p.transform;
+  top.transform = @p.transform;
 }

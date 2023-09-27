@@ -17,7 +17,7 @@ terminal OpenScope_t '' action { context = openScope(context); };
 concrete production match_c
 top::SelectionStmt_c ::= 'match' '(' scrutinees::ArgumentExprList_c ')' '{' cs::StmtClauses_c '}'
 {
-  top.ast = abs:matchStmt(foldExpr(scrutinees.ast), cs.ast);
+  top.ast = abs:matchStmt(foldr(abs:consScrutineeExpr, abs:nilScrutineeExpr(), scrutinees.ast), cs.ast);
 }
 
 

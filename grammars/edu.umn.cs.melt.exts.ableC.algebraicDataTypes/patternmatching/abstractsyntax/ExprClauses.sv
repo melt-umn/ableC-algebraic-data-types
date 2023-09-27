@@ -54,15 +54,15 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 inherited attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors, defs, env,
-  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+nonterminal ExprClauses with location, matchLocation, pp, errors,
+  expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   typerep, appendedExprClauses, appendedExprClausesRes, controlStmtContext;
-flowtype ExprClauses = decorate {env, matchLocation, expectedTypes,
-  transformIn, controlStmtContext},
+flowtype ExprClauses =
+  decorate {matchLocation, expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
   appendedExprClausesRes {appendedExprClauses};
 
-propagate controlStmtContext, matchLocation, endLabelName, errors, defs, appendedExprClauses on ExprClauses;
+propagate matchLocation, endLabelName, errors, initialEnv, appendedExprClauses on ExprClauses;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
@@ -81,14 +81,11 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     then rest.typerep
     else errorType();
   top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
-  
-  c.env = top.env;
-  rest.env = addEnv(c.defs, c.env);
 
   c.expectedTypes = top.expectedTypes;
   rest.expectedTypes = top.expectedTypes;
 
-  top.transform = seqStmt(c.transform, rest.transform);
+  top.transform = seqStmt(@c.transform, @rest.transform);
   c.transformIn = top.transformIn;
   rest.transformIn = top.transformIn;
 }
@@ -110,14 +107,14 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
   return p1.appendedExprClausesRes;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors, defs, env,
-  expectedTypes, transform<Stmt>, transformIn<[Expr]>, endLabelName,
-  typerep, controlStmtContext;
-flowtype ExprClause = decorate {env, matchLocation, expectedTypes,
-  transformIn, controlStmtContext},
-  errors {decorate}, defs {decorate}, transform {decorate, endLabelName}, typerep {decorate};
+nonterminal ExprClause with location, matchLocation, pp, errors,
+  expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
+  typerep;
+flowtype ExprClause =
+  decorate {matchLocation, expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
+  errors {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
-propagate controlStmtContext, matchLocation, endLabelName, errors, defs on ExprClause;
+propagate matchLocation, endLabelName, errors, initialEnv on ExprClause;
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
@@ -128,8 +125,6 @@ top::ExprClause ::= ps::PatternList e::Expr
     then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
 
-  ps.env = top.env;
-  e.env = addEnv(ps.defs ++ ps.patternDefs, top.env);
   ps.expectedTypes = top.expectedTypes;
 
   top.typerep = e.typerep;
@@ -137,9 +132,11 @@ top::ExprClause ::= ps::PatternList e::Expr
   top.transform =
     ableC_Stmt {
       {
-        $Decl{decls(foldDecl(ps.decls))}
-        if ($Expr{ps.transform}) {
-          _match_result = $Expr{decExpr(e, location=builtin)};
+        $Decl{decls(@ps.patternDecls)}
+        if ($Expr{@ps.transform}) {
+          // Using the host assignment operator to avoid a circularity
+          // with looking up the type of _match_result.
+          _match_result host::= $Expr{@e};
           goto $name{top.endLabelName};
         }
       }
