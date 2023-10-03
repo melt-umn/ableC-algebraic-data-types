@@ -54,24 +54,25 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
 inherited attribute appendedExprClauses :: ExprClauses;
 synthesized attribute appendedExprClausesRes :: ExprClauses;
 
-nonterminal ExprClauses with location, matchLocation, pp, errors,
+tracked nonterminal ExprClauses with pp, errors,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   typerep, appendedExprClauses, appendedExprClausesRes, controlStmtContext;
 flowtype ExprClauses =
-  decorate {matchLocation, expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
+  decorate {expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
   appendedExprClausesRes {appendedExprClauses};
 
-propagate matchLocation, endLabelName, errors, initialEnv, appendedExprClauses on ExprClauses;
+propagate endLabelName, errors, initialEnv, appendedExprClauses on ExprClauses;
 
 abstract production consExprClause
 top::ExprClauses ::= c::ExprClause rest::ExprClauses
 {
   top.pp = cat( c.pp, rest.pp );
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     if typeAssignableTo(c.typerep, rest.typerep) || typeAssignableTo(rest.typerep, c.typerep)
     then []
-    else [err(c.location,
+    else [errFromOrigin(c,
               s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
 
   top.typerep =
@@ -80,7 +81,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     else if typeAssignableTo(rest.typerep, c.typerep)
     then rest.typerep
     else errorType();
-  top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes, location=top.location);
+  top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes);
 
   c.expectedTypes = top.expectedTypes;
   rest.expectedTypes = top.expectedTypes;
@@ -107,22 +108,23 @@ ExprClauses ::= p1::ExprClauses p2::ExprClauses
   return p1.appendedExprClausesRes;
 }
 
-nonterminal ExprClause with location, matchLocation, pp, errors,
+tracked nonterminal ExprClause with pp, errors,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   typerep;
 flowtype ExprClause =
-  decorate {matchLocation, expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
+  decorate {expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
   errors {decorate}, transform {decorate, endLabelName}, typerep {decorate};
 
-propagate matchLocation, endLabelName, errors, initialEnv on ExprClause;
+propagate endLabelName, errors, initialEnv on ExprClause;
 
 abstract production exprClause
 top::ExprClause ::= ps::PatternList e::Expr
 {
   top.pp = ppConcat([ ppImplode(comma(), ps.pps), text("->"), space(), nestlines(2, e.pp), text(";")]);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     if ps.count != length(top.expectedTypes)
-    then [err(top.location, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
+    then [errFromOrigin(top, s"This clause has ${toString(ps.count)} patterns, but ${toString(length(top.expectedTypes))} were expected.")]
     else [];
 
   ps.expectedTypes = top.expectedTypes;

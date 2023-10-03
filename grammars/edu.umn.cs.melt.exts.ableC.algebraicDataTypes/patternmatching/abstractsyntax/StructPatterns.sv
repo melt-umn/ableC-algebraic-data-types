@@ -25,9 +25,9 @@ top::Pattern ::= ps::StructPatternList
     case top.expectedType, refId, refIdLookup of
     | errorType(), _, _ -> []
     -- Check that expected type for this pattern is some sort of type with fields
-    | t, nothing(), _ -> [err(top.location, s"Initializer pattern expected to match a struct or union (got ${showType(t)}).")]
+    | t, nothing(), _ -> [errFromOrigin(top, s"Initializer pattern expected to match a struct or union (got ${showType(t)}).")]
     -- Check that this type has a definition
-    | t, just(id), [] -> [err(top.location, s"${showType(t)} does not have a definition.")]
+    | t, just(id), [] -> [errFromOrigin(top, s"${showType(t)} does not have a definition.")]
     | _, _, _ -> []
     end;
   
@@ -71,7 +71,7 @@ inherited attribute givenTagEnv::Decorated Env;
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
 
-nonterminal StructPatternList with pps, errors, patternDecls,
+tracked nonterminal StructPatternList with pps, errors, patternDecls,
   givenTagEnv, givenFieldNames, initialEnv, transform<Expr>, transformIn<Expr>;
 flowtype StructPatternList =
   decorate {givenTagEnv, givenFieldNames, initialEnv, patternDecls.env, patternDecls.isTopLevel, patternDecls.controlStmtContext, transform.env, transform.controlStmtContext, transformIn},
@@ -83,12 +83,13 @@ abstract production consStructPattern
 top::StructPatternList ::= p::StructPattern rest::StructPatternList
 {
   top.pps = p.pp :: rest.pps;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
 
   p.givenFieldNames = top.givenFieldNames;
   rest.givenFieldNames = p.remainingFieldNames;
   
   top.patternDecls = consDecl(decls(@p.patternDecls), @rest.patternDecls);
-  top.transform = andExpr(@p.transform, @rest.transform, location=builtin);
+  top.transform = andExpr(@p.transform, @rest.transform);
   p.transformIn = top.transformIn;
   rest.transformIn = top.transformIn;
 }
@@ -98,10 +99,10 @@ top::StructPatternList ::= {-empty-}
 {
   top.pps = [];
   top.patternDecls = nilDecl();
-  top.transform = mkIntConst(1, builtin);
+  top.transform = mkIntConst(1);
 }
 
-nonterminal StructPattern with location, pp, errors, patternDecls,
+tracked nonterminal StructPattern with pp, errors, patternDecls,
   givenTagEnv, givenFieldNames, remainingFieldNames, initialEnv, transform<Expr>, transformIn<Expr>;
 flowtype StructPattern =
   decorate {givenTagEnv, givenFieldNames, initialEnv, patternDecls.env, patternDecls.isTopLevel, patternDecls.controlStmtContext, transform.env, transform.controlStmtContext, transformIn},
@@ -113,6 +114,7 @@ abstract production positionalStructPattern
 top::StructPattern ::= p::Pattern
 {
   top.pp = p.pp;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   propagate env;
   top.remainingFieldNames =
     case top.givenFieldNames of
@@ -124,7 +126,7 @@ top::StructPattern ::= p::Pattern
   
   top.errors <-
     if null(top.givenFieldNames)
-    then [err(top.location, "Too many positional field patterns")]
+    then [errFromOrigin(top, "Too many positional field patterns")]
     else [];
   
   p.expectedType =
@@ -138,7 +140,7 @@ top::StructPattern ::= p::Pattern
   top.patternDecls = @p.patternDecls;
 
   p.transformIn =
-    memberExpr(top.transformIn, false, name(fieldName, location=builtin), location=builtin);
+    memberExpr(top.transformIn, false, name(fieldName));
   top.transform = @p.transform;
 }
 
@@ -146,9 +148,10 @@ abstract production namedStructPattern
 top::StructPattern ::= n::Name p::Pattern
 {
   top.pp = pp".${n.pp} = ${p.pp}";
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     if !null(n.valueLookupCheck)
-    then [err(n.location, s"Unexpected named field ${n.name}")]
+    then [errFromOrigin(n, s"Unexpected named field ${n.name}")]
     else [];
   top.remainingFieldNames = top.givenFieldNames;
   
@@ -157,6 +160,6 @@ top::StructPattern ::= n::Name p::Pattern
   
   top.patternDecls = @p.patternDecls;
   
-  p.transformIn = memberExpr(top.transformIn, false, n, location=builtin);
+  p.transformIn = memberExpr(top.transformIn, false, n);
   top.transform = @p.transform;
 }

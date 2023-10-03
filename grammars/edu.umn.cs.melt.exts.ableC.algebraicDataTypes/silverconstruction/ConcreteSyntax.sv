@@ -16,24 +16,24 @@ concrete productions top::Constructor_c
 | '$ConstructorList' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
 {
-  top.ast = antiquoteConstructorList(e, location=top.location);
-  top.constructorName = ableC:name("", location=top.location);
+  top.ast = antiquoteConstructorList(e);
+  top.constructorName = ableC:name("");
 }
 
 concrete productions top::StmtClause_c
 | '$StmtClauses' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquoteStmtClauses(e, location=top.location); }
+  { top.ast = antiquoteStmtClauses(e); }
 
 concrete productions top::ExprClause_c
 | '$ExprClauses' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquoteExprClauses(e, location=top.location); }
+  { top.ast = antiquoteExprClauses(e); }
 
 concrete productions top::Pattern_c
 | '$PatternList' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquotePatternList(e, location=top.location); }
+  { top.ast = antiquotePatternList(e); }
 | '$Pattern' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquotePattern(e, location=top.location); }
+  { top.ast = antiquotePattern(e); }
