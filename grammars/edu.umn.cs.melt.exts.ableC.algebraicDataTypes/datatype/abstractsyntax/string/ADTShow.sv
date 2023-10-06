@@ -107,7 +107,7 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
 aspect production nilConstructor
 top::ConstructorList ::=
 {
-  top.showErrors = \ Decorated Env -> [];
+  top.showErrors = \ _ -> [];
   top.showTransform = top.showTransformIn;
 }
 
@@ -143,7 +143,7 @@ top::Parameters ::= h::ParameterDecl t::Parameters
 aspect production nilParameters
 top::Parameters ::= 
 {
-  top.adtShowErrors = \ Decorated Env -> [];
+  top.adtShowErrors = \ _ -> [];
   top.adtShowTransform = nullStmt();
 }
 
