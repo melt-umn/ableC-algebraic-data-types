@@ -48,7 +48,7 @@ synthesized attribute transform<a> :: a;
 -- the same constructors.
 inherited attribute adtGivenName :: String;
 
-nonterminal ADTDecl with location, pp, env, defs, errors, isTopLevel,
+tracked nonterminal ADTDecl with pp, env, defs, errors, isTopLevel,
   adtGivenName, name, givenRefId, refId, constructors, tagEnv, hostFieldNames,
   transform<Decl>, controlStmtContext;
 flowtype ADTDecl = decorate {isTopLevel, env, givenRefId, adtGivenName,
@@ -60,6 +60,7 @@ abstract production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
   propagate isTopLevel, controlStmtContext, adtGivenName, errors;  -- TODO: check for redeclaration
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.pp = ppConcat([ ppAttributes(attrs), n.pp, space(), braces(nestlines(2, cs.pp)) ]);
 
   {- structs create a tagItem and a refIdItem in the environment
@@ -114,7 +115,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
             nilEnumItem() ->
               consEnumItem(
                 enumItem(
-                  name(s"_dummy_${top.adtGivenName}_enum_item_${toString(genInt())}", location=builtin),
+                  name(s"_dummy_${top.adtGivenName}_enum_item_${toString(genInt())}"),
                   nothingExpr()),
                 nilEnumItem())
           | _ -> cs.enumItems
@@ -202,7 +203,7 @@ synthesized attribute constructors :: [Pair<String Decorated Parameters>];
 inherited attribute appendedConstructors :: ConstructorList;
 synthesized attribute appendedConstructorsRes :: ConstructorList;
 
-nonterminal ConstructorList
+tracked nonterminal ConstructorList
   with pp, env, errors, defs, enumItems, structItems, funDecls,
     adtGivenName, adtDeclName, constructors, controlStmtContext,
     appendedConstructors, appendedConstructorsRes;
@@ -259,11 +260,10 @@ synthesized attribute structItem :: StructItem;
 -- Constructs the function declaration for each constructor
 synthesized attribute funDecl :: Decl;
 
-nonterminal Constructor
+tracked nonterminal Constructor
   with pp, env, defs, errors,
        enumItem, structItem, funDecl, adtGivenName, adtDeclName, constructors,
-       controlStmtContext, -- because Types may contain Exprs
-       location;
+       controlStmtContext; -- because Types may contain Exprs
 flowtype Constructor = decorate {env, adtGivenName, adtDeclName,
   controlStmtContext},
   pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName},
@@ -274,6 +274,8 @@ propagate env, adtGivenName, adtDeclName, controlStmtContext, errors, defs on Co
 abstract production constructor
 top::Constructor ::= n::Name ps::Parameters
 {
+  attachNote extensionGenerated("ableC-algebraic-data-types");
+
   {- This attribute is for extensions to use to initialize additional members added
      to the generated ADT struct. -}
   production attribute initStmts::[Stmt] with ++;
@@ -289,7 +291,7 @@ top::Constructor ::= n::Name ps::Parameters
 
   production enumItemName::String = top.adtGivenName ++ "_" ++ n.name;
   top.enumItem =
-    enumItem(name(top.adtGivenName ++ "_" ++ n.name, location=top.location), nothingExpr());
+    enumItem(name(top.adtGivenName ++ "_" ++ n.name), nothingExpr());
 
   top.structItem =
     structItem(
@@ -298,14 +300,14 @@ top::Constructor ::= n::Name ps::Parameters
         nilQualifier(),
         structDecl(
           nilAttribute(),
-          justName(name(top.adtDeclName ++ "_" ++ n.name ++ "_s", location=builtin)),
-          ps.asStructItemList, location=builtin)),
+          justName(name(top.adtDeclName ++ "_" ++ n.name ++ "_s")),
+          ps.asStructItemList)),
       consStructDeclarator(
         structField(n, baseTypeExpr(), nilAttribute()),
         nilStructDeclarator()));
 
   production resultTypeExpr::BaseTypeExpr =
-    adtTagReferenceTypeExpr(nilQualifier(), name(top.adtDeclName, location=builtin));
+    adtTagReferenceTypeExpr(nilQualifier(), name(top.adtDeclName));
   top.funDecl =
     ableC_Decl {
       static inline $BaseTypeExpr{resultTypeExpr} $Name{n}($Parameters{ps.asConstructorParameters}) {

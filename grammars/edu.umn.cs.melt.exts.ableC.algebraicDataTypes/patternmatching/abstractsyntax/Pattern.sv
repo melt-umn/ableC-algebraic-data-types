@@ -4,7 +4,7 @@ grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:abstractsy
     productions, instead of arbitrary new attributes with regular nonterminals, since
     this is generally expected to be more useful.
 -}
-closed nonterminal Pattern with location, pp, expectedType, initialEnv, errors;
+closed tracked nonterminal Pattern with pp, expectedType, initialEnv, errors;
 flowtype Pattern =
   decorate {
     expectedType, initialEnv, transformIn,
@@ -49,8 +49,8 @@ top::Pattern ::= n::Name
   n.env = top.initialEnv;
   forwards to
     case n.valueItem of
-    | enumValueItem(_) -> patternConst(declRefExpr(n, location=builtin), location=top.location)
-    | _ -> patternVariable(n, location=top.location)
+    | enumValueItem(_) -> patternConst(declRefExpr(n))
+    | _ -> patternVariable(n)
     end;
 }
 
@@ -58,6 +58,7 @@ abstract production patternVariable
 top::Pattern ::= n::Name
 {
   top.pp = n.pp;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   top.patternDecls = ableC_Decls { $directTypeExpr{top.expectedType} $Name{@n}; };
@@ -68,52 +69,55 @@ abstract production patternWildcard
 top::Pattern ::=
 {
   top.pp = text("_");
-  top.transform = mkIntConst(1, builtin);
+  top.transform = mkIntConst(1);
 }
 
 abstract production patternConst
 top::Pattern ::= constExpr::Expr
 {
   top.pp = constExpr.pp;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-  -- TODO: Proper handling for equality type checking
     if !typeAssignableTo(constExpr.typerep, top.expectedType.defaultFunctionArrayLvalueConversion)
-    then [err(constExpr.location, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
+    then [errFromOrigin(constExpr, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
     else [];
   
-  top.transform = equalsExpr(top.transformIn, @constExpr, location=builtin);
+  top.transform = equalsExpr(top.transformIn, @constExpr);
 }
 
 abstract production patternStringLiteral
 top::Pattern ::= s::String
 {
   top.pp = text(s);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   
   local stringType::Type =
     pointerType(nilQualifier(),
       builtinType(
-        consQualifier(constQualifier(location=builtin), nilQualifier()),
+        consQualifier(constQualifier(), nilQualifier()),
         signedType(charType())));
   top.errors <-
     if !typeAssignableTo(stringType.defaultFunctionArrayLvalueConversion, top.expectedType.defaultFunctionArrayLvalueConversion)
-    then [err(top.location, s"String constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
+    then [errFromOrigin(top, s"String constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
     else [];
   top.errors <-
     if null(lookupValue("strcmp", top.transform.env))
-    then [err(top.location, "Pattern string literals require definition of strcmp (include <string.h>?)")]
+    then [errFromOrigin(top, "Pattern string literals require definition of strcmp (include <string.h>?)")]
     else [];
 
-  top.transform = ableC_Expr { !strcmp($Expr{top.transformIn}, $Expr{stringLiteral(s, location=builtin)}) };
+  top.transform = ableC_Expr { !strcmp($Expr{top.transformIn}, $Expr{stringLiteral(s)}) };
 }
 
 abstract production patternPointer
 top::Pattern ::= p::Pattern
 {
   top.pp = cat(pp"&", p.pp);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-
     case top.expectedType.withoutAttributes of
     | pointerType(_, _) -> []
     | errorType() -> []
-    | _ -> [err(p.location, s"Pointer pattern expected to match pointer type (got ${showType(top.expectedType)})")]
+    | _ -> [errFromOrigin(p, s"Pointer pattern expected to match pointer type (got ${showType(top.expectedType)})")]
     end;
   
   p.expectedType =
@@ -127,7 +131,7 @@ top::Pattern ::= p::Pattern
   -- Store the result of the dereference in a temporary variable
   -- since p.transformIn may be used more than once.
   local tempName::String = "_match_pointer_" ++ toString(genInt());
-  p.transformIn = declRefExpr(name(tempName, location=builtin), location=builtin);
+  p.transformIn = declRefExpr(name(tempName));
   top.transform =
     ableC_Expr {
       ({$directTypeExpr{p.expectedType} $name{tempName} = *$Expr{top.transformIn};
@@ -139,6 +143,7 @@ abstract production patternBoth
 top::Pattern ::= p1::Pattern p2::Pattern
 {
   top.pp = ppConcat([p1.pp, space(), text("@"), space(), p2.pp ]);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   
   p1.expectedType = top.expectedType;
   p2.expectedType = top.expectedType;
@@ -146,13 +151,14 @@ top::Pattern ::= p1::Pattern p2::Pattern
   p2.transformIn = top.transformIn;
 
   top.patternDecls = consDecl(decls(@p1.patternDecls), @p2.patternDecls);
-  top.transform = andExpr(@p1.transform, @p2.transform, location=builtin);
+  top.transform = andExpr(@p1.transform, @p2.transform);
 }
 
 abstract production patternNot
 top::Pattern ::= p::Pattern 
 {
   top.pp = cat(text("! "), p.pp);
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   -- TODO: Exclude variable patterns
 
   p.expectedType = top.expectedType;
@@ -160,7 +166,7 @@ top::Pattern ::= p::Pattern
   top.patternDecls = @p.patternDecls;
 
   p.transformIn = top.transformIn;
-  top.transform = notExpr(@p.transform, location=builtin);
+  top.transform = notExpr(@p.transform);
 }
 
 abstract production patternWhen
@@ -169,7 +175,7 @@ top::Pattern ::= e::Expr
   top.pp = cat( text("when"), parens(e.pp));
   top.errors <-
     if !e.typerep.defaultFunctionArrayLvalueConversion.isScalarType
-    then [err(e.location, "when condition must be scalar type, instead it is " ++ showType(e.typerep))]
+    then [errFromOrigin(e, "when condition must be scalar type, instead it is " ++ showType(e.typerep))]
     else [];
   
   top.transform = @e;
@@ -191,7 +197,7 @@ top::Pattern ::= p::Pattern
 inherited attribute appendedPatterns :: PatternList;
 synthesized attribute appendedPatternsRes :: PatternList;
 
-nonterminal PatternList with pps, errors, patternDecls,
+tracked nonterminal PatternList with pps, errors, patternDecls,
   expectedTypes, initialEnv, count, transform<Expr>, transformIn<[Expr]>,
   appendedPatterns, appendedPatternsRes, controlStmtContext;
 flowtype PatternList =
@@ -205,6 +211,7 @@ abstract production consPattern
 top::PatternList ::= p::Pattern rest::PatternList
 {
   top.pps = p.pp :: rest.pps;
+  attachNote extensionGenerated("ableC-algebraic-data-types");
   top.count = 1 + rest.count;
   top.appendedPatternsRes = consPattern(p, rest.appendedPatternsRes);
   
@@ -218,8 +225,8 @@ top::PatternList ::= p::Pattern rest::PatternList
 
   top.patternDecls = consDecl(decls(@p.patternDecls), @rest.patternDecls);
   
-  top.transform = andExpr(@p.transform, @rest.transform, location=builtin);
-  p.transformIn = if null(top.transformIn) then errorExpr([], location=builtin) else head(top.transformIn);
+  top.transform = andExpr(@p.transform, @rest.transform);
+  p.transformIn = if null(top.transformIn) then errorExpr([]) else head(top.transformIn);
   rest.transformIn = if null(top.transformIn) then [] else tail(top.transformIn);
 }
 
@@ -229,7 +236,7 @@ top::PatternList ::= {-empty-}
   top.pps = [];
   top.count = 0;
   top.patternDecls = nilDecl();
-  top.transform = mkIntConst(1, builtin);
+  top.transform = mkIntConst(1);
   top.appendedPatternsRes = top.appendedPatterns;
 }
 

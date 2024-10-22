@@ -10,5 +10,3 @@ imports edu:umn:cs:melt:ableC:abstractsyntax:env;
 
 exports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:abstractsyntax:string
   with edu:umn:cs:melt:exts:ableC:string:abstractsyntax;
-
-global builtin::Location = builtinLoc("algebraicDataTypes");
