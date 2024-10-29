@@ -25,9 +25,9 @@ top::Pattern ::= ps::StructPatternList
     case top.expectedType, refId, refIdLookup of
     | errorType(), _, _ -> []
     -- Check that expected type for this pattern is some sort of type with fields
-    | t, nothing(), _ -> [errFromOrigin(top, s"Initializer pattern expected to match a struct or union (got ${showType(t)}).")]
+    | t, nothing(), _ -> [errFromOrigin(top, s"Initializer pattern expected to match a struct or union (got ${show(80, t)}).")]
     -- Check that this type has a definition
-    | t, just(id), [] -> [errFromOrigin(top, s"${showType(t)} does not have a definition.")]
+    | t, just(id), [] -> [errFromOrigin(top, s"${show(80, t)} does not have a definition.")]
     | _, _, _ -> []
     end;
   
@@ -48,25 +48,21 @@ top::Pattern ::= ps::StructPatternList
   ps.transformIn = top.transformIn;
 }
 
-function flattenFieldNames
-[String] ::= fns::[Either<String ExtType>] env::Decorated Env
-{
-  return
-    flatMap(
-      \ f::Either<String ExtType> ->
-        case f of
-        | left(fn) -> [fn]
-        | right(e) ->
-          case e.maybeRefId of
-          | just(refId) when lookupRefId(refId, env) matches r :: _ ->
-            flattenFieldNames(r.fieldNames, env)
-          | _ -> error("Failed to get anon struct fields")
-          end
-        end,
-      fns);
-}
+fun flattenFieldNames [String] ::= fns::[Either<String ExtType>] env::Env =
+  flatMap(
+    \ f::Either<String ExtType> ->
+      case f of
+      | left(fn) -> [fn]
+      | right(e) ->
+        case e.maybeRefId of
+        | just(refId) when lookupRefId(refId, env) matches r :: _ ->
+          flattenFieldNames(r.fieldNames, env)
+        | _ -> error("Failed to get anon struct fields")
+        end
+      end,
+    fns);
 
-inherited attribute givenTagEnv::Decorated Env;
+inherited attribute givenTagEnv::Env;
 
 inherited attribute givenFieldNames::[String];
 synthesized attribute remainingFieldNames::[String];
@@ -160,6 +156,6 @@ top::StructPattern ::= n::Name p::Pattern
   
   top.patternDecls = @p.patternDecls;
   
-  p.transformIn = memberExpr(top.transformIn, false, n);
+  p.transformIn = memberExpr(top.transformIn, false, ^n);
   top.transform = @p.transform;
 }

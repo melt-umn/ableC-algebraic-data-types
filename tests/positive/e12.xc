@@ -1,4 +1,4 @@
-#include <alloca.h>
+#include <arena.h>
 #include <assert.h>
 #include <string.xh>
 
@@ -10,21 +10,26 @@ datatype Bar {
   BarThing(int, datatype Foo*);
 };
 
-allocate datatype Foo with alloca;
-allocate datatype Bar with alloca;
-
 typedef datatype Foo* Foo;
 
-string show_Foo(datatype Foo x) {
-  (void) x;
-  return str("Foo!");
+size_t max_len_Foo(datatype Foo x) {
+  return 4;
 }
 
-show datatype Foo with show_Foo;
+size_t show_Foo(char *buf, datatype Foo x) {
+  return sprintf(buf, "Foo!");
+}
+
+show datatype Foo with max_len_Foo, show_Foo;
 
 int main(void) {
-  Foo x = alloca_FooThing(5);
-  datatype Bar* y = alloca_BarThing(42, x);
-  assert(show(x) == "&Foo!");
-  assert(show(y) == "&BarThing(42, &Foo!)");
+  with_arena a {
+    Foo x = new FooThing(5);
+    datatype Bar* y = new BarThing(42, x);
+    printf("%s\n", show(x).text);
+    printf("%s\n", show(y).text);
+
+    assert(show(x) == "&Foo!");
+    assert(show(y) == "&BarThing(42, &Foo!)");
+  }
 }

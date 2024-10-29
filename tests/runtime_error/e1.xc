@@ -11,7 +11,7 @@ datatype Expr {
   Const (int);
 };
 
-allocate datatype Expr with malloc;
+allocate_using heap;
 
 int valueE(Expr *e) {
   return
@@ -46,7 +46,7 @@ int free_Expr(Expr *e) {
 }
 
 int main () {
-  Expr *t = malloc_Add(malloc_Const(4), malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t = new Add(new Const(4), new Mul(new Const(2), new Const(4)));
  
   int result1 = valueE(t);
   int result2 = valueS(t);

@@ -6,7 +6,7 @@ imports silver:reflect;
 imports silver:compiler:definition:core;
 imports silver:compiler:metatranslation;
 
-imports edu:umn:cs:melt:exts:silver:ableC:abstractsyntax;
+imports edu:umn:cs:melt:ableC:silverconstruction:abstractsyntax;
 imports edu:umn:cs:melt:ableC:abstractsyntax:host as ableC;
 
 -- AbleC-to-Silver bridge productions

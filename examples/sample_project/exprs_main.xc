@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include "exprs.xh"
 
-allocate datatype Expr with malloc;
+allocate_using heap;
 
 int main () {
-  Expr *t = malloc_Add(malloc_Const(3), malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t = new Add(new Const(3), new Mul(new Const(2), new Const(4)));
  
   int result = value(t);
 

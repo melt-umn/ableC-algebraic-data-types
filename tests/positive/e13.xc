@@ -4,20 +4,23 @@
 
 typedef datatype Bar* Bar;
 
-string show_Bar(Bar x) {
-  (void) x;
-  return str("Bar!");
+size_t max_len_Bar(Bar x) {
+  return 4;
 }
 
-show Bar with show_Bar;
+size_t show_Bar(char *buf, Bar x) {
+  return sprintf(buf, "Bar!");
+}
+
+show Bar with max_len_Bar, show_Bar;
 
 datatype Foo {
   FooBar(Bar);
 };
 
-allocate datatype Foo with alloca;
+allocate_using stack;
 
 int main(void) {
-  datatype Foo* y = alloca_FooBar(NULL);
+  datatype Foo* y = new FooBar(NULL);
   assert(show(y) == "&FooBar(Bar!)");
 }

@@ -8,14 +8,14 @@ datatype Bar {
   A(struct Foo *foo);
 };
 
-allocate datatype Bar with malloc;
+allocate_using heap;
 
 datatype Baz {
   B(datatype Bar *bar);
 };
 
 int main () {
-  datatype Baz b = B(malloc_A(NULL));
+  datatype Baz b = B(new A(NULL));
   
   string s = show(b); // Showing datatype with non-showable field
 }

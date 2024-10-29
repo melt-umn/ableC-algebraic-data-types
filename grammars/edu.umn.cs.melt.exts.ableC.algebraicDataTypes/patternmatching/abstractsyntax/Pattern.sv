@@ -23,7 +23,7 @@ inherited attribute expectedType :: Type;
 inherited attribute expectedTypes :: [Type];
 
 -- The env for the overall match construct, used to resolve forwarding in patterns.
-inherited attribute initialEnv::Decorated Env;
+inherited attribute initialEnv::Env;
 
 -- Pattern variable declarations for the pattern.
 translation attribute patternDecls::Decls occurs on Pattern;
@@ -49,8 +49,8 @@ top::Pattern ::= n::Name
   n.env = top.initialEnv;
   forwards to
     case n.valueItem of
-    | enumValueItem(_) -> patternConst(declRefExpr(n))
-    | _ -> patternVariable(n)
+    | enumValueItem(_) -> patternConst(declRefExpr(^n))
+    | _ -> patternVariable(^n)
     end;
 }
 
@@ -62,7 +62,7 @@ top::Pattern ::= n::Name
   top.errors <- n.valueRedeclarationCheckNoCompatible;
   
   top.patternDecls = ableC_Decls { $directTypeExpr{top.expectedType} $Name{@n}; };
-  top.transform = ableC_Expr { ($Name{n} = $Expr{top.transformIn}, 1) };
+  top.transform = ableC_Expr { ($Name{^n} = $Expr{top.transformIn}, 1) };
 }
 
 abstract production patternWildcard
@@ -79,7 +79,7 @@ top::Pattern ::= constExpr::Expr
   attachNote extensionGenerated("ableC-algebraic-data-types");
   top.errors <-  -- TODO: Proper handling for equality type checking
     if !typeAssignableTo(constExpr.typerep, top.expectedType.defaultFunctionArrayLvalueConversion)
-    then [errFromOrigin(constExpr, s"Constant pattern expected to match type ${showType(constExpr.typerep)} (got ${showType(top.expectedType)})")]
+    then [errFromOrigin(constExpr, s"Constant pattern expected to match type ${show(80, constExpr.typerep)} (got ${show(80, top.expectedType)})")]
     else [];
   
   top.transform = equalsExpr(top.transformIn, @constExpr);
@@ -91,14 +91,14 @@ top::Pattern ::= s::String
   top.pp = text(s);
   attachNote extensionGenerated("ableC-algebraic-data-types");
   
-  local stringType::Type =
+  nondecorated local stringType::Type =
     pointerType(nilQualifier(),
       builtinType(
         consQualifier(constQualifier(), nilQualifier()),
         signedType(charType())));
   top.errors <-
     if !typeAssignableTo(stringType.defaultFunctionArrayLvalueConversion, top.expectedType.defaultFunctionArrayLvalueConversion)
-    then [errFromOrigin(top, s"String constant pattern expected to match type ${showType(stringType)} (got ${showType(top.expectedType)})")]
+    then [errFromOrigin(top, s"String constant pattern expected to match type ${show(80, stringType)} (got ${show(80, top.expectedType)})")]
     else [];
   top.errors <-
     if null(lookupValue("strcmp", top.transform.env))
@@ -117,12 +117,12 @@ top::Pattern ::= p::Pattern
     case top.expectedType.withoutAttributes of
     | pointerType(_, _) -> []
     | errorType() -> []
-    | _ -> [errFromOrigin(p, s"Pointer pattern expected to match pointer type (got ${showType(top.expectedType)})")]
+    | _ -> [errFromOrigin(p, s"Pointer pattern expected to match pointer type (got ${show(80, top.expectedType)})")]
     end;
   
   p.expectedType =
     case top.expectedType.withoutAttributes of
-    | pointerType(_, sub) -> sub
+    | pointerType(_, sub) -> ^sub
     | _ -> errorType()
     end;
 
@@ -175,7 +175,7 @@ top::Pattern ::= e::Expr
   top.pp = cat( text("when"), parens(e.pp));
   top.errors <-
     if !e.typerep.defaultFunctionArrayLvalueConversion.isScalarType
-    then [errFromOrigin(e, "when condition must be scalar type, instead it is " ++ showType(e.typerep))]
+    then [errFromOrigin(e, "when condition must be scalar type, instead it is " ++ show(80, e.typerep))]
     else [];
   
   top.transform = @e;
@@ -213,7 +213,7 @@ top::PatternList ::= p::Pattern rest::PatternList
   top.pps = p.pp :: rest.pps;
   attachNote extensionGenerated("ableC-algebraic-data-types");
   top.count = 1 + rest.count;
-  top.appendedPatternsRes = consPattern(p, rest.appendedPatternsRes);
+  top.appendedPatternsRes = consPattern(^p, rest.appendedPatternsRes);
   
   local splitTypes :: Pair<Type [Type]> =
     case top.expectedTypes of
@@ -243,6 +243,6 @@ top::PatternList ::= {-empty-}
 function appendPatternList
 PatternList ::= p1::PatternList p2::PatternList
 {
-  p1.appendedPatterns = p2;
+  p1.appendedPatterns = ^p2;
   return p1.appendedPatternsRes;
 }

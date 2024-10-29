@@ -1,6 +1,6 @@
 grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:silverconstruction;
 
-imports edu:umn:cs:melt:exts:silver:ableC:concretesyntax;
+imports edu:umn:cs:melt:ableC:silverconstruction:concretesyntax;
 
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype;
 imports edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching;
@@ -16,24 +16,24 @@ concrete productions top::Constructor_c
 | '$ConstructorList' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
 {
-  top.ast = antiquoteConstructorList(e);
+  top.ast = antiquoteConstructorList(^e);
   top.constructorName = ableC:name("");
 }
 
 concrete productions top::StmtClause_c
 | '$StmtClauses' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquoteStmtClauses(e); }
+  { top.ast = antiquoteStmtClauses(^e); }
 
 concrete productions top::ExprClause_c
 | '$ExprClauses' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquoteExprClauses(e); }
+  { top.ast = antiquoteExprClauses(^e); }
 
 concrete productions top::Pattern_c
 | '$PatternList' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquotePatternList(e); }
+  { top.ast = antiquotePatternList(^e); }
 | '$Pattern' silver:compiler:definition:core:LCurly_t e::Expr silver:compiler:definition:core:RCurly_t
   layout {silver:compiler:definition:core:WhiteSpace, BlockComments, Comments}
-  { top.ast = antiquotePattern(e); }
+  { top.ast = antiquotePattern(^e); }

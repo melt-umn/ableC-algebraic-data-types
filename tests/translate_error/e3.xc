@@ -9,7 +9,7 @@ datatype Expr {
   Const (int);
 };
 
-allocate datatype Expr with malloc;
+allocate_using heap;
 
 int funny_value(Expr *e) {
   int result = 999;
@@ -37,24 +37,24 @@ int funny_value(Expr *e) {
 int main () {
     int result;
 
-    Expr *t0 = malloc_Add(malloc_Mul(malloc_Const(3), malloc_Const(2), malloc_Const(999)), // Type error in tree construction
-                          malloc_Mul(malloc_Const(2), malloc_Const(4)));
+    Expr *t0 = new Add(new Mul(new Const(3), new Const(2), new Const(999)), // Type error in tree construction
+                       new Mul(new Const(2), new Const(4)));
     result = funny_value(t0);
     if (result != 34) return 1;
   
-    Expr *t1 = malloc_Mul(malloc_Const(3), malloc_Mul(malloc_Const(2), malloc_Const(4)));
+    Expr *t1 = new Mul(new Const(3), new Mul(new Const(2), new Const(4)));
     result = funny_value(t1);
     if (result != 192) return 2;
   
-    Expr *t2 = malloc_Mul(malloc_Const(2), malloc_Const(4));
+    Expr *t2 = new Mul(new Const(2), new Const(4));
     result = funny_value(t2);
     if (result != 32) return 3;
 
-    Expr *t3 = malloc_Const(2); 
+    Expr *t3 = new Const(2); 
     result = funny_value(t3);
     if (result != 2 + 2) return 4;
   
-    Expr *t4 = malloc_Add(malloc_Const(2), malloc_Const(4));
+    Expr *t4 = new Add(new Const(2), new Const(4));
     result = funny_value(t4);
     if (result != 1000) return 5;
   

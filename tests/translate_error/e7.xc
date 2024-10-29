@@ -9,8 +9,8 @@ datatype Expr {
   Const (int);
 };
 
-allocate datatype Expr with malloc;
+allocate_using heap;
 
 int main () {
-  malloc_Add; // Referencing in invalid context
+  new Add(); // Wrong number of arguments
 }

@@ -42,14 +42,14 @@ Expr *e7 = malloc(sizeof(Expr));
 *e7 = Add(e3, e6);
 ```
 
-This requirement of allocating each sub-expression as a seperate statement
-is cumbersome, and so special syntax is provided to auto-generate allocating
-constructors:
+This requirement of allocating each sub-expression as a separate statement
+is cumbersome, so one can make use of the syntax provided by the ableC-allocation
+and ableC-constructor extensions to achieve this:
 ```c
-allocate datatype Expr with malloc;
+allocate_using heap;
 
-Expr *tree = malloc_Add(malloc_Mul(malloc_Const(3), malloc_Const(2)), 
-                        malloc_Mul(malloc_Const(2), malloc_Const(4)));
+Expr *tree = new Add(new Mul(new Const(3), new Const(2)), 
+                     new Mul(new Const(2), new Const(4)));
 ```
 
 Furthermore, one can also use pattern matching to inspect and

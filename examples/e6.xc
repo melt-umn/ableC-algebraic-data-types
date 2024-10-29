@@ -10,16 +10,16 @@ datatype Expr {
   Const (int val);
 };
 
-allocate datatype Expr with malloc;
+allocate_using heap;
 
 int main() {
-  Expr *t0 = malloc_Mul(malloc_Const(2), malloc_Const(4));
+  Expr *t0 = new Mul(new Const(2), new Const(4));
   printf("%s\n", show(t0).text);
          
   if (show(t0) != "&Mul(&Const(2), &Const(4))") return 1;
   
-  Expr *t1 = malloc_Add(malloc_Const(3), 
-                        malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t1 = new Add(new Const(3), 
+                     new Mul(new Const(2), new Const(4)));
   printf("%s\n", show(t1).text);
 
   if (show(t1) != "&Add(&Const(3), &Mul(&Const(2), &Const(4)))") return 2;

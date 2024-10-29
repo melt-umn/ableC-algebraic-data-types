@@ -9,7 +9,7 @@ datatype Expr {
   Const (int);
 };
 
-allocate datatype Expr with malloc;
+allocate_using heap;
 
 int value(Expr *e) {
   int result = 99;
@@ -23,16 +23,16 @@ int value(Expr *e) {
 }
 
 int main () {
-  Expr *t0 = malloc_Mul(malloc_Const(2), malloc_Const(4));
+  Expr *t0 = new Mul(new Const(2), new Const(4));
 
   if (value(t0) != 8) return 1;
   
-  Expr *t1 = malloc_Mul(malloc_Const(3), malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t1 = new Mul(new Const(3), new Mul(new Const(2), new Const(4)));
 
   if (value(t1) != 24) return 2;
 
-  Expr *t2 = malloc_Add(malloc_Mul(malloc_Const(3), malloc_Const(2)),
-                        malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t2 = new Add(new Mul(new Const(3), new Const(2)),
+                     new Mul(new Const(2), new Const(4)));
 
   if (value(t2) != 14) return 3;
 

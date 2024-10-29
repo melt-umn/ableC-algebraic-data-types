@@ -7,7 +7,7 @@ datatype Tree {
   Leaf (const char*);
 };
 
-allocate datatype Tree with malloc;
+allocate_using heap;
 
 int count_matches (Tree *t) {
   match (t) {
@@ -23,7 +23,7 @@ int count_matches (Tree *t) {
 }
 
 int main (int argc, char **argv) {
-  Tree *tree = malloc_Fork(malloc_Fork(malloc_Leaf("b"), malloc_Leaf("c"), "x"), malloc_Leaf("a"), "y");
+  Tree *tree = new Fork(new Fork(new Leaf("b"), new Leaf("c"), "x"), new Leaf("a"), "y");
 
   int result = count_matches(tree);
 

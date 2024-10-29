@@ -103,14 +103,14 @@ top::BaseTypeExpr ::= q::Qualifiers n::Name
   local fwrd::BaseTypeExpr =
     case tags of
     -- We don't see the declaration, so we're adding it.
-    | [] -> extTypeExpr(q, adtExtType(n.name, n.name, refId))
+    | [] -> extTypeExpr(^q, adtExtType(n.name, n.name, refId))
     -- It's a datatype and the tag type agrees.
-    | adtRefIdTagItem(r) :: _ -> extTypeExpr(q, adtExtType(n.name, n.name, r))
+    | adtRefIdTagItem(r) :: _ -> extTypeExpr(^q, adtExtType(n.name, n.name, r))
     -- It's a datatype and the tag type doesn't agree.
     | _ -> errorTypeExpr([errFromOrigin(n, "Tag " ++ n.name ++ " is not a datatype")])
     end;
   
-  forwards to defsTypeExpr(defs, fwrd);
+  forwards to defsTypeExpr(defs, @fwrd);
 }
 
 -- Type --
@@ -157,6 +157,5 @@ top::ExtType ::= adtName::String adtDeclName::String refId::String
       end;
   top.maybeRefId := just(refId);
   top.adtName = just(adtName);
-  top.isCompleteType =
-    \ env::Decorated Env -> !null(lookupRefId(refId, env));
+  top.isCompleteType = \ env -> !null(lookupRefId(refId, env));
 }

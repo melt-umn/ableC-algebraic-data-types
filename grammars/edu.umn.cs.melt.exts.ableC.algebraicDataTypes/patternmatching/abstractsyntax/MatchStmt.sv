@@ -44,7 +44,8 @@ top::ScrutineeExprs ::= h::Expr  t::ScrutineeExprs
   top.pps = h.pp :: t.pps;
   attachNote extensionGenerated("ableC-algebraic-data-types");
 
-  local matchVarName::Name = name("_match_scrutinee_val_" ++ toString(top.argumentPosition));
+  nondecorated local matchVarName::Name =
+    name("_match_scrutinee_val_" ++ toString(top.argumentPosition));
   top.transform =
     ableC_Stmt {
       $Decl{autoDecl(matchVarName, @h)}

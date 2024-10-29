@@ -1,6 +1,6 @@
 grammar artifact;
 
-{- This Silver specification does litte more than list the desired
+{- This Silver specification does little more than list the desired
    extensions, albeit in a somewhat stylized way.
 
    Files like this can easily be generated automatically from a simple
@@ -14,12 +14,8 @@ import edu:umn:cs:melt:ableC:drivers:compile;
 parser extendedParser :: cst:Root {
   edu:umn:cs:melt:ableC:concretesyntax;
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes;
-  edu:umn:cs:melt:exts:ableC:string;
-  edu:umn:cs:melt:exts:ableC:templating;
+  edu:umn:cs:melt:exts:ableC:constructor;
+  edu:umn:cs:melt:exts:ableC:allocation;
 } 
 
-function main
-IOVal<Integer> ::= args::[String] io_in::IOToken
-{
-  return driver(args, io_in, extendedParser);
-}
+fun main IO<Integer> ::= args::[String] = driver(args, extendedParser);

@@ -65,7 +65,7 @@ top::StmtClauses ::= c::StmtClause rest::StmtClauses
 {
   top.pp = cat( c.pp, rest.pp );
   attachNote extensionGenerated("ableC-algebraic-data-types");
-  top.appendedStmtClausesRes = consStmtClause(c, rest.appendedStmtClausesRes);
+  top.appendedStmtClausesRes = consStmtClause(^c, rest.appendedStmtClausesRes);
 
   top.transform = seqStmt(@c.transform, @rest.transform);
   c.transformIn = top.transformIn;
@@ -87,7 +87,7 @@ top::StmtClauses ::=
 function appendStmtClauses
 StmtClauses ::= p1::StmtClauses p2::StmtClauses
 {
-  p1.appendedStmtClauses = p2;
+  p1.appendedStmtClauses = ^p2;
   return p1.appendedStmtClausesRes;
 }
 

@@ -1,15 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <alloca.h>
+#include <arena.h>
 
 datatype Expr {
   Add (datatype Expr*, datatype Expr*);
   Mul (datatype Expr*, datatype Expr*);
   Const (int);
 };
-
-allocate datatype Expr with malloc;
-allocate datatype Expr with alloca;
 
 int value (datatype Expr e) {
   int result = 99;
@@ -22,18 +20,30 @@ int value (datatype Expr e) {
 }
 
 int main () {
-  datatype Expr t0 = Mul(malloc_Const(2), malloc_Const(4));
+  allocate_using heap;
+
+  datatype Expr t0 = Mul(new Const(2), new Const(4));
 
   if (value(t0) != 8) return 1;
   
-  datatype Expr t1 = Mul(alloca_Const(3), alloca_Mul(alloca_Const(2), alloca_Const(4)));
+  allocate_using stack;
+
+  datatype Expr t1 = Mul(new Const(3), new Mul(new Const(2), new Const(4)));
 
   if (value(t1) != 24) return 2;
 
-  datatype Expr t2 = Add(malloc_Mul(malloc_Const(3), malloc_Const(2)), 
-                         alloca_Mul(alloca_Const(2), alloca_Const(4)));
+  with_arena a {
+    datatype Expr t2 = Add(new Mul(new Const(3), new Const(2)), 
+                           new Mul(new Const(2), new Const(4)));
 
-  if (value(t2) != 14) return 3;
+    if (value(t2) != 14) return 3;
+  }
+
+  match (t0) {
+    Mul(e1, e2) -> {
+      free(e1); free(e2);
+    }
+  }
 
   return 0;
 }

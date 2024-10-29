@@ -1,4 +1,4 @@
-grammar determinism;
+grammar edu:umn:cs:melt:exts:ableC:algebraicDataTypes:artifacts:mda_test;
 
 {- This Silver specification does not generate a useful working 
    compiler, it only serves as a grammar for running the modular
@@ -25,20 +25,15 @@ copper_mda testPatternMatching(ablecParser) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
 }
 
-copper_mda testAllocation(ablecParser) {
-  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:concretesyntax;
-}
-
 parser ableCWithDatatypes :: Root {
   edu:umn:cs:melt:ableC:concretesyntax;
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:datatype:concretesyntax;
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:patternmatching:concretesyntax;
-  edu:umn:cs:melt:exts:ableC:algebraicDataTypes:allocation:concretesyntax;
 }
 
 copper_mda testSilverConstruction(ableCWithDatatypes) {
   edu:umn:cs:melt:exts:ableC:algebraicDataTypes:silverconstruction;
-  edu:umn:cs:melt:exts:silver:ableC:concretesyntax:antiquotation;
+  edu:umn:cs:melt:ableC:silverconstruction:concretesyntax:antiquotation;
   silver:compiler:host:core;
   silver:compiler:extension:patternmatching;
   silver:compiler:modification:list;

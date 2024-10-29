@@ -9,7 +9,7 @@ datatype Expr {
   Const (int);
 };
 
-allocate datatype Expr with malloc;
+allocate_using heap;
 
 int funny_value(Expr *e) {
   int result = 999;
@@ -39,34 +39,34 @@ int funny_value(Expr *e) {
 int main () {
   int result;
 
-  Expr *t0 = malloc_Add(malloc_Mul(malloc_Const(3), malloc_Const(2)),
-                        malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t0 = new Add(new Mul(new Const(3), new Const(2)),
+                     new Mul(new Const(2), new Const(4)));
   result = funny_value(t0);
   printf("funny_value of t0 is %d\n", result);
   if (result != 34) return 1;
 
-  Expr *t1 = malloc_Mul(malloc_Const(3),
-                        malloc_Mul(malloc_Const(2), malloc_Const(4)));
+  Expr *t1 = new Mul(new Const(3),
+                     new Mul(new Const(2), new Const(4)));
   result = funny_value(t1);
   printf("funny_value of t1 is %d\n", result);
   if (result != 192) return 2;
 
-  Expr *t2 = malloc_Mul(malloc_Const(2), malloc_Const(4));
+  Expr *t2 = new Mul(new Const(2), new Const(4));
   result = funny_value(t2);
   printf("funny_value of t2 is %d\n", result);
   if (result != 32) return 3;
 
-  Expr *t3 = malloc_Const(2);
+  Expr *t3 = new Const(2);
   result = funny_value(t3);
   printf("funny_value of t3 is %d\n", result);
   if (result != 2 + 2) return 4;
 
-  Expr *t4 = malloc_Add(malloc_Const(2), malloc_Const(4));
+  Expr *t4 = new Add(new Const(2), new Const(4));
   result = funny_value(t4);
   printf("funny_value of t4 is %d\n", result);
   if (result != 1000) return 5;
 
-  Expr *t5 = malloc_Mul(malloc_Const(1), malloc_Const(-4));
+  Expr *t5 = new Mul(new Const(1), new Const(-4));
   result = funny_value(t5);
   printf("funny_value of t5 is %d\n", result);
   if (result != 84) return 6;

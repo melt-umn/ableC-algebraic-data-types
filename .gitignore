@@ -1,40 +1,18 @@
+
+# Emacs temp files
 *~
 
-build.xml
-
-*.class
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.ear
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-
-# Misc build artifacts (copied from ableC)
-*~
-.fuse_hidden*
-build.xml
+# Silver-related files
+build*.xml
 *.copperdump.html
 *.jar
-*.pp_out.c
-*.gen_cpp
-*.c
+generated/
+
+# Other files
+depends.mk
+examples/*.c
+tests/**/*.c
 *.i
 *.o
 *.out
-*.stdout
-*.stderr
-a.out
-out
-
 *.test
-*.test.out
-*.test.stdout
-*.test.stderr
-*.tests_failed
-.clean

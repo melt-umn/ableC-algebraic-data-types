@@ -73,7 +73,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     if typeAssignableTo(c.typerep, rest.typerep) || typeAssignableTo(rest.typerep, c.typerep)
     then []
     else [errFromOrigin(c,
-              s"Incompatible types in rhs of pattern, expected ${showType(rest.typerep)} but found ${showType(c.typerep)}")];
+              s"Incompatible types in rhs of pattern, expected ${show(80, rest.typerep)} but found ${show(80, c.typerep)}")];
 
   top.typerep =
     if typeAssignableTo(c.typerep, rest.typerep)
@@ -81,7 +81,7 @@ top::ExprClauses ::= c::ExprClause rest::ExprClauses
     else if typeAssignableTo(rest.typerep, c.typerep)
     then rest.typerep
     else errorType();
-  top.appendedExprClausesRes = consExprClause(c, rest.appendedExprClausesRes);
+  top.appendedExprClausesRes = consExprClause(^c, rest.appendedExprClausesRes);
 
   c.expectedTypes = top.expectedTypes;
   rest.expectedTypes = top.expectedTypes;
@@ -104,7 +104,7 @@ top::ExprClauses ::=
 function appendExprClauses
 ExprClauses ::= p1::ExprClauses p2::ExprClauses
 {
-  p1.appendedExprClauses = p2;
+  p1.appendedExprClauses = ^p2;
   return p1.appendedExprClausesRes;
 }
 
@@ -138,7 +138,7 @@ top::ExprClause ::= ps::PatternList e::Expr
         if ($Expr{@ps.transform}) {
           // Using the host assignment operator to avoid a circularity
           // with looking up the type of _match_result.
-          _match_result host::= $Expr{@e};
+          $Expr{hostEqExpr(ableC_Expr { _match_result }, @e)};
           goto $name{top.endLabelName};
         }
       }
