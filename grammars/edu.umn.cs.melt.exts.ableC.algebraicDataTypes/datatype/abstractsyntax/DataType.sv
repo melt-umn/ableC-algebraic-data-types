@@ -76,13 +76,11 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
   attrs.env = top.transform.env;
   n.env = top.transform.env;
 
-  production attribute preDefs :: [Def] with ++;
-  preDefs :=
+  production preDefs :: [Def] =
     if name_tagHasForwardDcl_workaround
     then []
     else [adtTagDef(n.name, adtRefIdTagItem(top.refId))];
-  production attribute postDefs :: [Def] with ++;
-  postDefs :=
+  production postDefs :: [Def] =
     [adtRefIdDef(top.refId, adtRefIdItem(top))];
 
   top.defs := preDefs ++ postDefs;
@@ -142,10 +140,14 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
      for ADT, for example an auto-generated recursive freeing function. -}
   production attribute adtDecls::Decls with appendDecls;
   adtDecls := nilDecl();
+  -- Seed the flowtype
+  adtDecls <- if false then error(hackUnparse(top.transform.env) ++ hackUnparse(top.transform.controlStmtContext) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
 
   {- Used to generate prototypes for adtDecls which are inserted before the constructors -}
   production attribute adtProtos::Decls with appendDecls;
   adtProtos := nilDecl();
+  -- Seed the flowtype
+  adtProtos <- if false then error(hackUnparse(top.transform.env) ++ hackUnparse(top.transform.controlStmtContext) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
 
   {- This attribute is for extensions to use to add additional members to the generated
      ADT struct. -}

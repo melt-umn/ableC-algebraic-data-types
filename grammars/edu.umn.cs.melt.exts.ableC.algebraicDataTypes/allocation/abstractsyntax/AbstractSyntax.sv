@@ -14,9 +14,11 @@ imports edu:umn:cs:melt:exts:ableC:constructor:abstractsyntax as ctor;
 aspect production adtDecl
 top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
 {
-  postDefs <- map(\ c::(String, Decorated Parameters) ->
-    ctor:constructorDef(c.1, adtConstructorReference(^n, name(c.1))),
-    cs.constructors);
+  adtDecls <- foldDecl([defsDecl(
+    map(\ c::(String, Decorated Parameters) ->
+      ctor:constructorDef(c.1, adtConstructorReference(^n, name(c.1))),
+      cs.constructors))
+  ]);
 }
 
 production adtConstructorReference implements ctor:Constructor
