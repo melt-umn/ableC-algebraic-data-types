@@ -262,7 +262,7 @@ tracked nonterminal Constructor
   with pp, defs, errors,
        enumItem, structItem, funDecl, adtGivenName, adtDeclName, constructors;
 flowtype Constructor =
-  decorate {adtGivenName, adtDeclName, enumItem.env, structItem.env},
+  decorate {adtGivenName, adtDeclName, enumItem.env, structItem.env, structItem.controlStmtContext},
   pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName},
   structItem {decorate}, funDecl {decorate}, constructors {decorate};
 
