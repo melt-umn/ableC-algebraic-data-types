@@ -285,7 +285,9 @@ top::Constructor ::= n::Name ps::Parameters
 
   ps.position = 0;
   ps.constructorName = n.name;
-  ps.env = structBody.env;
+  -- Ensure any forward decls in the params get defs from where they actually
+  -- first appear in the translation:
+  ps.env = addEnv(structBody.defs, structBody.env);
   ps.controlStmtContext = initialControlStmtContext;
 
   top.constructors = [(n.name, ps)];
