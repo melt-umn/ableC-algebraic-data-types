@@ -25,7 +25,7 @@ top::Expr ::= scrutinees::ScrutineeExprs  clauses::ExprClauses
   
   forward fwrd =
     ableC_Expr {
-      ({$Decl{preDecl(clauses.typerep, name("_match_result"))}
+      ({$Decl{preDecl(clauses.typerep.withoutTypeQualifiers, name("_match_result"))}
         $Stmt{@scrutinees.transform}
         $Stmt{@clauses.transform}
         fprintf(stderr, $stringLiteralExpr{s"Pattern match failure at ${getParsedOriginLocationOrFallback(top).unparse}\n"});
