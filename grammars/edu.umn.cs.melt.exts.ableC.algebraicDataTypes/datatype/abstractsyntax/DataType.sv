@@ -83,7 +83,8 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
   production postDefs :: [Def] =
     [adtRefIdDef(top.refId, adtRefIdItem(top))];
 
-  top.defs := preDefs ++ postDefs;
+  -- defs are only used instead of the translation in case of errors.
+  top.defs := preDefs ++ cs.defs ++ postDefs;
 
   local name_refIdIfOld_workaround :: Maybe<String> =
     case n.tagLocalLookup of
@@ -162,7 +163,7 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
         $Decl{@adtStructDecl}
         $Decl{defsDecl(postDefs)}
         $Decls{@adtProtos}
-        $Decls{cs.funDecls}
+        $Decls{@cs.funDecls}
         $Decls{@adtDecls}
       });
 
@@ -196,7 +197,7 @@ translation attribute enumItems :: EnumItemList;
 translation attribute structItems :: StructItemList;
 
 -- Constructs the initialization function for each constructor
-synthesized attribute funDecls :: Decls;
+translation attribute funDecls :: Decls;
 
 -- Constructor list used, e.g., when type checking patterns
 synthesized attribute constructors :: [Pair<String Decorated Parameters>];
@@ -226,7 +227,7 @@ top::ConstructorList ::= c::Constructor cl::ConstructorList
   top.pp = ppConcat([ c.pp, sep, cl.pp ]);
   top.enumItems = consEnumItem(@c.enumItem, @cl.enumItems);
   top.structItems = consStructItem(@c.structItem, @cl.structItems);
-  top.funDecls = consDecl(c.funDecl, cl.funDecls);
+  top.funDecls = consDecl(@c.funDecl, @cl.funDecls);
   top.constructors = c.constructors ++ cl.constructors;
   top.appendedConstructorsRes = consConstructor(^c, cl.appendedConstructorsRes);
 }
@@ -256,7 +257,7 @@ translation attribute enumItem :: EnumItem;
 translation attribute structItem :: StructItem;
 
 -- Constructs the function declaration for each constructor
-synthesized attribute funDecl :: Decl;
+translation attribute funDecl :: Decl;
 
 tracked nonterminal Constructor
   with pp, defs, errors,
@@ -280,6 +281,8 @@ top::Constructor ::= n::Name ps::Parameters
 
   top.pp = ppConcat([n.pp, parens(ppImplode(text(", "), ps.pps)), semi()]);
   top.errors <- n.valueRedeclarationCheckNoCompatible;
+
+  top.defs <- top.funDecl.defs;
 
   n.env = top.enumItem.env;
 
