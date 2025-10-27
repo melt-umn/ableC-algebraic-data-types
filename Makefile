@@ -30,6 +30,9 @@ EXT_GRAMMAR=edu:umn:cs:melt:exts:ableC:algebraicDataTypes
 EXT_DEPS=ableC-string ableC-constructor ableC-allocation ableC-templating
 USE_CUSTOM_SILVER=1
 
+# Need to bump up the heap space to run the MWDA:
+export SVJVM_FLAGS=-Xmx6G -Xss30m
+
 LDLIBS=-lm
 
 # Path from current directory to top level ableC repository
