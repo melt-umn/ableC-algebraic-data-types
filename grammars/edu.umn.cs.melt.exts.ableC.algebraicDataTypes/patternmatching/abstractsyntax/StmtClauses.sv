@@ -54,7 +54,8 @@ synthesized attribute appendedStmtClausesRes :: StmtClauses;
 tracked nonterminal StmtClauses with pp, errors, functionDefs,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   appendedStmtClauses, appendedStmtClausesRes, labelDefs;
-flowtype StmtClauses = decorate {initialEnv, transform.env, transform.controlStmtContext, expectedTypes, transformIn},
+flowtype StmtClauses =
+  decorate {initialEnv, transform.env, transform.controlStmtContext, expectedTypes, transformIn, endLabelName},
   errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName},
   appendedStmtClausesRes {appendedStmtClauses};
 

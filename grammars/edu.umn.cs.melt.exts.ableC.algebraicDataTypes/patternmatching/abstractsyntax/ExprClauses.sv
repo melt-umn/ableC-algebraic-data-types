@@ -58,8 +58,8 @@ tracked nonterminal ExprClauses with pp, errors,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   typerep, appendedExprClauses, appendedExprClausesRes, controlStmtContext;
 flowtype ExprClauses =
-  decorate {expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
-  errors {decorate}, transform {decorate, endLabelName}, typerep {decorate},
+  decorate {expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn, endLabelName},
+  errors {decorate}, transform {decorate}, typerep {decorate},
   appendedExprClausesRes {appendedExprClauses};
 
 propagate endLabelName, errors, initialEnv, appendedExprClauses on ExprClauses;
@@ -112,8 +112,8 @@ tracked nonterminal ExprClause with pp, errors,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName,
   typerep;
 flowtype ExprClause =
-  decorate {expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn},
-  errors {decorate}, transform {decorate, endLabelName}, typerep {decorate};
+  decorate {expectedTypes, initialEnv, transform.env, transform.controlStmtContext, transformIn, endLabelName},
+  errors {decorate}, transform {decorate}, typerep {decorate};
 
 propagate endLabelName, errors, initialEnv on ExprClause;
 

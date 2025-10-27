@@ -210,7 +210,7 @@ tracked nonterminal ConstructorList
     adtGivenName, adtDeclName, constructors,
     appendedConstructors, appendedConstructorsRes;
 flowtype ConstructorList =
-  decorate {adtGivenName, adtDeclName, enumItems.decorate, structItems.decorate},
+  decorate {adtGivenName, adtDeclName, enumItems.decorate, structItems.decorate, funDecls.decorate},
   pp {}, errors {decorate}, defs {decorate}, enumItems {adtGivenName},
   structItems {decorate}, funDecls {decorate}, constructors {decorate},
   appendedConstructorsRes {appendedConstructors};
@@ -263,7 +263,7 @@ tracked nonterminal Constructor
   with pp, defs, errors,
        enumItem, structItem, funDecl, adtGivenName, adtDeclName, constructors;
 flowtype Constructor =
-  decorate {adtGivenName, adtDeclName, enumItem.env, structItem.env, structItem.controlStmtContext},
+  decorate {adtGivenName, adtDeclName, enumItem.env, structItem.env, structItem.controlStmtContext, funDecl.decorate},
   pp {}, errors {decorate}, defs {decorate}, enumItem {adtGivenName},
   structItem {decorate}, funDecl {decorate}, constructors {decorate};
 

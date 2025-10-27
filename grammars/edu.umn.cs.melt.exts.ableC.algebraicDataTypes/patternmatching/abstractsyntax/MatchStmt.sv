@@ -32,7 +32,7 @@ top::Stmt ::= scrutinees::ScrutineeExprs  clauses::StmtClauses
 synthesized attribute scrutineeRefs::[Expr];
 
 tracked nonterminal ScrutineeExprs with pps, transform<Stmt>, scrutineeRefs, typereps, errors, argumentPosition;
-flowtype ScrutineeExprs = decorate {transform.env, transform.controlStmtContext},
+flowtype ScrutineeExprs = decorate {argumentPosition, transform.env, transform.controlStmtContext},
   pps {}, transform {argumentPosition}, scrutineeRefs {argumentPosition},
   typereps {decorate}, errors {decorate};
 
