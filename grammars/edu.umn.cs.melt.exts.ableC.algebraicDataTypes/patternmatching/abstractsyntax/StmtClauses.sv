@@ -56,7 +56,7 @@ tracked nonterminal StmtClauses with pp, errors, functionDefs,
   appendedStmtClauses, appendedStmtClausesRes, labelDefs;
 flowtype StmtClauses =
   decorate {initialEnv, transform.env, transform.controlStmtContext, expectedTypes, transformIn, endLabelName},
-  errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName},
+  errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate},
   appendedStmtClausesRes {appendedStmtClauses};
 
 propagate endLabelName, errors, functionDefs, labelDefs, initialEnv, appendedStmtClauses on StmtClauses;
@@ -95,8 +95,8 @@ StmtClauses ::= p1::StmtClauses p2::StmtClauses
 
 tracked nonterminal StmtClause with pp, errors, functionDefs,
   expectedTypes, initialEnv, transform<Stmt>, transformIn<[Expr]>, endLabelName, labelDefs;
-flowtype StmtClause = decorate {initialEnv, transform.env, transform.controlStmtContext, expectedTypes, transformIn},
-  errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate, endLabelName};
+flowtype StmtClause = decorate {initialEnv, transform.env, transform.controlStmtContext, expectedTypes, transformIn, endLabelName},
+  errors {decorate}, functionDefs {}, labelDefs {}, transform {decorate};
 
 {- A statement clause becomes a Stmt, in the form:
 
