@@ -31,7 +31,7 @@ EXT_DEPS=ableC-string ableC-constructor ableC-allocation ableC-templating
 USE_CUSTOM_SILVER=1
 
 # Need to bump up the heap space to run the MWDA:
-export SVJVM_FLAGS=-Xmx7G -Xss30m
+export SVJVM_FLAGS=-Xmx8G -Xss30m
 
 LDLIBS=-lm
 
