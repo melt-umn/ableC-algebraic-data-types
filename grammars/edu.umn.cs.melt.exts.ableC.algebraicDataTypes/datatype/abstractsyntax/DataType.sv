@@ -137,23 +137,26 @@ top::ADTDecl ::= attrs::Attributes n::Name cs::ConstructorList
   top.tagEnv = adtStructDeclaration.tagEnv;
   top.hostFieldNames := adtStructDeclaration.hostFieldNames;
 
+  -- This is used for convenience to seed what inherited attributes on top can be used
+  -- to compute adtDecls, adtProtos, etc.
+  local topDeps::Decorated ADTDecl with {
+    transform.env, transform.controlStmtContext, transform.isTopLevel,
+    givenRefId, adtGivenName
+  } = top;
+
   {- This attribute is for extensions to use to add additional auto-generated functions
      for ADT, for example an auto-generated recursive freeing function. -}
   production attribute adtDecls::Decls with appendDecls;
-  adtDecls := nilDecl();
-  -- Seed the flowtype
-  adtDecls <- if false then error(hackUnparse(top.transform.env) ++ hackUnparse(top.transform.controlStmtContext) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
+  adtDecls := if false then error(hackUnparse(topDeps)) else nilDecl();
 
   {- Used to generate prototypes for adtDecls which are inserted before the constructors -}
   production attribute adtProtos::Decls with appendDecls;
-  adtProtos := nilDecl();
-  -- Seed the flowtype
-  adtProtos <- if false then error(hackUnparse(top.transform.env) ++ hackUnparse(top.transform.controlStmtContext) ++ hackUnparse(top.givenRefId) ++ top.adtGivenName) else nilDecl();
+  adtProtos := if false then error(hackUnparse(topDeps)) else nilDecl();
 
   {- This attribute is for extensions to use to add additional members to the generated
      ADT struct. -}
   production attribute structItems::StructItemList with appendStructItemList;
-  structItems := nilStructItem();
+  structItems := if false then error(hackUnparse(topDeps)) else nilStructItem();
 
   top.transform =
     decls(
